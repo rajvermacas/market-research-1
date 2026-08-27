@@ -50,6 +50,9 @@ scripts/validate_data.py                  structural, quality and cross-interval
 
 Read these before drawing conclusions from a backtest:
 
+0. **The early years are thin.** The panel is dated from 2000 but holds only ~9% of the symbols
+   that actually traded in 2000, rising to ~75% by 2008 and ~90% after 2020. Do not treat pre-2004
+   results as market-wide. Curing this needs NSE bhavcopy (see below), not more Yahoo requests.
 1. **Survivorship bias.** The universe is NSE's *current* main-board listing, so pre-snapshot
    delistings are absent.
 2. **Adjustments.** `open/high/low/close` are split-adjusted; `adj_close` is also dividend-adjusted.
@@ -60,6 +63,26 @@ Read these before drawing conclusions from a backtest:
 4. **Upstream gaps and bad ticks.** Yahoo drops the odd session for individual symbols, and a small
    number of bars violate OHLC ordering. Reported by `validate_data.py`, not silently patched.
 5. **Out of scope.** NSE Emerge (SME) symbols and BSE-exclusive listings are not served by Yahoo.
+
+## Curing survivorship bias
+
+Yahoo cannot fix this: it deletes delisted Indian tickers outright, returning zero bars even for
+the years they traded (verified on AMTEKAUTO, ANDHRABANK, ALBK, ALOKTEXT). The point-in-time source
+is NSE bhavcopy — the official end-of-day record of every symbol that traded on a given day.
+
+- Legacy format, 1999 to ~2020:
+  `nsearchives.nseindia.com/content/historical/EQUITIES/<YYYY>/<MON>/cm<DD><MON><YYYY>bhav.csv.zip`
+- Current UDiFF format:
+  `nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_<YYYYMMDD>_F_0000.csv.zip`
+- Rename map: `nsearchives.nseindia.com/content/equities/symbolchange.csv` (1,057 records, 1999-2026)
+
+Stacking ~6,650 daily files reconstructs the universe as it was on each date; a company simply stops
+appearing after it dies. Filter to series EQ/BE/BZ — the files also carry SGBs and ETFs.
+
+The cost is that bhavcopy prices are **raw**: no split or bonus adjustment. Rebuilding the
+equivalent of `adj_close` from NSE's corporate-actions feed is the bulk of the work, and getting it
+wrong manufactures fake gaps on every split. Key on ISIN where available, since symbols are renamed
+and occasionally reused.
 
 ## LESSONS
 

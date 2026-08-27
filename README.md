@@ -45,6 +45,33 @@ History per symbol is very uneven — this is a full-market panel, not an index 
 January 2000. **Filter on bar count before any cross-sectional ranking** or recent listings will
 distort the results.
 
+#### The early years are thin — read this before backtesting pre-2005
+
+The date range says 2000, but coverage in the early years is a small fraction of the market that
+actually traded. Measured against NSE's own daily bhavcopy (the official end-of-day record of every
+symbol that traded):
+
+| Date | Symbols that traded on NSE | In this panel | Coverage |
+| --- | --- | --- | --- |
+| 2000-06-12 | 917 | 86 | **9%** |
+| 2004-06-10 | 752 | 570 | 76% |
+| 2008-06-10 | 1,225 | 898 | 73% |
+| 2012-06-11 | 1,514 | 1,089 | 72% |
+| 2016-06-10 | 1,532 | 1,226 | 80% |
+| 2020-06-10 | 1,683 | 1,577 | 94% |
+| 2024-06-10 | 2,208 | 1,975 | 89% |
+
+Two effects stack. Delisted and merged companies are absent entirely (survivorship bias), and
+Yahoo's Indian history is shallow even for companies that still trade — ABB, ACC and AARTIIND are
+all currently listed and still have no year-2000 data there.
+
+Practical reading: treat this panel as solid from roughly 2015, usable with care 2005–2015, and
+**not representative of the market before about 2004**. A cross-sectional backtest run on 2000-2003
+is ranking 9% of the universe, pre-selected for having survived to 2026.
+
+Curing this requires a different source — NSE bhavcopy, stacked per trading day, which records the
+universe as it was on each date. See `AGENTS.md` for the approach.
+
 Every Nifty index constituent is present: Nifty 50 50/50, Next 50 50/50, Nifty 100 100/100,
 Nifty 200 200/200, Nifty 500 500/500, Midcap 150 150/150, Smallcap 250 250/250.
 
