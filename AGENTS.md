@@ -29,6 +29,7 @@ scripts/download_market_data.py           (re)builds the universe and every pric
 scripts/validate_data.py                  structural, quality and cross-interval checks
 scripts/screener.py                       pullback-in-uptrend screen over the daily panel
 scripts/ema_support.py                    how reliably each name holds its daily 20/50 EMA
+scripts/n_pattern.py                      impulse/pullback/resumption "N" on a rising 10 EMA
 ```
 
 ## Conventions
@@ -91,6 +92,12 @@ and occasionally reused.
 Rules accumulated from mistakes made in this repo. Add to this list — never remove — whenever a
 mistake recurs.
 
+- Always render a chart-pattern screener's hits before believing them. The N-pattern conditions
+  passed on price geometry while matching stocks that looked nothing like the target shape; only
+  the candlestick plot showed it. `--charts` exists for this.
+- Constrain the *duration* of a pattern's legs, not just their size. Magnitude-only rules let one
+  long trend masquerade as an impulse plus pullback, because the swing low pins to the edge of the
+  search window.
 - Never pick a threshold before looking at the distribution it sits in. A 60% "holds its EMA"
   cutoff sounded reasonable and returned 2 of 293 names, because the cohort median is 37%. Compute
   the distribution, then rank against it rather than gating on a number that felt right.

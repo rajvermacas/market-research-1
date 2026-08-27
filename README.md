@@ -220,6 +220,39 @@ Two numbers matter, and the second is the honest one:
   the window. A stock in a relentless uptrend posts a high hold rate because *any* entry worked.
   Positive edge is what says the average itself carried information.
 
+## N-pattern screener
+
+`scripts/n_pattern.py` finds the three-leg continuation shape — impulse up, partial pullback that
+leans on a rising 10 EMA, then resumption — by decomposing the recent swings:
+
+```
+      B          D        A  swing low the impulse starts from
+     /\         /         B  impulse high
+    /  \       /          C  pullback low: a HIGHER low than A, resting on the 10 EMA
+   /    \     /           D  today, turning back up off C
+  A      C___/
+```
+
+```bash
+python scripts/n_pattern.py                            # full NSE universe
+python scripts/n_pattern.py --universe nifty500 --charts 9
+python scripts/n_pattern.py --min-impulse 0.10 --max-retrace 0.5
+```
+
+B is the highest high in the last `--window` bars, A the lowest low before it, C the lowest low
+after it. Conditions then cover the geometry: impulse size, retracement depth, `C > A`, C touching
+the 10 EMA without closing far below it, how recently C formed, how far price has resumed, and the
+EMA rising with price above it.
+
+**Leg duration matters as much as leg size.** Without `--max-leg1-bars` and `--min-pullback-bars`,
+a stock in one long uninterrupted trend matches: A pins to the left edge of the window, the
+"impulse" measures the entire run, and the "pullback" is a one-day wick near the highs. Those
+constraints are what keep the pattern local and shaped like an N.
+
+`--charts N` renders the top hits as candlesticks with the EMA and the A/B/C levels marked. Use it
+— geometric conditions are easy to satisfy in ways that look nothing like the intended shape, and
+the picture is the only quick way to catch that.
+
 ## Refreshing the data
 
 ```bash
