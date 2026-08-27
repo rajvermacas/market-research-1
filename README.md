@@ -194,6 +194,32 @@ test is reading an incomplete bar and can flip by the close. The screener prints
 `_manifest.json` flags the final bar as partial — refresh the daily panel after 15:30 IST for a
 settled read.
 
+## EMA support analysis
+
+`scripts/ema_support.py` answers a different kind of question from the screener: not "what
+qualifies today" but "which momentum names *historically* bounce off their daily 20/50 EMA".
+
+```bash
+python scripts/ema_support.py                     # monthly RSI > 60 universe, 3-year window
+python scripts/ema_support.py --years 5 --min-touches 12
+python scripts/ema_support.py --horizon 20 --break-tol 0.03
+```
+
+A touch is counted when the previous close sat comfortably above the EMA (`--separation`,
+default 1.5%) and the bar's low came down to it (`--touch-tol`, 0.5%) — requiring the prior bar to
+be clearly above is what stops a week of chopping along the average counting as five touches. It
+held if no close over the next `--horizon` bars fell more than `--break-tol` below the EMA and the
+close at the horizon is back above it.
+
+Two numbers matter, and the second is the honest one:
+
+- **hold rate** — share of touches that held. Cohort median is ~37% on the 20 EMA and ~41% on the
+  50 EMA, so read a name against that, not against 50%. The tool ranks rather than gates for this
+  reason (`--min-hold` defaults to 0).
+- **edge** — median return after a touch minus the same stock's median return from a random bar in
+  the window. A stock in a relentless uptrend posts a high hold rate because *any* entry worked.
+  Positive edge is what says the average itself carried information.
+
 ## Refreshing the data
 
 ```bash

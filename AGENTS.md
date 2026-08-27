@@ -28,6 +28,7 @@ data/ohlcv/_manifest.json                 provenance of the current snapshot + k
 scripts/download_market_data.py           (re)builds the universe and every price panel
 scripts/validate_data.py                  structural, quality and cross-interval checks
 scripts/screener.py                       pullback-in-uptrend screen over the daily panel
+scripts/ema_support.py                    how reliably each name holds its daily 20/50 EMA
 ```
 
 ## Conventions
@@ -90,6 +91,12 @@ and occasionally reused.
 Rules accumulated from mistakes made in this repo. Add to this list — never remove — whenever a
 mistake recurs.
 
+- Never pick a threshold before looking at the distribution it sits in. A 60% "holds its EMA"
+  cutoff sounded reasonable and returned 2 of 293 names, because the cohort median is 37%. Compute
+  the distribution, then rank against it rather than gating on a number that felt right.
+- A hit rate without a control measures the market, not the setup. A stock in a strong uptrend
+  scores well on any entry rule. Always report the same statistic measured from random bars in the
+  same window, and quote the difference.
 - A screen's stated filters are not always its intent. "Daily RSI > 60" selects names that have
   already run; a pullback entry wants the daily RSI *low and turning up* while the higher
   timeframes stay strong. Restate the setup in words and check the filters actually select for it
