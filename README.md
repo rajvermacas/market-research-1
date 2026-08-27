@@ -158,6 +158,42 @@ liquid = (
 recent = daily.filter(pl.col("year") >= 2024).collect()
 ```
 
+## Screener
+
+`scripts/screener.py` implements a **pullback-in-uptrend** screen: higher timeframes strongly
+trending, daily RSI dipped, daily RSI just turning back up — so the entry lands as strength
+resumes rather than after the move has run.
+
+```bash
+python scripts/screener.py                      # full NSE universe
+python scripts/screener.py --universe nifty500
+python scripts/screener.py --pullback-max 50 --rising-bars 1   # looser
+python scripts/screener.py --mode trend         # plain "daily+weekly+monthly RSI > 60"
+```
+
+Default conditions, each a flag:
+
+| Stage | Condition |
+| --- | --- |
+| Structure | monthly RSI(14) > 60, weekly RSI(14) > 60, close above 200-day SMA |
+| Pullback | daily RSI dipped to <= 45 within the last 15 bars |
+| Turn | daily RSI rising 2 consecutive bars, >= 3 points off its trough, trough <= 7 bars ago |
+| Not late | daily RSI still below 65 |
+| Tradable | market cap > 5,000 crore, 20-day average turnover > 5 crore |
+
+`--mode trend` is the opposite selection — it finds names already extended, which is what a
+"daily RSI > 60" condition gives you.
+
+RSI is Wilder's, validated to machine precision (< 1e-9) against a reference implementation on
+daily, weekly and monthly. Weekly and monthly are resampled from the daily panel. Market caps are
+fetched live from Yahoo, since the repository stores prices but not fundamentals; results are
+written to `.cache/screener/` (gitignored).
+
+**The last daily bar matters here.** If the snapshot was captured mid-session, the "RSI rising"
+test is reading an incomplete bar and can flip by the close. The screener prints a warning when
+`_manifest.json` flags the final bar as partial — refresh the daily panel after 15:30 IST for a
+settled read.
+
 ## Refreshing the data
 
 ```bash
