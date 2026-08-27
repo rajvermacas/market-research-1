@@ -1,0 +1,36 @@
+{
+  "generated_at_ist": "2026-08-27T10:49:16+05:30",
+  "source": "Yahoo Finance via yfinance; symbol lists from NSE public archives",
+  "universe": "nse_all",
+  "universe_size": 2559,
+  "notes": [
+    "OHLC are split-adjusted as served by Yahoo; adj_close is additionally dividend-adjusted. Use adj_close (or its ratio to close) for total-return work.",
+    "The hourly panel has no adj_close column: Yahoo does not adjust intraday bars, so the value it returns is just a copy of close and would be misleading.",
+    "Yahoo serves only ~730 trading days of hourly bars, so the hourly panel cannot reach 2000.",
+    "The universe is NSE's *current* main-board listing, so companies delisted before the snapshot are absent and the panel carries survivorship bias for historical backtests.",
+    "NSE Emerge (SME) symbols and BSE-exclusive listings are not served by Yahoo Finance and are therefore not in this dataset.",
+    "Yahoo occasionally omits a session for individual symbols; see the _coverage_*.csv files and scripts/validate_data.py for the gaps present in this snapshot.",
+    "A bar flagged last_bar_possibly_partial covers a period that had not closed when the snapshot was taken \u2014 filter it out before backtesting."
+  ],
+  "intervals": {
+    "daily": {
+      "path": "data/ohlcv/daily/year=*/data.parquet",
+      "yfinance_interval": "1d",
+      "time_column": "date",
+      "has_adj_close": true,
+      "requested_start": "2000-01-01",
+      "requested_end": "2026-08-27",
+      "rows": 7465347,
+      "symbols": 2559,
+      "first": "2000-01-03",
+      "last": "2026-08-27",
+      "size_mb": 131.2,
+      "symbols_unavailable_on_yahoo": [],
+      "symbols_skipped_no_daily_data": [],
+      "last_bar_possibly_partial": true
+    }
+  },
+  "committed_intervals": [
+    "daily"
+  ]
+}
