@@ -242,7 +242,7 @@ def simulate(trades: pl.DataFrame, prices: pl.DataFrame, slots: int, cost: float
             cash -= allocation
             open_pos.append([
                 column[row["symbol"]], shares,
-                int(np.searchsorted(grid, row["exit_time"])), row["exit"],
+                int(np.searchsorted(grid, row["exit_time"])), row["exit"], allocation,
             ])
             taken += 1
             # open_pos already holds the position just appended, so this count is the
@@ -251,7 +251,10 @@ def simulate(trades: pl.DataFrame, prices: pl.DataFrame, slots: int, cost: float
             max_stacked = max(max_stacked, same)
 
         equity[t] = cash + sum(p[1] * matrix[t, p[0]] for p in open_pos)
-    return equity, taken, skipped, blocked, max_stacked
+    # What the final equity owes to positions never closed: booked at the last mark, not
+    # at a real exit. Reported so the reader can discount it.
+    unrealised = sum(p[1] * matrix[-1, p[0]] - p[4] for p in open_pos)
+    return equity, taken, skipped, blocked, max_stacked, unrealised
 
 
 def simulate_fixed(trades: pl.DataFrame, prices: pl.DataFrame, notional: float,
@@ -295,6 +298,99 @@ def simulate_fixed(trades: pl.DataFrame, prices: pl.DataFrame, notional: float,
     return pnl, base, peak_open, deployed
 
 
+def simulate_shared_stop(trades: pl.DataFrame, panels: dict, slots: int, cost: float,
+                         per_symbol: int | None = None):
+    """Every open position in a symbol closes as soon as *any* of its stops is hit.
+
+    With stacked entries each position normally carries its own stop, so the newest dies
+    first and the older ones — sitting on lower stops — survive. Here the symbol is
+    treated as one book instead: the effective stop is the highest among its open
+    positions, and when price trades through it the whole holding in that name is closed
+    at that level.
+
+    That coupling makes an exit depend on what else is open, which depends on which
+    signals won a slot, so it cannot be precomputed per trade the way find_trades() does.
+    It is resolved here, bar by bar, against the actual highs and lows. Targets stay
+    per-position: only the stop is shared. Within a bar the stop is assumed to fill first.
+    """
+    grid, close_m, open_m, high_m, low_m, column = (
+        panels["grid"], panels["close"], panels["open"], panels["high"],
+        panels["low"], panels["column"],
+    )
+    entry_at: dict[int, list] = {}
+    for row in trades.iter_rows(named=True):
+        entry_at.setdefault(int(np.searchsorted(grid, row["entry_time"])), []).append(row)
+
+    cash = 1.0
+    open_pos: list[dict] = []
+    equity = np.empty(len(grid))
+    closed: list[dict] = []
+    taken = skipped = blocked = max_stacked = 0
+
+    for t in range(len(grid)):
+        by_col: dict[int, list] = {}
+        for position in open_pos:
+            by_col.setdefault(position["col"], []).append(position)
+
+        for col, group in by_col.items():
+            lo, op, hi = low_m[t, col], open_m[t, col], high_m[t, col]
+            effective = max(p["stop"] for p in group)
+            if not np.isnan(lo) and lo <= effective:
+                fill = op if (not np.isnan(op) and op <= effective) else effective
+                for position in group:            # the whole name goes, not just one leg
+                    cash += position["shares"] * fill * (1 - cost)
+                    closed.append({**position, "exit": fill, "exit_time": int(grid[t]),
+                                   "outcome": "stop", "bars_held": t - position["entry_idx"]})
+                    open_pos.remove(position)
+                continue
+            for position in group:
+                if not np.isnan(hi) and hi >= position["target"]:
+                    fill = op if (not np.isnan(op) and op >= position["target"]) \
+                        else position["target"]
+                    cash += position["shares"] * fill * (1 - cost)
+                    closed.append({**position, "exit": fill, "exit_time": int(grid[t]),
+                                   "outcome": "target", "bars_held": t - position["entry_idx"]})
+                    open_pos.remove(position)
+
+        for row in entry_at.get(t, []):
+            if len(open_pos) >= slots:
+                skipped += 1
+                continue
+            col = column[row["symbol"]]
+            if per_symbol is not None and sum(1 for p in open_pos if p["col"] == col) >= per_symbol:
+                blocked += 1
+                continue
+            held = sum(p["shares"] * close_m[t, p["col"]] for p in open_pos)
+            allocation = min((cash + held) / slots, cash)
+            if allocation <= 0:
+                skipped += 1
+                continue
+            cash -= allocation
+            open_pos.append({"col": col, "symbol": row["symbol"],
+                             "shares": allocation * (1 - cost) / row["entry"],
+                             "entry": row["entry"], "stop": row["stop"],
+                             "target": row["target"], "entry_time": row["entry_time"],
+                             "entry_idx": t})
+            taken += 1
+            max_stacked = max(max_stacked, sum(1 for p in open_pos if p["col"] == col))
+
+        equity[t] = cash + sum(p["shares"] * close_m[t, p["col"]] for p in open_pos)
+
+    for position in open_pos:
+        closed.append({**position, "exit": close_m[-1, position["col"]],
+                       "exit_time": int(grid[-1]), "outcome": "open",
+                       "bars_held": len(grid) - 1 - position["entry_idx"]})
+    unrealised = sum(p["shares"] * close_m[-1, p["col"]]
+                     - p["shares"] * p["entry"] for p in open_pos)
+    frame = pl.DataFrame([{k: v for k, v in c.items() if k not in ("col", "entry_idx")}
+                          for c in closed])
+    if frame.height:
+        frame = frame.with_columns(
+            (pl.col("exit") / pl.col("entry") * (1 - cost) ** 2 - 1).alias("ret"),
+            ((pl.col("entry") - pl.col("stop")) / pl.col("entry")).alias("risk_pct"))
+    return equity, taken, skipped, blocked, max_stacked, frame, unrealised
+
+
 def performance(equity: np.ndarray, bars: int) -> tuple[float, float]:
     years = bars / BARS_PER_YEAR
     cagr = equity[-1] ** (1 / years) - 1
@@ -319,6 +415,9 @@ def main() -> int:
                         help="target as a multiple of risk; several sweeps them (default 1..5)")
     parser.add_argument("--slots", type=int, default=10,
                         help="max concurrent positions (default 10)")
+    parser.add_argument("--shared-stop", action="store_true",
+                        help="one stop hit closes EVERY open position in that symbol, "
+                             "instead of only the leg whose own stop was hit")
     parser.add_argument("--fixed-notional", type=float, default=None,
                         help="unlimited cash, this many rupees per trade; every signal is "
                              "taken and nothing compounds (e.g. 100000 for 1 lakh)")
@@ -399,6 +498,21 @@ def main() -> int:
     )
     bars = prices.height
 
+    panels = None
+    if args.shared_stop:
+        # A shared stop resolves against real highs and lows, so those panels are needed
+        # too. Deliberately left un-filled: a bar the symbol did not trade is NaN, and NaN
+        # comparisons are False, so a missing bar can never trigger a stop.
+        traded_cols = [c for c in prices.columns if c != "datetime"]
+        panels = {"grid": prices["datetime"].dt.epoch("us").to_numpy(),
+                  "column": {c: i for i, c in enumerate(traded_cols)},
+                  "close": prices.select(traded_cols).to_numpy()}
+        for field in ("open", "high", "low"):
+            wf = (hourly.filter(pl.col("symbol").is_in(signal_symbols))
+                  .select("symbol", "datetime", field)
+                  .pivot(on="symbol", index="datetime", values=field).sort("datetime"))
+            panels[field] = wf.select(traded_cols).to_numpy()
+
     # Control: equal-weight buy-and-hold of every symbol already trading at the start of
     # the window. Forward-filling first is essential — a handful of timestamps carry a bar
     # for only one or two symbols, and an unfilled mean over those is a single stock's
@@ -433,13 +547,17 @@ def main() -> int:
         trades = find_trades(frame, cost, reward_risk)
         if trades.is_empty():
             print("  no trades"); continue
-        if args.fixed_notional:
+        if args.shared_stop:
+            equity, taken, skipped, blocked, max_stacked, closed_frame, unrealised = \
+                simulate_shared_stop(trades, panels, args.slots, cost, args.per_symbol)
+            trades = closed_frame
+        elif args.fixed_notional:
             pnl, base, peak_open, deployed = simulate_fixed(
                 trades, prices, args.fixed_notional, cost)
             equity = (base + pnl) / base       # normalise so CAGR/DD read as usual
-            taken, skipped, blocked, max_stacked = trades.height, 0, 0, 0
+            taken, skipped, blocked, max_stacked, unrealised = trades.height, 0, 0, 0, 0.0
         else:
-            equity, taken, skipped, blocked, max_stacked = simulate(
+            equity, taken, skipped, blocked, max_stacked, unrealised = simulate(
                 trades, prices, args.slots, cost, args.per_symbol)
         cagr, maxdd = performance(equity, bars)
         closed = trades.filter(pl.col("outcome") != "open")
@@ -471,6 +589,9 @@ def main() -> int:
         ranked = closed["ret"].sort(descending=True)
         top10 = float(ranked.head(10).sum())
         gross = float(ranked.filter(ranked > 0).sum())
+        print(f"  unrealised in final equity: {unrealised:+.4f} of x{equity[-1]:.3f} "
+              f"({unrealised / (equity[-1] - 1) * 100:.1f}% of the total gain)"
+              if abs(equity[-1] - 1) > 1e-9 else "  unrealised: n/a")
         print(f"  half-split mean trade: h1 {float(h1['ret'].mean()) * 100:+.3f}%  "
               f"h2 {float(h2['ret'].mean()) * 100:+.3f}%"
               f"   | top 10 winners = {top10 / gross:.0%} of all gains")
