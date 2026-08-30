@@ -54,18 +54,30 @@ DAILY_GLOB = str(REPO_ROOT / "data" / "ohlcv" / "daily" / "**" / "*.parquet")
 HOURLY_GLOB = str(REPO_ROOT / "data" / "ohlcv" / "hourly" / "**" / "*.parquet")
 UNIVERSE = REPO_ROOT / "data" / "universe" / "nse_universe.parquet"
 CAP_CACHE = REPO_ROOT / ".cache" / "screener" / "market_caps.csv"
-BARS_PER_YEAR = 252 * 7  # NSE trades roughly seven hourly bars a session
+# Measured from the panel rather than assumed: 6.967 bars per session (7 slots,
+# 09:15-15:15, with occasional missing bars) across 246.3 sessions a year. The old
+# 252 x 7 = 1764 understated elapsed years by 2.8% and overstated every CAGR to match.
+BARS_PER_YEAR = 246 * 7
 
 
 # --------------------------------------------------------------- point-in-time filters
 
 
 def prior_bar_rsi(bars: pl.DataFrame, period: int, label: str, column: str) -> pl.DataFrame:
-    """RSI of each bar, shifted one bar forward so it is knowable when that bar opens."""
+    """RSI of each bar, shifted one bar forward so it is knowable when that bar opens.
+
+    The warm-up guard is not optional. rsi() is a recursive EWM seeded at zero, so it
+    returns 100.0 on a symbol's very first bar (avg_loss is still 0) — which passes any
+    "RSI > 60" regime filter for free. Without this, a stock with one completed monthly
+    bar satisfies the monthly filter, and those under-warmed signals were three times
+    more profitable than the rest, which is the shape of a bug rather than an edge.
+    """
     return (
         bars.sort("symbol", column)
         .with_columns(rsi("close", period).over("symbol").alias(label))
-        .with_columns(pl.col(label).shift(1).over("symbol").alias(label))
+        .with_columns(pl.col(label).shift(1).over("symbol").alias(label),
+                      pl.int_range(pl.len()).over("symbol").alias("_bars_seen"))
+        .filter(pl.col("_bars_seen") >= period * 3)
         .select("symbol", column, label)
         .drop_nulls(label)
     )
@@ -138,6 +150,8 @@ def find_trades(frame: pl.DataFrame, cost: float, reward_risk: float,
             if not stack and i <= last_exit:   # legacy: one position per symbol at a time
                 continue
             stop, entry = stops[i], close[i]
+            if i >= len(close) - 1:   # no bar left to resolve against
+                continue
             if not np.isfinite(entry) or entry <= 0 or not np.isfinite(stop) or stop >= entry:
                 continue            # a cross closing at its own low leaves no risk to size
             risk = entry - stop
@@ -562,13 +576,25 @@ def main() -> int:
     # 1656x) — almost certainly unadjusted corporate actions upstream rather than real
     # returns. They are reported by validate_data.py and left in the data, but an
     # equal-weight mean of ratios lets two such names dictate the whole benchmark.
-    bench = np.nanmedian(normalised, axis=1)
+    # Equal-weight buy-and-hold is the MEAN of normalised prices: a rupee into each name
+    # at t0, held. The median is the path of the median stock — a different object, not
+    # tradeable, and always lower because cross-sectional returns are right-skewed.
+    # Reporting the median as "buy-and-hold" understated the benchmark by ~7 points of
+    # CAGR and manufactured most of the strategy's apparent edge. Outliers are handled by
+    # winsorising the terminal ratio, which costs a quarter of a point, not seven.
+    terminal = normalised[-1]
+    lo, hi = np.nanpercentile(terminal, [1, 99])
+    keep = np.isnan(terminal) | ((terminal >= lo) & (terminal <= hi))
+    bench = np.nanmean(normalised[:, keep], axis=1)
     bench_cagr, bench_dd = performance(bench, len(bench))
-    mean_bench = np.nanmean(normalised, axis=1)
-    mean_cagr, mean_dd = performance(mean_bench, len(mean_bench))
-    print(f"control basket: {int(listed.sum()):,} symbols trading at the window start "
-          f"(median constituent; the outlier-driven mean would read "
-          f"{mean_cagr * 100:+.2f}% / {mean_dd * 100:.2f}%)")
+    raw = np.nanmean(normalised, axis=1)
+    raw_cagr, raw_dd = performance(raw, len(raw))
+    med = np.nanmedian(normalised, axis=1)
+    med_cagr, med_dd = performance(med, len(med))
+    print(f"control basket: {int(listed.sum()):,} symbols trading at the window start")
+    print(f"  equal-weight, winsorised 1/99 : {bench_cagr * 100:+.2f}% / {bench_dd * 100:.2f}%"
+          f"   (unwinsorised {raw_cagr * 100:+.2f}% / {raw_dd * 100:.2f}%)")
+    print(f"  median constituent, for reference: {med_cagr * 100:+.2f}% / {med_dd * 100:.2f}%")
 
     print(f"\nwindow {prices['datetime'][0]} -> {prices['datetime'][-1]}"
           f"  ({bars:,} hourly bars, {bars / BARS_PER_YEAR:.2f} years)")
