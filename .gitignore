@@ -1,0 +1,7 @@
+# Bulk downloaded price data - reproducible with src/fetch_nse.py
+data/nse/
+
+# Run logs and build noise
+output/*.log
+__pycache__/
+*.pyc
