@@ -1,0 +1,212 @@
+{
+  "mtm_drawdown_2009_2026": {
+    "max_dd_usd": -47530.5,
+    "peak": "2025-02-04",
+    "trough": "2025-05-23",
+    "recovered": "2025-10-13",
+    "days_underwater": 251
+  },
+  "closed_trade_vs_mtm": {
+    "note": "closed-trade equity books the loss only on exit; MTM shows what the account saw"
+  },
+  "per_year": {
+    "2009": {
+      "trades": 15,
+      "net_usd": 8553.102,
+      "mean_ret_pct": 0.759,
+      "sum_ret_pct": 11.392,
+      "mean_notional": 89345.502,
+      "win_rate": 0.867
+    },
+    "2010": {
+      "trades": 14,
+      "net_usd": 5149.0,
+      "mean_ret_pct": 0.503,
+      "sum_ret_pct": 7.038,
+      "mean_notional": 92967.661,
+      "win_rate": 0.643
+    },
+    "2011": {
+      "trades": 19,
+      "net_usd": -6930.499,
+      "mean_ret_pct": -0.385,
+      "sum_ret_pct": -7.307,
+      "mean_notional": 108134.423,
+      "win_rate": 0.737
+    },
+    "2012": {
+      "trades": 22,
+      "net_usd": 11952.0,
+      "mean_ret_pct": 0.528,
+      "sum_ret_pct": 11.625,
+      "mean_notional": 111448.711,
+      "win_rate": 0.773
+    },
+    "2013": {
+      "trades": 16,
+      "net_usd": 14069.192,
+      "mean_ret_pct": 0.763,
+      "sum_ret_pct": 12.203,
+      "mean_notional": 123129.925,
+      "win_rate": 1.0
+    },
+    "2014": {
+      "trades": 18,
+      "net_usd": 8888.0,
+      "mean_ret_pct": 0.368,
+      "sum_ret_pct": 6.625,
+      "mean_notional": 135776.582,
+      "win_rate": 0.722
+    },
+    "2015": {
+      "trades": 23,
+      "net_usd": 15495.5,
+      "mean_ret_pct": 0.51,
+      "sum_ret_pct": 11.739,
+      "mean_notional": 147028.5,
+      "win_rate": 0.87
+    },
+    "2016": {
+      "trades": 13,
+      "net_usd": 7167.463,
+      "mean_ret_pct": 0.41,
+      "sum_ret_pct": 5.332,
+      "mean_notional": 149396.083,
+      "win_rate": 0.615
+    },
+    "2017": {
+      "trades": 19,
+      "net_usd": 15275.359,
+      "mean_ret_pct": 0.489,
+      "sum_ret_pct": 9.287,
+      "mean_notional": 170729.253,
+      "win_rate": 0.895
+    },
+    "2018": {
+      "trades": 17,
+      "net_usd": -17760.011,
+      "mean_ret_pct": -0.549,
+      "sum_ret_pct": -9.333,
+      "mean_notional": 188809.04,
+      "win_rate": 0.529
+    },
+    "2019": {
+      "trades": 10,
+      "net_usd": -840.105,
+      "mean_ret_pct": -0.049,
+      "sum_ret_pct": -0.485,
+      "mean_notional": 199713.797,
+      "win_rate": 0.6
+    },
+    "2020": {
+      "trades": 15,
+      "net_usd": 10640.0,
+      "mean_ret_pct": 0.377,
+      "sum_ret_pct": 5.662,
+      "mean_notional": 236137.925,
+      "win_rate": 0.667
+    },
+    "2021": {
+      "trades": 20,
+      "net_usd": 64685.942,
+      "mean_ret_pct": 1.062,
+      "sum_ret_pct": 21.239,
+      "mean_notional": 312676.636,
+      "win_rate": 0.85
+    },
+    "2022": {
+      "trades": 4,
+      "net_usd": -17581.0,
+      "mean_ret_pct": -1.338,
+      "sum_ret_pct": -5.352,
+      "mean_notional": 330165.067,
+      "win_rate": 0.5
+    },
+    "2023": {
+      "trades": 16,
+      "net_usd": 5643.5,
+      "mean_ret_pct": 0.205,
+      "sum_ret_pct": 3.273,
+      "mean_notional": 298198.321,
+      "win_rate": 0.688
+    },
+    "2024": {
+      "trades": 22,
+      "net_usd": 75676.871,
+      "mean_ret_pct": 0.956,
+      "sum_ret_pct": 21.028,
+      "mean_notional": 352829.01,
+      "win_rate": 0.864
+    },
+    "2025": {
+      "trades": 19,
+      "net_usd": 36772.518,
+      "mean_ret_pct": 0.469,
+      "sum_ret_pct": 8.911,
+      "mean_notional": 410747.04,
+      "win_rate": 0.895
+    },
+    "2026": {
+      "trades": 16,
+      "net_usd": 77933.5,
+      "mean_ret_pct": 1.041,
+      "sum_ret_pct": 16.651,
+      "mean_notional": 445911.721,
+      "win_rate": 0.938
+    }
+  },
+  "trend": {
+    "net_usd": {
+      "slope_per_year": 2768.5450490517765,
+      "p_value": 0.026706471557573466,
+      "r2": 0.2711751844690876
+    },
+    "sum_ret_pct": {
+      "slope_per_year": 0.2805341253903967,
+      "p_value": 0.49509917336779047,
+      "r2": 0.02956365039581992
+    }
+  },
+  "concentration": {
+    "total_2009_2026_usd": 314790.33126384154,
+    "share_from_2024_2026_pct": 60.479268310652365,
+    "share_from_2026_ytd_pct": 24.757272463581494,
+    "share_from_top_10_trades_pct": 36.23364146607178,
+    "share_from_NQ_pct": 59.08209702180339,
+    "years_2009_2017_usd": 79619.1161548058,
+    "years_2018_2026_usd": 235171.21510903575
+  },
+  "edge_significance": {
+    "mean_ret_pct": 0.43465594012240694,
+    "median_ret_pct": 0.6149828779195069,
+    "std_ret_pct": 1.4996044146158065,
+    "t_stat": 5.003536139741358,
+    "p_value": 9.65444788455067e-07,
+    "n": 298,
+    "first_half": {
+      "period": "2009-2017",
+      "mean_ret_pct": 0.42237457760370567,
+      "t_stat": 3.8725528521636274
+    },
+    "second_half": {
+      "period": "2017-2026",
+      "mean_ret_pct": 0.4469373026411083,
+      "t_stat": 3.295818783900636
+    }
+  },
+  "capital_required": {
+    "es_notional_usd": 386100.0,
+    "nq_notional_usd": 589835.0,
+    "est_initial_margin_usd": 58556.1,
+    "max_mtm_drawdown_usd": 47530.5,
+    "sane_account_size_usd": 106086.6,
+    "total_pnl_usd": 314790.33126384154,
+    "simple_annual_return_on_that_capital_pct": 16.802354934961265
+  },
+  "vs_buy_hold": {
+    "buy_hold_1es_1nq_usd": 818062.5354040295,
+    "strategy_usd": 314790.33126384154,
+    "strategy_capture_pct": 38.479983820353176,
+    "strategy_exposure_pct_of_days": 14.993246285457001
+  }
+}

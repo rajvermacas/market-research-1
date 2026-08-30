@@ -1,0 +1,775 @@
+{
+  "claims": {
+    "win_rate_since_2022": 0.83,
+    "profit_factor_since_2022": 2.53,
+    "ytd_2026_usd": 76000,
+    "green_years": "14/18",
+    "cumulative_since_2009_usd": 335000
+  },
+  "reproduction": {
+    "raw|ES|2009_2026": {
+      "label": "",
+      "trades": 147.0,
+      "win_rate": 0.8231292517006803,
+      "profit_factor": 2.4313884714952074,
+      "net_usd": 133017.49926757812,
+      "avg_trade": 904.8809473984907,
+      "avg_win": 1867.3264402279183,
+      "avg_loss": -3574.1923076923076,
+      "best": 8896.0,
+      "worst": -12679.0,
+      "max_dd_usd": -13945.0,
+      "avg_bars": 4.469387755102041,
+      "first": "2009-06-15",
+      "last": "2026-08-27"
+    },
+    "raw|ES|2022_2026": {
+      "label": "",
+      "trades": 40.0,
+      "win_rate": 0.825,
+      "profit_factor": 2.5153197636810556,
+      "net_usd": 70277.5,
+      "avg_trade": 1756.9375,
+      "avg_win": 3535.0151515151515,
+      "avg_loss": -6625.428571428572,
+      "best": 8896.0,
+      "worst": -12679.0,
+      "max_dd_usd": -13945.0,
+      "avg_bars": 4.875,
+      "first": "2022-01-05",
+      "last": "2026-08-27"
+    },
+    "raw|ES|2001_2008": {
+      "label": "",
+      "trades": 42.0,
+      "win_rate": 0.8095238095238095,
+      "profit_factor": 2.9848193124959455,
+      "net_usd": 15297.00244140625,
+      "avg_trade": 364.21434384300596,
+      "avg_win": 676.5883071001838,
+      "avg_loss": -963.375,
+      "best": 1808.5,
+      "worst": -2479.0,
+      "max_dd_usd": -2479.0,
+      "avg_bars": 4.5,
+      "first": "2003-05-19",
+      "last": "2007-10-26"
+    },
+    "raw|NQ|2009_2026": {
+      "label": "",
+      "trades": 152.0,
+      "win_rate": 0.75,
+      "profit_factor": 2.42855504830585,
+      "net_usd": 209257.6005859375,
+      "avg_trade": 1376.6947406969573,
+      "avg_win": 3120.5228121573464,
+      "avg_loss": -3854.7894736842104,
+      "best": 16241.0,
+      "worst": -29004.0,
+      "max_dd_usd": -29004.0,
+      "avg_bars": 4.4605263157894735,
+      "first": "2009-06-15",
+      "last": "2026-08-27"
+    },
+    "raw|NQ|2022_2026": {
+      "label": "",
+      "trades": 38.0,
+      "win_rate": 0.8157894736842105,
+      "profit_factor": 2.8762663492621696,
+      "net_usd": 138718.0,
+      "avg_trade": 3650.4736842105262,
+      "avg_win": 6859.709677419355,
+      "avg_loss": -10561.857142857143,
+      "best": 16241.0,
+      "worst": -29004.0,
+      "max_dd_usd": -29004.0,
+      "avg_bars": 4.421052631578948,
+      "first": "2022-01-05",
+      "last": "2026-08-27"
+    },
+    "raw|NQ|2001_2008": {
+      "label": "",
+      "trades": 48.0,
+      "win_rate": 0.7291666666666666,
+      "profit_factor": 1.69942590250073,
+      "net_usd": 7188.0,
+      "avg_trade": 149.75,
+      "avg_win": 499.0,
+      "avg_loss": -790.5384615384615,
+      "best": 1306.0,
+      "worst": -3794.0,
+      "max_dd_usd": -4555.0,
+      "avg_bars": 4.6875,
+      "first": "2003-03-31",
+      "last": "2008-08-22"
+    },
+    "raw|PORT|2009_2026": {
+      "label": "",
+      "trades": 299.0,
+      "win_rate": 0.7859531772575251,
+      "profit_factor": 2.4296548606936006,
+      "net_usd": 342275.0998535156,
+      "avg_trade": 1144.732775429818,
+      "avg_win": 2475.259999376662,
+      "avg_loss": -3740.796875,
+      "best": 16241.0,
+      "worst": -29004.0,
+      "max_dd_usd": -41683.0,
+      "avg_bars": 4.464882943143813,
+      "first": "2009-06-15",
+      "last": "2026-08-27"
+    },
+    "raw|PORT|2022_2026": {
+      "label": "",
+      "trades": 78.0,
+      "win_rate": 0.8205128205128205,
+      "profit_factor": 2.7371271122341265,
+      "net_usd": 208995.5,
+      "avg_trade": 2679.4294871794873,
+      "avg_win": 5145.4140625,
+      "avg_loss": -8593.642857142857,
+      "best": 16241.0,
+      "worst": -29004.0,
+      "max_dd_usd": -41683.0,
+      "avg_bars": 4.653846153846154,
+      "first": "2022-01-05",
+      "last": "2026-08-27"
+    },
+    "raw|PORT|2001_2008": {
+      "label": "",
+      "trades": 90.0,
+      "win_rate": 0.7666666666666667,
+      "profit_factor": 2.250278160665383,
+      "net_usd": 22485.00244140625,
+      "avg_trade": 249.83336046006946,
+      "avg_win": 586.5072817595109,
+      "avg_loss": -856.3809523809524,
+      "best": 1808.5,
+      "worst": -3794.0,
+      "max_dd_usd": -4813.0,
+      "avg_bars": 4.6,
+      "first": "2003-03-31",
+      "last": "2008-08-22"
+    },
+    "roll_adjusted|ES|2009_2026": {
+      "label": "",
+      "trades": 144.0,
+      "win_rate": 0.8194444444444444,
+      "profit_factor": 2.436501937944977,
+      "net_usd": 128805.6023312824,
+      "avg_trade": 894.4833495227945,
+      "avg_win": 1851.4555523494544,
+      "avg_loss": -3448.698186382817,
+      "best": 8896.0,
+      "worst": -12679.0,
+      "max_dd_usd": -15187.040743175749,
+      "avg_bars": 4.472222222222222,
+      "first": "2009-06-15",
+      "last": "2026-08-27"
+    },
+    "roll_adjusted|ES|2022_2026": {
+      "label": "",
+      "trades": 40.0,
+      "win_rate": 0.85,
+      "profit_factor": 2.6399857454904385,
+      "net_usd": 68570.26399757346,
+      "avg_trade": 1714.2565999393366,
+      "avg_win": 3246.5224705168666,
+      "avg_loss": -6968.583333333333,
+      "best": 8896.0,
+      "worst": -12679.0,
+      "max_dd_usd": -12679.0,
+      "avg_bars": 4.775,
+      "first": "2022-01-05",
+      "last": "2026-08-27"
+    },
+    "roll_adjusted|ES|2001_2008": {
+      "label": "",
+      "trades": 44.0,
+      "win_rate": 0.7727272727272727,
+      "profit_factor": 2.5948509564824334,
+      "net_usd": 13958.932996612497,
+      "avg_trade": 317.2484771957386,
+      "avg_win": 667.9833234297794,
+      "avg_loss": -875.25,
+      "best": 1808.5,
+      "worst": -2479.0,
+      "max_dd_usd": -2479.0,
+      "avg_bars": 4.636363636363637,
+      "first": "2002-03-25",
+      "last": "2007-10-26"
+    },
+    "roll_adjusted|NQ|2009_2026": {
+      "label": "",
+      "trades": 154.0,
+      "win_rate": 0.7467532467532467,
+      "profit_factor": 2.295488313284556,
+      "net_usd": 185984.72893255917,
+      "avg_trade": 1207.693045016618,
+      "avg_win": 2865.63605154627,
+      "avg_loss": -3681.113256288766,
+      "best": 16241.0,
+      "worst": -29004.0,
+      "max_dd_usd": -29004.0,
+      "avg_bars": 4.467532467532467,
+      "first": "2009-05-13",
+      "last": "2026-08-27"
+    },
+    "roll_adjusted|NQ|2022_2026": {
+      "label": "",
+      "trades": 37.0,
+      "win_rate": 0.8108108108108109,
+      "profit_factor": 2.486144550653655,
+      "net_usd": 109875.12506347669,
+      "avg_trade": 2969.597974688559,
+      "avg_win": 6126.937502115889,
+      "avg_loss": -10561.857142857143,
+      "best": 16241.0,
+      "worst": -29004.0,
+      "max_dd_usd": -29004.0,
+      "avg_bars": 4.5675675675675675,
+      "first": "2022-01-05",
+      "last": "2026-08-27"
+    },
+    "roll_adjusted|NQ|2001_2008": {
+      "label": "",
+      "trades": 47.0,
+      "win_rate": 0.7446808510638298,
+      "profit_factor": 1.873443641046577,
+      "net_usd": 7921.6045257029255,
+      "avg_trade": 168.54477714261543,
+      "avg_win": 485.4571010044643,
+      "avg_loss": -755.7828341211103,
+      "best": 1306.0,
+      "worst": -3794.0,
+      "max_dd_usd": -5366.0,
+      "avg_bars": 4.702127659574468,
+      "first": "2003-03-31",
+      "last": "2008-05-27"
+    },
+    "roll_adjusted|PORT|2009_2026": {
+      "label": "",
+      "trades": 298.0,
+      "win_rate": 0.7818791946308725,
+      "profit_factor": 2.3497016329368257,
+      "net_usd": 314790.33126384154,
+      "avg_trade": 1056.343393502824,
+      "avg_win": 2352.016742940157,
+      "avg_loss": -3588.1472283263865,
+      "best": 16241.0,
+      "worst": -29004.0,
+      "max_dd_usd": -41683.0,
+      "avg_bars": 4.469798657718121,
+      "first": "2009-05-13",
+      "last": "2026-08-27"
+    },
+    "roll_adjusted|PORT|2022_2026": {
+      "label": "",
+      "trades": 77.0,
+      "win_rate": 0.8311688311688312,
+      "profit_factor": 2.5417180864840243,
+      "net_usd": 178445.38906105014,
+      "avg_trade": 2317.4725852084434,
+      "avg_win": 4596.717016578908,
+      "avg_loss": -8903.423076923076,
+      "best": 16241.0,
+      "worst": -29004.0,
+      "max_dd_usd": -41683.0,
+      "avg_bars": 4.675324675324675,
+      "first": "2022-01-05",
+      "last": "2026-08-27"
+    },
+    "roll_adjusted|PORT|2001_2008": {
+      "label": "",
+      "trades": 91.0,
+      "win_rate": 0.7582417582417582,
+      "profit_factor": 2.227733568088176,
+      "net_usd": 21880.537522315422,
+      "avg_trade": 240.44546727819144,
+      "avg_win": 575.3975584314311,
+      "avg_loss": -810.0860913387875,
+      "best": 1808.5,
+      "worst": -3794.0,
+      "max_dd_usd": -5624.0,
+      "avg_bars": 4.670329670329671,
+      "first": "2002-03-25",
+      "last": "2008-05-27"
+    }
+  },
+  "roll_gaps": {
+    "es_rolls_detected": 99,
+    "nq_rolls_detected": 100,
+    "es_mean_gap_pts": 3.7562170340543455,
+    "nq_mean_gap_pts": 40.61470935164835,
+    "net_2009_2026_raw": 342275.0998535156,
+    "net_2009_2026_adjusted": 314790.33126384154
+  },
+  "yearly_raw": {
+    "2009": {
+      "trades": 13,
+      "net_usd": 6848.6018,
+      "win_rate": 0.8462,
+      "ret_pct_sum": 17.2388
+    },
+    "2010": {
+      "trades": 14,
+      "net_usd": 5751.5,
+      "win_rate": 0.6429,
+      "ret_pct_sum": 11.1526
+    },
+    "2011": {
+      "trades": 18,
+      "net_usd": -6581.502,
+      "win_rate": 0.7222,
+      "ret_pct_sum": -9.7591
+    },
+    "2012": {
+      "trades": 22,
+      "net_usd": 12589.5,
+      "win_rate": 0.8636,
+      "ret_pct_sum": 23.2018
+    },
+    "2013": {
+      "trades": 18,
+      "net_usd": 14423.0,
+      "win_rate": 0.9444,
+      "ret_pct_sum": 22.281
+    },
+    "2014": {
+      "trades": 18,
+      "net_usd": 10023.0,
+      "win_rate": 0.7222,
+      "ret_pct_sum": 13.1179
+    },
+    "2015": {
+      "trades": 22,
+      "net_usd": 16494.5,
+      "win_rate": 0.8636,
+      "ret_pct_sum": 17.9277
+    },
+    "2016": {
+      "trades": 14,
+      "net_usd": -971.0,
+      "win_rate": 0.5714,
+      "ret_pct_sum": -1.7639
+    },
+    "2017": {
+      "trades": 19,
+      "net_usd": 14924.0,
+      "win_rate": 0.9474,
+      "ret_pct_sum": 13.2014
+    },
+    "2018": {
+      "trades": 17,
+      "net_usd": -14330.5,
+      "win_rate": 0.5882,
+      "ret_pct_sum": -9.6695
+    },
+    "2019": {
+      "trades": 12,
+      "net_usd": 3764.5,
+      "win_rate": 0.6667,
+      "ret_pct_sum": 2.5942
+    },
+    "2020": {
+      "trades": 13,
+      "net_usd": 1808.0,
+      "win_rate": 0.6154,
+      "ret_pct_sum": 1.7954
+    },
+    "2021": {
+      "trades": 21,
+      "net_usd": 68536.0,
+      "win_rate": 0.8571,
+      "ret_pct_sum": 27.7517
+    },
+    "2022": {
+      "trades": 4,
+      "net_usd": -17581.0,
+      "win_rate": 0.5,
+      "ret_pct_sum": -6.5566
+    },
+    "2023": {
+      "trades": 17,
+      "net_usd": 1077.0,
+      "win_rate": 0.6471,
+      "ret_pct_sum": 2.1543
+    },
+    "2024": {
+      "trades": 22,
+      "net_usd": 91689.5,
+      "win_rate": 0.8636,
+      "ret_pct_sum": 27.8292
+    },
+    "2025": {
+      "trades": 19,
+      "net_usd": 56076.5,
+      "win_rate": 0.8947,
+      "ret_pct_sum": 14.0812
+    },
+    "2026": {
+      "trades": 16,
+      "net_usd": 77733.5,
+      "win_rate": 0.9375,
+      "ret_pct_sum": 16.5692
+    }
+  },
+  "yearly_adjusted": {
+    "2009": {
+      "trades": 15,
+      "net_usd": 8553.1018,
+      "win_rate": 0.8667,
+      "ret_pct_sum": 11.3924
+    },
+    "2010": {
+      "trades": 14,
+      "net_usd": 5149.0,
+      "win_rate": 0.6429,
+      "ret_pct_sum": 7.0377
+    },
+    "2011": {
+      "trades": 19,
+      "net_usd": -6930.4994,
+      "win_rate": 0.7368,
+      "ret_pct_sum": -7.3073
+    },
+    "2012": {
+      "trades": 22,
+      "net_usd": 11952.0,
+      "win_rate": 0.7727,
+      "ret_pct_sum": 11.6248
+    },
+    "2013": {
+      "trades": 16,
+      "net_usd": 14069.1916,
+      "win_rate": 1.0,
+      "ret_pct_sum": 12.2026
+    },
+    "2014": {
+      "trades": 18,
+      "net_usd": 8888.0,
+      "win_rate": 0.7222,
+      "ret_pct_sum": 6.6255
+    },
+    "2015": {
+      "trades": 23,
+      "net_usd": 15495.5,
+      "win_rate": 0.8696,
+      "ret_pct_sum": 11.7388
+    },
+    "2016": {
+      "trades": 13,
+      "net_usd": 7167.4629,
+      "win_rate": 0.6154,
+      "ret_pct_sum": 5.3323
+    },
+    "2017": {
+      "trades": 19,
+      "net_usd": 15275.3593,
+      "win_rate": 0.8947,
+      "ret_pct_sum": 9.2869
+    },
+    "2018": {
+      "trades": 17,
+      "net_usd": -17760.0113,
+      "win_rate": 0.5294,
+      "ret_pct_sum": -9.3327
+    },
+    "2019": {
+      "trades": 10,
+      "net_usd": -840.105,
+      "win_rate": 0.6,
+      "ret_pct_sum": -0.4855
+    },
+    "2020": {
+      "trades": 15,
+      "net_usd": 10640.0,
+      "win_rate": 0.6667,
+      "ret_pct_sum": 5.6619
+    },
+    "2021": {
+      "trades": 20,
+      "net_usd": 64685.9423,
+      "win_rate": 0.85,
+      "ret_pct_sum": 21.2387
+    },
+    "2022": {
+      "trades": 4,
+      "net_usd": -17581.0,
+      "win_rate": 0.5,
+      "ret_pct_sum": -5.3522
+    },
+    "2023": {
+      "trades": 16,
+      "net_usd": 5643.5,
+      "win_rate": 0.6875,
+      "ret_pct_sum": 3.2727
+    },
+    "2024": {
+      "trades": 22,
+      "net_usd": 75676.8713,
+      "win_rate": 0.8636,
+      "ret_pct_sum": 21.0284
+    },
+    "2025": {
+      "trades": 19,
+      "net_usd": 36772.5178,
+      "win_rate": 0.8947,
+      "ret_pct_sum": 8.9109
+    },
+    "2026": {
+      "trades": 16,
+      "net_usd": 77933.5,
+      "win_rate": 0.9375,
+      "ret_pct_sum": 16.6515
+    }
+  },
+  "green_years": {
+    "raw": "14/18",
+    "adjusted": "14/18"
+  },
+  "ytd_2026": {
+    "raw_usd": 77733.5,
+    "adjusted_usd": 77933.5
+  },
+  "drawdown": {
+    "raw_2009_2026": {
+      "max_dd_usd": -41683.0,
+      "peak_date": "2025-02-04",
+      "trough_date": "2025-03-07",
+      "recovery_date": "2025-10-20",
+      "days_underwater": 258
+    },
+    "adjusted_2009_2026": {
+      "max_dd_usd": -41683.0,
+      "peak_date": "2025-02-04",
+      "trough_date": "2025-03-07",
+      "recovery_date": "2025-10-20",
+      "days_underwater": 258
+    },
+    "adjusted_full": {
+      "max_dd_usd": -41683.0,
+      "peak_date": "2025-02-04",
+      "trough_date": "2025-03-07",
+      "recovery_date": "2025-10-20",
+      "days_underwater": 258
+    }
+  },
+  "sizing_illusion": {
+    "raw": {
+      "2009_2017": {
+        "trades": 158,
+        "net_usd": 73501.59985351562,
+        "mean_ret_pct": 0.6746719547544691,
+        "sum_ret_pct": 106.5981688512061,
+        "mean_notional_usd": 75913.06962025317,
+        "win_rate": 0.8037974683544303
+      },
+      "2018_2026": {
+        "trades": 141,
+        "net_usd": 268773.5,
+        "mean_ret_pct": 0.5429017559197853,
+        "sum_ret_pct": 76.54914758468972,
+        "mean_notional_usd": 274579.6985815603,
+        "win_rate": 0.7659574468085106
+      }
+    },
+    "adjusted": {
+      "2009_2017": {
+        "trades": 159,
+        "net_usd": 79619.1161548058,
+        "mean_ret_pct": 0.42725543218140544,
+        "sum_ret_pct": 67.93361371684345,
+        "mean_notional_usd": 126602.97571574911,
+        "win_rate": 0.7987421383647799
+      },
+      "2018_2026": {
+        "trades": 139,
+        "net_usd": 235171.21510903575,
+        "mean_ret_pct": 0.4431212693498835,
+        "sum_ret_pct": 61.59385643963381,
+        "mean_notional_usd": 315074.43277920503,
+        "win_rate": 0.762589928057554
+      }
+    }
+  },
+  "tail_risk": {
+    "worst_5_trades_usd": [
+      -29004.0,
+      -12679.0,
+      -12024.0,
+      -11754.0,
+      -10629.0
+    ],
+    "worst_5_dates": [
+      "2025-02-21",
+      "2025-02-21",
+      "2022-01-19",
+      "2020-10-19",
+      "2023-08-02"
+    ],
+    "worst_mae_pct": -13.325007012756249,
+    "mean_mae_pct": -1.4540815981128468,
+    "pct_trades_underwater_5pct": 6.7114093959731544,
+    "avg_win_usd": 2352.016742940157,
+    "avg_loss_usd": -3588.1472283263865,
+    "loss_from_time_stops": -123638.01130108826,
+    "exit_reason_counts": {
+      "rsi_target": 284,
+      "time_stop": 14
+    }
+  },
+  "out_of_sample_2001_2008": {
+    "label": "",
+    "trades": 91.0,
+    "win_rate": 0.7582417582417582,
+    "profit_factor": 2.227733568088176,
+    "net_usd": 21880.537522315422,
+    "avg_trade": 240.44546727819144,
+    "avg_win": 575.3975584314311,
+    "avg_loss": -810.0860913387875,
+    "best": 1808.5,
+    "worst": -3794.0,
+    "max_dd_usd": -5624.0,
+    "avg_bars": 4.670329670329671,
+    "first": "2002-03-25",
+    "last": "2008-05-27"
+  },
+  "exposure": {
+    "ES": 0.13350125944584382,
+    "NQ": 0.14310453400503778
+  },
+  "buy_hold": {
+    "ES_2009_2026": {
+      "buy_hold_usd": 327176.242069431,
+      "strategy_usd": 128805.6023312824,
+      "strategy_exposure_days": 644,
+      "window_days": 4442
+    },
+    "NQ_2009_2026": {
+      "buy_hold_usd": 490886.2933345986,
+      "strategy_usd": 185984.72893255917,
+      "strategy_exposure_days": 688,
+      "window_days": 4442
+    }
+  },
+  "random_entry": {
+    "ES_2009_2026": {
+      "actual_usd": 128805.6023312824,
+      "random_mean_usd": 27955.858766263835,
+      "random_p95_usd": 80068.1280626763,
+      "percentile_of_actual": 99.9,
+      "actual_win_rate": 0.8194444444444444,
+      "random_mean_win_rate": 0.5808298611111111
+    },
+    "NQ_2009_2026": {
+      "actual_usd": 185984.72893255917,
+      "random_mean_usd": 56308.615813058066,
+      "random_p95_usd": 156332.22731608304,
+      "percentile_of_actual": 98.3,
+      "actual_win_rate": 0.7467532467532467,
+      "random_mean_win_rate": 0.580603896103896
+    }
+  },
+  "robustness": {
+    "as_stated_close_entry": {
+      "trades": 298,
+      "win_rate": 0.7818791946308725,
+      "profit_factor": 2.3497016329368257,
+      "net_usd": 314790.33126384154,
+      "max_dd_usd": -41683.0
+    },
+    "next_open_entry": {
+      "trades": 296,
+      "win_rate": 0.7702702702702703,
+      "profit_factor": 2.1099935290433773,
+      "net_usd": 280144.5678297396,
+      "max_dd_usd": -66003.0
+    },
+    "cutler_rsi": {
+      "trades": 764,
+      "win_rate": 0.7238219895287958,
+      "profit_factor": 1.6247214935412784,
+      "net_usd": 361352.24273194815,
+      "max_dd_usd": -59373.57431417545
+    },
+    "rsi_entry_5": {
+      "trades": 167,
+      "win_rate": 0.7724550898203593,
+      "profit_factor": 2.3002118229928197,
+      "net_usd": 209839.8402125152,
+      "max_dd_usd": -48033.0
+    },
+    "rsi_entry_15": {
+      "trades": 419,
+      "win_rate": 0.7541766109785203,
+      "profit_factor": 2.211334060718055,
+      "net_usd": 383863.9061633318,
+      "max_dd_usd": -41683.0
+    },
+    "rsi_exit_60": {
+      "trades": 303,
+      "win_rate": 0.7062706270627063,
+      "profit_factor": 2.226336528811965,
+      "net_usd": 253069.70091808535,
+      "max_dd_usd": -25378.11628155702
+    },
+    "rsi_exit_80": {
+      "trades": 283,
+      "win_rate": 0.7561837455830389,
+      "profit_factor": 1.9336685105604012,
+      "net_usd": 305093.4644422316,
+      "max_dd_usd": -78605.29020510748
+    },
+    "max_hold_5": {
+      "trades": 313,
+      "win_rate": 0.6932907348242812,
+      "profit_factor": 1.8307029472498282,
+      "net_usd": 242874.97575650224,
+      "max_dd_usd": -47414.5
+    },
+    "max_hold_20": {
+      "trades": 294,
+      "win_rate": 0.782312925170068,
+      "profit_factor": 2.378463183678562,
+      "net_usd": 312907.2355361394,
+      "max_dd_usd": -54430.5
+    },
+    "sma_100": {
+      "trades": 254,
+      "win_rate": 0.7834645669291339,
+      "profit_factor": 2.3753547973461058,
+      "net_usd": 247308.83126384154,
+      "max_dd_usd": -30032.61628155702
+    },
+    "sma_50": {
+      "trades": 195,
+      "win_rate": 0.7846153846153846,
+      "profit_factor": 2.677673681681434,
+      "net_usd": 189525.17597382737,
+      "max_dd_usd": -18762.580909475022
+    }
+  },
+  "cost_sensitivity": {
+    "0_tick_slippage": {
+      "net_usd": 319930.33126384154,
+      "cost_per_rt_es": 4.0,
+      "profit_factor": 2.37772395605793
+    },
+    "1_tick_slippage": {
+      "net_usd": 314790.33126384154,
+      "cost_per_rt_es": 29.0,
+      "profit_factor": 2.3497016329368257
+    },
+    "2_tick_slippage": {
+      "net_usd": 309650.33126384154,
+      "cost_per_rt_es": 54.0,
+      "profit_factor": 2.321769325285049
+    },
+    "4_tick_slippage": {
+      "net_usd": 299370.33126384154,
+      "cost_per_rt_es": 104.0,
+      "profit_factor": 2.266417134705609
+    }
+  }
+}
