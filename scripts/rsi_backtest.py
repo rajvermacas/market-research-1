@@ -105,8 +105,14 @@ def attach_market_cap(bars: pl.DataFrame, daily: pl.DataFrame, caps: pl.DataFram
 # ------------------------------------------------------------------------- trade search
 
 
-def find_trades(frame: pl.DataFrame, cost: float, reward_risk: float) -> pl.DataFrame:
-    """Walk each signal forward to whichever of the stop or the target it reaches first."""
+def find_trades(frame: pl.DataFrame, cost: float, reward_risk: float,
+                stop_column: str | None = None) -> pl.DataFrame:
+    """Walk each signal forward to whichever of the stop or the target it reaches first.
+
+    The stop defaults to the entry candle's low. `stop_column` names a column holding a
+    stop *price* instead, so a noise-aware stop (an ATR multiple, say) can be tested
+    against the structural one without touching the rest of the machinery.
+    """
     rows = []
     for (symbol,), part in frame.group_by("symbol", maintain_order=True):
         part = part.sort("datetime")
@@ -117,6 +123,7 @@ def find_trades(frame: pl.DataFrame, cost: float, reward_risk: float) -> pl.Data
         times = part["datetime"].dt.epoch("us").to_numpy()
         high = part["high"].to_numpy()
         low = part["low"].to_numpy()
+        stops = part[stop_column].to_numpy() if stop_column else low
         open_ = part["open"].to_numpy()
         close = part["close"].to_numpy()
 
@@ -124,8 +131,8 @@ def find_trades(frame: pl.DataFrame, cost: float, reward_risk: float) -> pl.Data
         for i in idx:
             if i <= last_exit:      # one position per symbol at a time
                 continue
-            stop, entry = low[i], close[i]
-            if not np.isfinite(entry) or entry <= 0 or stop >= entry:
+            stop, entry = stops[i], close[i]
+            if not np.isfinite(entry) or entry <= 0 or not np.isfinite(stop) or stop >= entry:
                 continue            # a cross closing at its own low leaves no risk to size
             risk = entry - stop
             target = entry + reward_risk * risk
