@@ -7,6 +7,15 @@ strength resumes, while the daily/weekly/monthly regime is still intact.
 
     regime      daily RSI(14) > 60, weekly RSI(14) > 60, monthly RSI(14) > 60
     size        market cap > 5000 crore
+    candle      the signal candle closes in the top 30% of its own range
+                (close_pos >= 0.70). Backtested this is worth roughly 4 points of
+                CAGR, and not because a strong close predicts anything: the stop is
+                the candle's LOW, so a candle closing near its high puts the stop far
+                enough from the entry to clear the noise. Swept from 0.5 to 0.95, the
+                improvement is a broad plateau across 0.60-0.80 rather than a spike,
+                and it collapses above 0.85 where too few trades remain. With a fixed
+                percentage stop the filter adds nothing at all, which is the same
+                point from the other direction.
     trigger     hourly RSI(14) crossed above 60 on the evaluated bar
                 (previous bar <= 60, this bar > 60)
     fresh       EMA(hourly RSI, 21) still < 53 — the smoothed RSI is well short of the
@@ -73,6 +82,10 @@ def hourly_features(hourly: pl.DataFrame, period: int, ema_span: int, live: bool
     enriched = enriched.with_columns(
         ema("rsi_h", ema_span).over("symbol").alias("rsi_ema"),
         pl.col("rsi_h").shift(1).over("symbol").alias("rsi_h_prev"),
+        # where the candle closed inside its own range: 1.0 = closed exactly at the high
+        ((pl.col("close") - pl.col("low"))
+         / pl.when(pl.col("high") > pl.col("low"))
+             .then(pl.col("high") - pl.col("low")).otherwise(None)).alias("close_pos"),
     )
     # Drop the newest bar unless --live: it is the in-progress candle, and a cross on it
     # can reverse before the hour closes.
@@ -87,6 +100,8 @@ def hourly_features(hourly: pl.DataFrame, period: int, ema_span: int, live: bool
             pl.len().alias("hourly_bars"),
             pl.col("datetime").last().alias("bar"),
             pl.col("close").last().alias("close"),
+            pl.col("low").last().alias("stop"),
+            pl.col("close_pos").last().alias("close_pos"),
             pl.col("rsi_h").last().alias("rsi_hourly"),
             pl.col("rsi_h_prev").last().alias("rsi_hourly_prev"),
             pl.col("rsi_ema").last().alias("rsi_hourly_ema"),
@@ -175,6 +190,11 @@ def main() -> int:
                         help="span of the EMA drawn on the hourly RSI (default 21)")
     parser.add_argument("--cross-level", type=float, default=60.0,
                         help="level the hourly RSI must cross above (default 60)")
+    parser.add_argument("--min-close-pos", type=float, default=0.70,
+                        help="marubozu strength: (close-low)/(high-low) floor for the signal "
+                             "candle (default 0.70; 0 disables it)")
+    parser.add_argument("--reward-risk", type=float, nargs="+", default=[7.0, 10.0],
+                        help="target multiples of risk to quote per hit (default 7 and 10)")
     parser.add_argument("--ema-max", type=float, default=53.0,
                         help="the RSI's own EMA must still be below this (default 53)")
     parser.add_argument("--htf-min", type=float, default=60.0,
@@ -212,7 +232,7 @@ def main() -> int:
     hourly = (
         pl.scan_parquet(HOURLY_GLOB, hive_partitioning=True)
         .filter(pl.col("symbol").is_in(symbols))
-        .select("symbol", "datetime", "close")
+        .select("symbol", "datetime", "open", "high", "low", "close")
         .collect()
     )
     print(f"universe {universe.height} symbols | daily {daily.height:,} rows | "
@@ -245,6 +265,11 @@ def main() -> int:
         (f"EMA({args.ema_span}) of RSI < {args.ema_max:g}",
          pl.col("rsi_hourly_ema") < args.ema_max),
     ]
+    if args.min_close_pos > 0:
+        conditions.append(
+            (f"marubozu: close_pos >= {args.min_close_pos:g}",
+             pl.col("close_pos") >= args.min_close_pos)
+        )
     if not args.no_implied_confirm:
         conditions.append(
             (f"EMA({args.ema_span}) of RSI < RSI", pl.col("rsi_hourly_ema") < pl.col("rsi_hourly"))
@@ -278,12 +303,19 @@ def main() -> int:
         passing = passing.with_columns(pl.lit(None, dtype=pl.Float64).alias("market_cap_cr"))
         print("   no symbols survived the hourly trigger")
 
+    # The stop is the signal candle's low, so risk and every target follow from it.
+    passing = passing.with_columns(
+        ((pl.col("close") - pl.col("stop")) / pl.col("close") * 100).alias("risk_pct"),
+        *[(pl.col("close") + rr * (pl.col("close") - pl.col("stop"))).alias(f"target_1_{rr:g}")
+          for rr in args.reward_risk],
+    )
     result = (
         passing.join(universe.select("symbol", "company_name", "industry"),
                      on="symbol", how="left")
         .sort("market_cap_cr", descending=True, nulls_last=True)
         .select("symbol", "company_name", "industry", "market_cap_cr", "bar", "close",
-                "rsi_hourly_prev", "rsi_hourly", "rsi_hourly_ema",
+                "stop", "risk_pct", *[f"target_1_{rr:g}" for rr in args.reward_risk],
+                "close_pos", "rsi_hourly_prev", "rsi_hourly", "rsi_hourly_ema",
                 "rsi_daily", "rsi_weekly", "rsi_monthly")
     )
     as_of = features["bar"].max()
