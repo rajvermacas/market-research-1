@@ -168,7 +168,11 @@ def fetch_symbol(session: requests.Session, token: int, interval: str,
     frame = pl.DataFrame(rows, schema=["datetime", "open", "high", "low", "close", "volume"],
                          orient="row")
     return frame.with_columns(
-        pl.col("datetime").str.to_datetime().dt.convert_time_zone("Asia/Kolkata"),
+        # Kite stamps candles like 2017-12-15T09:15:00+0530 — an explicit format is
+        # required, since Polars refuses to infer one when an offset is present.
+        pl.col("datetime")
+          .str.to_datetime(format="%Y-%m-%dT%H:%M:%S%z")
+          .dt.convert_time_zone("Asia/Kolkata"),
         *[pl.col(c).cast(pl.Float64) for c in ("open", "high", "low", "close")],
         pl.col("volume").cast(pl.Int64),
     ).unique(subset=["datetime"], keep="last").sort("datetime")
