@@ -114,6 +114,7 @@ def main() -> int:
     parser.add_argument("--reward-risk", type=float, default=5.0)
     parser.add_argument("--slots", type=int, default=10)
     parser.add_argument("--cost-bps", type=float, default=10.0)
+    parser.add_argument("--ema-max", type=float, default=53.0)
     parser.add_argument("--rsi-period", type=int, default=14)
     parser.add_argument("--ema-span", type=int, default=21)
     args = parser.parse_args()
@@ -140,7 +141,7 @@ def main() -> int:
     frame = attach_market_cap(frame, daily, caps)
 
     frame = frame.with_columns(
-        ((pl.col("rsi_prev") <= 60) & (pl.col("rsi_h") > 60) & (pl.col("rsi_ema") < 60)
+        ((pl.col("rsi_prev") <= 60) & (pl.col("rsi_h") > 60) & (pl.col("rsi_ema") < args.ema_max)
          & (pl.col("rsi_daily") > 60) & (pl.col("rsi_weekly") > 60)
          & (pl.col("rsi_monthly") > 60) & (pl.col("cap_cr") > 5000)).alias("signal_raw")
     ).sort("symbol", "datetime")

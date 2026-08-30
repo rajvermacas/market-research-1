@@ -233,6 +233,7 @@ def main() -> int:
     parser.add_argument("--rsi-period", type=int, default=14)
     parser.add_argument("--ema-span", type=int, default=21)
     parser.add_argument("--cross-level", type=float, default=60.0)
+    parser.add_argument("--ema-max", type=float, default=53.0)
     parser.add_argument("--htf-min", type=float, default=60.0)
     parser.add_argument("--market-cap-min", type=float, default=5000.0)
     parser.add_argument("--reward-risk", type=float, nargs="+", default=[1, 2, 3, 4, 5],
@@ -293,7 +294,7 @@ def main() -> int:
     frame = frame.with_columns(
         ((pl.col("rsi_prev") <= args.cross_level)
          & (pl.col("rsi_h") > args.cross_level)
-         & (pl.col("rsi_ema") < args.cross_level)
+         & (pl.col("rsi_ema") < args.ema_max)
          & (pl.col("rsi_daily") > args.htf_min)
          & (pl.col("rsi_weekly") > args.htf_min)
          & (pl.col("rsi_monthly") > args.htf_min)

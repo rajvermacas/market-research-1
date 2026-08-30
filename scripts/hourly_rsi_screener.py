@@ -9,12 +9,14 @@ strength resumes, while the daily/weekly/monthly regime is still intact.
     size        market cap > 5000 crore
     trigger     hourly RSI(14) crossed above 60 on the evaluated bar
                 (previous bar <= 60, this bar > 60)
-    fresh       EMA(hourly RSI, 21) still < 60 — the smoothed RSI has not reached the
-                zone yet, so the cross is an early turn rather than a late continuation
+    fresh       EMA(hourly RSI, 21) still < 53 — the smoothed RSI is well short of the
+                cross level, so the hourly had genuinely cooled off first. At entry the
+                RSI is therefore at least 7 points above its own average, which is a
+                decisive turn rather than a drift across the line
     confirm     EMA(hourly RSI, 21) < hourly RSI — RSI above its own signal line
 
 Note that `confirm` is implied by `trigger` and `fresh` together: the cross forces
-RSI > 60 and `fresh` forces the EMA < 60, so EMA < 60 < RSI always holds. It is kept
+RSI > 60 and `fresh` forces the EMA < 53, so EMA < 53 < 60 < RSI always holds. It is kept
 because the source screen lists it, and --no-implied-confirm drops it; either way the
 matched set is identical, which `--explain` demonstrates.
 
@@ -173,6 +175,8 @@ def main() -> int:
                         help="span of the EMA drawn on the hourly RSI (default 21)")
     parser.add_argument("--cross-level", type=float, default=60.0,
                         help="level the hourly RSI must cross above (default 60)")
+    parser.add_argument("--ema-max", type=float, default=53.0,
+                        help="the RSI's own EMA must still be below this (default 53)")
     parser.add_argument("--htf-min", type=float, default=60.0,
                         help="daily, weekly and monthly RSI must all exceed this (default 60)")
     parser.add_argument("--market-cap-min", type=float, default=5000.0,
@@ -238,8 +242,8 @@ def main() -> int:
         (f"RSI crossed above {args.cross_level:g}",
          (pl.col("rsi_hourly_prev") <= args.cross_level)
          & (pl.col("rsi_hourly") > args.cross_level)),
-        (f"EMA({args.ema_span}) of RSI < {args.cross_level:g}",
-         pl.col("rsi_hourly_ema") < args.cross_level),
+        (f"EMA({args.ema_span}) of RSI < {args.ema_max:g}",
+         pl.col("rsi_hourly_ema") < args.ema_max),
     ]
     if not args.no_implied_confirm:
         conditions.append(
@@ -268,6 +272,11 @@ def main() -> int:
         passing = (passing.join(caps, on="symbol", how="inner")
                           .filter(pl.col("market_cap_cr") > args.market_cap_min))
         print(f"   after market cap           {passing.height:>5} symbols")
+    else:
+        # An empty screen is a normal outcome, not an error: the size filter is simply
+        # never reached, and the column it would have added still has to exist.
+        passing = passing.with_columns(pl.lit(None, dtype=pl.Float64).alias("market_cap_cr"))
+        print("   no symbols survived the hourly trigger")
 
     result = (
         passing.join(universe.select("symbol", "company_name", "industry"),

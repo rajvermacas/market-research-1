@@ -38,10 +38,13 @@ CAP_CACHE = REPO_ROOT / ".cache" / "screener" / "market_caps.csv"
 FEATURE_CACHE = REPO_ROOT / ".cache" / "screener" / "features_hourly.parquet"
 
 
-def build_features(period: int, ema_span: int) -> pl.DataFrame:
-    if FEATURE_CACHE.exists():
-        print(f"features from cache {FEATURE_CACHE.name}")
-        return pl.read_parquet(FEATURE_CACHE)
+def build_features(period: int, ema_span: int, ema_max: float) -> pl.DataFrame:
+    # The threshold is part of the cache identity: a frame built at one ema_max carries a
+    # signal_raw column that is simply wrong for another.
+    cache = FEATURE_CACHE.with_name(f"features_hourly_ema{ema_max:g}.parquet")
+    if cache.exists():
+        print(f"features from cache {cache.name}")
+        return pl.read_parquet(cache)
     universe = pl.read_parquet(UNIVERSE)
     symbols = universe["symbol"].to_list()
     daily = (pl.scan_parquet(DAILY_GLOB, hive_partitioning=True)
@@ -59,7 +62,7 @@ def build_features(period: int, ema_span: int) -> pl.DataFrame:
     caps = pl.read_csv(CAP_CACHE) if CAP_CACHE.exists() else fetch_market_caps(symbols)
     frame = attach_market_cap(frame, daily, caps)
     frame = frame.with_columns(
-        ((pl.col("rsi_prev") <= 60) & (pl.col("rsi_h") > 60) & (pl.col("rsi_ema") < 60)
+        ((pl.col("rsi_prev") <= 60) & (pl.col("rsi_h") > 60) & (pl.col("rsi_ema") < ema_max)
          & (pl.col("rsi_daily") > 60) & (pl.col("rsi_weekly") > 60)
          & (pl.col("rsi_monthly") > 60) & (pl.col("cap_cr") > 5000)).alias("signal_raw")
     ).sort("symbol", "datetime")
@@ -74,9 +77,9 @@ def build_features(period: int, ema_span: int) -> pl.DataFrame:
     frame = frame.with_columns(true_range.alias("tr"))
     frame = frame.with_columns(
         pl.col("tr").rolling_mean(14).over("symbol").alias("atr"))
-    FEATURE_CACHE.parent.mkdir(parents=True, exist_ok=True)
-    frame.write_parquet(FEATURE_CACHE, compression="zstd")
-    print(f"features cached to {FEATURE_CACHE.name}")
+    cache.parent.mkdir(parents=True, exist_ok=True)
+    frame.write_parquet(cache, compression="zstd")
+    print(f"features cached to {cache.name}")
     return frame
 
 
@@ -85,10 +88,11 @@ def main() -> int:
     parser.add_argument("--reward-risk", type=float, default=5.0)
     parser.add_argument("--slots", type=int, default=10)
     parser.add_argument("--cost-bps", type=float, default=10.0)
+    parser.add_argument("--ema-max", type=float, default=53.0)
     args = parser.parse_args()
     cost = args.cost_bps / 10_000
 
-    frame = build_features(14, 21)
+    frame = build_features(14, 21, args.ema_max)
     hourly = frame.select("symbol", "datetime", "close")
     signals = frame.filter(pl.col("signal_raw"))
     signal_symbols = signals["symbol"].unique().to_list()
