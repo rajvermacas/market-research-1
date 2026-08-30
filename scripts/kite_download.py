@@ -165,8 +165,22 @@ def fetch_symbol(session: requests.Session, token: int, interval: str,
         cursor = chunk_end + dt.timedelta(days=1)
     if not rows:
         return pl.DataFrame()
-    frame = pl.DataFrame(rows, schema=["datetime", "open", "high", "low", "close", "volume"],
-                         orient="row")
+    # Explicit dtypes, and volume as Float64 first: Kite occasionally returns 2**63 as a
+    # volume, which is one past Int64's ceiling and aborts inference outright.
+    frame = pl.DataFrame(
+        rows,
+        schema={"datetime": pl.Utf8, "open": pl.Float64, "high": pl.Float64,
+                "low": pl.Float64, "close": pl.Float64, "volume": pl.Float64},
+        orient="row",
+    )
+    impossible = frame.filter(pl.col("volume") >= 2.0 ** 62).height
+    if impossible:
+        # Nulled rather than kept or silently zeroed, and counted so the run says so.
+        print(f"      {impossible} bars carry an impossible volume (>= 2^62) — nulled",
+              flush=True)
+        frame = frame.with_columns(
+            pl.when(pl.col("volume") >= 2.0 ** 62).then(None)
+              .otherwise(pl.col("volume")).alias("volume"))
     return frame.with_columns(
         # Kite stamps candles like 2017-12-15T09:15:00+0530 — an explicit format is
         # required, since Polars refuses to infer one when an offset is present.
@@ -174,7 +188,7 @@ def fetch_symbol(session: requests.Session, token: int, interval: str,
           .str.to_datetime(format="%Y-%m-%dT%H:%M:%S%z")
           .dt.convert_time_zone("Asia/Kolkata"),
         *[pl.col(c).cast(pl.Float64) for c in ("open", "high", "low", "close")],
-        pl.col("volume").cast(pl.Int64),
+        pl.col("volume").cast(pl.Int64, strict=False),
     ).unique(subset=["datetime"], keep="last").sort("datetime")
 
 
