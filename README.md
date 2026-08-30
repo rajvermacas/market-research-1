@@ -218,6 +218,101 @@ of brokerage and one index point of slippage per side (three on Nifty Bank). Rup
 figures use current NSE lot sizes (75 Nifty, 30 Nifty Bank); percentage figures are
 lot-independent and are the primary unit for any cross-market comparison.
 
+
+## NSE cash equities
+
+Index futures are one thing; NSE cash equities are where most Indian retail traders
+would actually run this. The same four rules were applied to every liquid Nifty 500
+constituent — 340 stocks clearing ₹5 crore of median daily turnover — at a fixed
+₹1 lakh per position, 2008–Aug 2026.
+
+The headline looks emphatic: **27,892 trades, 67.2% winners, +0.545% per trade before
+costs, t = 18.0**. A t-statistic of 18 is not a fluke. But it measures the wrong thing.
+
+### The edge is 0.075%, the cost is 0.32%
+
+Buying *random* days in the same 340 stocks above their 200-day SMA, holding for the
+same distribution of days, returns **+0.470% per trade**. The RSI(2) signal adds
+**0.075%** on top — 13.8% of the gross figure. The rest is the well-known fact that
+stocks in uptrends drift up.
+
+| Mean return per trade | % of position |
+|---|---|
+| Available from random entry in the same universe | +0.470% |
+| Added by the RSI(2) signal | **+0.075%** |
+| Gross, as reported | +0.545% |
+| Stock-futures round-trip cost | −0.126% (1.7× the edge) |
+| Delivery-equity round-trip cost | **−0.323% (4.3× the edge)** |
+| Net after delivery costs | +0.222% |
+
+The strategy still finishes positive after costs. So would randomly buying uptrending
+stocks, at +0.147%. You pay 0.32% in tax and spread to harvest 0.075% of signal on top
+of a drift anyone can have for free.
+
+The random-entry benchmark also settles the survivorship question. Today's Nifty 500 is
+a list of companies that made it, so a long-only backtest on it is flattered — but the
+benchmark trades that same survivor list, so the bias inflates both numbers equally.
+Only the 0.075% gap is survivorship-neutral.
+
+Cost sensitivity is the whole story:
+
+| Round-trip cost | Mean net per trade | Win rate |
+|---|---|---|
+| 0% | +0.545% | 67.2% |
+| 0.1% | +0.445% | 66.3% |
+| 0.2% | +0.345% | 65.6% |
+| 0.323% (delivery) | +0.222% | 64.6% |
+| 0.5% | **+0.045%** | 62.8% |
+
+At 0.5% round trip — ordinary for a mid-cap with a real spread — the edge is gone.
+
+### You cannot take the trades anyway
+
+RSI(2) < 10 is a market-wide condition: when India sells off, hundreds of stocks trip it
+at once. The uncapped book holds a **median of 24 positions**, 71 at the 90th percentile,
+and peaked at **219 open positions on 26 October 2023** — ₹2.19 crore deployed.
+
+Cap it at something a person can run:
+
+| Max positions | Capital | Trades taken | Skipped | Return/yr | Max drawdown |
+|---|---|---|---|---|---|
+| 5 | ₹5 L | 3,899 | 23,993 | 7.0% | −51.6% |
+| 10 | ₹10 L | 7,139 | 20,753 | **3.8%** | **−49.8%** |
+| 20 | ₹20 L | 12,288 | 15,604 | 2.7% | −40.5% |
+
+A ten-position book earns 3.8% a year and draws down 50% over 18.7 years — a
+fixed-deposit return carrying equity-crash risk. The capping is not a modelling artifact;
+it is the constraint any real account faces, and it bites hardest exactly when signals
+are most abundant, because that is when the market is falling.
+
+### The single-stock tail
+
+Average loss −4.61% against an average win of +2.88%. 11.3% of trades went more than 10%
+underwater, 1.6% past 20%, with no stop. The worst was ADANIENT in January 2023: entered
+on the dip, **−70.6% at its low**, closed by the 10-session clock at −54.5%. The 3,267
+time-stop exits (11.7% of trades) lost ₹2.78 crore between them while the 24,625 target
+exits made ₹3.40 crore.
+
+Ten green years out of nineteen — a coin flip. 2008 averaged −3.56% a trade across 537
+trades: the 200-day SMA filter let stocks in early that year and the market then fell
+through it. 2025 and 2026 are both negative.
+
+**Verdict for NSE equities:** the effect is statistically real and economically
+negligible. It is 0.075% a trade of genuine signal sitting under 0.32% of cost, in a
+strategy that wants 24 simultaneous positions and hands you a 50% drawdown for a 3.8%
+annual return when you size it like a human. A single-stock dip buy with no stop also
+carries −70% excursions that no index version ever will.
+
+### NSE equity method notes
+
+All Nifty 500 constituents whose Yahoo history is available and whose median daily
+turnover since 2008 clears ₹5 crore — 340 of 485 downloaded names. Prices split and bonus
+adjusted. Positions are a fixed ₹1 lakh, so no result depends on share price level.
+Delivery friction is 0.323% per round trip: STT 0.1% each side, exchange charge 0.00297%
+a side, stamp duty 0.015% on the buy, SEBI and GST, plus 0.05% slippage per side. The
+stock-futures column swaps STT for the 0.02% sell-side rate. Capped-portfolio results
+break ties on a signal date by lowest entry RSI, known at the signal, so no look-ahead.
+
 ## Verdict
 
 The strategy is real, the post's numbers are honest, and the edge survives
@@ -235,7 +330,8 @@ What the chart oversells:
 5. You need ~$106K to trade it through its own drawdown, making it ~16.8%/yr simple.
 
 6. It is a US effect at these parameters. On the Nifty it is marginal and mostly
-   eaten by costs; on the Nifty Bank it does not survive at all.
+   eaten by costs; on the Nifty Bank it does not survive at all. On NSE single
+   stocks the genuine timing edge is 0.075% a trade against 0.32% of cost.
 
 The honest framing: a well-behaved mean-reversion overlay worth roughly 0.44% of
 notional per trade, ~17 trades a year, in the market 15% of the time — not a
@@ -250,6 +346,8 @@ python src/run_analysis.py     # reproduction, robustness, costs -> output/resul
 python src/deep_dive.py        # MTM drawdown, concentration, significance -> output/deep_dive.json
 python src/export_charts.py    # series for the report -> output/chart_data.json
 python src/india.py            # same rules on NSE indices -> output/india.json
+python src/fetch_nse.py        # Nifty 500 daily history -> data/nse/  (~180MB, not in git)
+python src/nse_equities.py     # same rules on 340 NSE stocks -> output/nse_equities.json
 ```
 
 | File | Purpose |
@@ -261,6 +359,8 @@ python src/india.py            # same rules on NSE indices -> output/india.json
 | `src/run_analysis.py` | Claim reproduction, robustness grid, cost and random-entry tests |
 | `src/deep_dive.py` | Mark-to-market drawdown, concentration, edge significance, capital needed |
 | `src/india.py` | The same rules on Nifty 50, Nifty Bank, Nifty IT and Sensex, with the Indian cost stack |
+| `src/fetch_nse.py` | Nifty 500 daily history downloader, split/bonus adjusted |
+| `src/nse_equities.py` | The same rules on 340 liquid NSE stocks: cost decomposition, survivorship-neutral benchmark, capacity caps |
 | `src/export_charts.py` | Chart series for the published report |
 
 ## Caveats

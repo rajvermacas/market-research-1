@@ -400,6 +400,127 @@
     });
   }
 
+
+  /* ---------- NSE: what the 0.545% is made of, vs what it costs ---------- */
+  function nseDecomp(hostId, dc) {
+    const host = document.getElementById(hostId);
+    const f = frame(host, 236, { l: 176, r: 104, t: 22, b: 34 });
+    const g = el("g"); f.svg.appendChild(g);
+    const xmax = 0.6;
+    const X = (v) => f.p.l + (f.W - f.p.l - f.p.r) * (v / xmax);
+    const rows = [
+      { k: "Gross, as reported", parts: [
+          { v: dc.random_baseline, c: "--muted", n: "available from random entry" },
+          { v: dc.timing_edge, c: "--s1", n: "added by the RSI(2) signal" }] },
+      { k: "Cost · stock futures", parts: [{ v: dc.fno_cost, c: "--s2", n: "0.02% STT + fees + slippage" }] },
+      { k: "Cost · delivery equity", parts: [{ v: dc.delivery_cost, c: "--neg", n: "0.1% STT each side + fees + slippage" }] }
+    ];
+    const rowH = (f.H - f.p.t - f.p.b) / rows.length;
+    for (let v = 0; v <= xmax + 1e-9; v += 0.1) {
+      g.appendChild(el("line", { class: "gridline", x1: X(v), x2: X(v), y1: f.p.t, y2: f.H - f.p.b }));
+      const t = el("text", { class: "tick", x: X(v), y: f.H - f.p.b + 17, "text-anchor": "middle" });
+      t.textContent = v.toFixed(1) + "%"; g.appendChild(t);
+    }
+    rows.forEach((r, i) => {
+      const y = f.p.t + rowH * i + rowH / 2;
+      const h = Math.min(rowH - 12, 22);
+      let acc = 0;
+      r.parts.forEach((p2) => {
+        const x = X(acc), w = X(acc + p2.v) - X(acc);
+        const rect = el("rect", { x: x + 1, y: y - h / 2, width: Math.max(w - 2, 1.5), height: h, fill: css(p2.c), rx: 3, style: "cursor:crosshair" });
+        g.appendChild(rect);
+        if (w > 44) {
+          const inner = el("text", { class: "dlabel", x: x + w / 2, y: y + 4, fill: css("--surface"), "text-anchor": "middle", style: "font-size:11px" });
+          inner.textContent = p2.v.toFixed(3) + "%"; g.appendChild(inner);
+        }
+        const px = x, pw = w, pv = p2.v, pn = p2.n;
+        const enter = () => showTip(f, host, px + pw / 2, y - h / 2, `<b>${r.k}</b><div class="row"><span>${pn}</span><span>${pv.toFixed(3)}%</span></div>`);
+        rect.addEventListener("mouseenter", enter); rect.addEventListener("mousemove", enter);
+        rect.addEventListener("mouseleave", () => hideTip(f));
+        acc += p2.v;
+      });
+      const lb = el("text", { class: "tick", x: f.p.l - 10, y: y + 3.5, "text-anchor": "end", style: "font-size:11px" });
+      lb.textContent = r.k; g.appendChild(lb);
+      const tot = el("text", { class: "dlabel", x: X(acc) + 9, y: y + 4, fill: css(r.parts[r.parts.length - 1].c) });
+      tot.textContent = acc.toFixed(3) + "%"; g.appendChild(tot);
+    });
+    g.appendChild(el("line", { class: "axisline", x1: f.p.l, x2: f.p.l, y1: f.p.t, y2: f.H - f.p.b }));
+    const lg = el("text", { class: "tick", x: f.p.l, y: 12, style: "font-size:10.5px" });
+    lg.textContent = "grey = drift anyone gets · blue = the actual signal"; g.appendChild(lg);
+    const xl = el("text", { class: "tick", x: (f.p.l + f.W - f.p.r) / 2, y: f.H - 3, "text-anchor": "middle" });
+    xl.textContent = "per trade, % of position value"; g.appendChild(xl);
+  }
+
+  /* ---------- NSE: edge against round-trip cost ---------- */
+  function nseCost(hostId, rows) {
+    const host = document.getElementById(hostId);
+    const f = frame(host, 230, { l: 56, r: 30, t: 16, b: 42 });
+    const g = el("g"); f.svg.appendChild(g);
+    const sc = niceScale(0, Math.max(...rows.map((r) => r.mean_net_pct)), 4);
+    const xmax = Math.max(...rows.map((r) => r.cost_pct));
+    const X = (v) => f.p.l + (f.W - f.p.l - f.p.r) * (v / xmax);
+    const Y = (v) => f.p.t + (f.H - f.p.t - f.p.b) * (1 - (v - sc.y0) / (sc.y1 - sc.y0));
+    yAxis(f, g, sc, (v) => v.toFixed(2) + "%");
+    rows.forEach((r) => {
+      const t = el("text", { class: "tick", x: X(r.cost_pct), y: f.H - f.p.b + 17, "text-anchor": "middle" });
+      t.textContent = r.cost_pct.toFixed(3).replace(/0+$/, "").replace(/\.$/, "") + "%"; g.appendChild(t);
+    });
+    const d = rows.map((r, i) => (i ? "L" : "M") + X(r.cost_pct).toFixed(1) + " " + Y(r.mean_net_pct).toFixed(1)).join(" ");
+    g.appendChild(el("path", { d: d, fill: "none", stroke: css("--s1"), "stroke-width": 2, "stroke-linejoin": "round" }));
+    g.appendChild(el("line", { class: "axisline", x1: f.p.l, x2: f.W - f.p.r, y1: Y(0), y2: Y(0) }));
+    rows.forEach((r) => {
+      const live = Math.abs(r.cost_pct - 0.323) < 1e-6;
+      const c = el("circle", { cx: X(r.cost_pct), cy: Y(r.mean_net_pct), r: live ? 6 : 4.5,
+        fill: css(live ? "--neg" : "--s1"), stroke: css("--surface"), "stroke-width": 2, style: "cursor:crosshair" });
+      g.appendChild(c);
+      if (live) {
+        const lb = el("text", { class: "dlabel", x: X(r.cost_pct), y: Y(r.mean_net_pct) - 14, fill: css("--neg"), "text-anchor": "middle" });
+        lb.textContent = "delivery equity"; g.appendChild(lb);
+      }
+      const enter = () => showTip(f, host, X(r.cost_pct), Y(r.mean_net_pct), `<b>${r.cost_pct}% round trip</b>
+        <div class="row"><span>Mean net / trade</span><span>${r.mean_net_pct.toFixed(3)}%</span></div>
+        <div class="row"><span>Win rate</span><span>${(r.win_rate * 100).toFixed(1)}%</span></div>`);
+      c.addEventListener("mouseenter", enter); c.addEventListener("mousemove", enter);
+      c.addEventListener("mouseleave", () => hideTip(f));
+    });
+    const xl = el("text", { class: "tick", x: (f.p.l + f.W - f.p.r) / 2, y: f.H - 4, "text-anchor": "middle" });
+    xl.textContent = "round-trip cost, % of position value"; g.appendChild(xl);
+  }
+
+  /* ---------- NSE: mean net return per trade, by year ---------- */
+  function nseYears(hostId, rows) {
+    const host = document.getElementById(hostId);
+    const f = frame(host, 236, { l: 56, r: 20, t: 16, b: 30 });
+    const g = el("g"); f.svg.appendChild(g);
+    const vals = rows.map((r) => r.mean_net_pct);
+    const sc = niceScale(Math.min(...vals), Math.max(...vals), 4);
+    const Y = (v) => f.p.t + (f.H - f.p.t - f.p.b) * (1 - (v - sc.y0) / (sc.y1 - sc.y0));
+    const iw = (f.W - f.p.l - f.p.r) / rows.length;
+    const bw = Math.min(iw - 8, 32);
+    yAxis(f, g, sc, (v) => v.toFixed(1) + "%");
+    g.appendChild(el("line", { class: "axisline", x1: f.p.l, x2: f.W - f.p.r, y1: Y(0), y2: Y(0) }));
+    const inr = (v) => (v < 0 ? "−₹" : "₹") + Math.round(Math.abs(v)).toLocaleString("en-IN");
+    rows.forEach((r, i) => {
+      const cx = f.p.l + iw * (i + 0.5);
+      const yv = Y(r.mean_net_pct), yz = Y(0);
+      const top = Math.min(yv, yz), h = Math.max(Math.abs(yv - yz), 1.5);
+      const rect = el("rect", { x: cx - bw / 2, y: top, width: bw, height: h,
+        fill: css(r.mean_net_pct >= 0 ? "--s1" : "--neg"), rx: 3, style: "cursor:crosshair" });
+      g.appendChild(rect);
+      if (i % 2 === 0) {
+        const t = el("text", { class: "tick", x: cx, y: f.H - f.p.b + 17, "text-anchor": "middle" });
+        t.textContent = "'" + String(r.year).slice(2); g.appendChild(t);
+      }
+      const enter = () => showTip(f, host, cx, top, `<b>${r.year}</b>
+        <div class="row"><span>Mean net / trade</span><span>${pct(r.mean_net_pct)}</span></div>
+        <div class="row"><span>Trades</span><span>${r.trades.toLocaleString()}</span></div>
+        <div class="row"><span>Win rate</span><span>${(r.win_rate * 100).toFixed(0)}%</span></div>
+        <div class="row"><span>P&amp;L at ₹1L each</span><span>${inr(r.pnl_inr)}</span></div>`);
+      rect.addEventListener("mouseenter", enter); rect.addEventListener("mousemove", enter);
+      rect.addEventListener("mouseleave", () => hideTip(f));
+    });
+  }
+
   /* ---------- tables ---------- */
   const ROBUST = [
     ["As stated", 298, .782, 2.35, 314790, -41683, true],
@@ -459,6 +580,9 @@
     ]);
     costBars("c-costs");
     indiaYears("c-indiayear", INDIA.year_india);
+    nseDecomp("c-nsedecomp", NSE.decomposition);
+    nseCost("c-nsecost", NSE.cost_sensitivity);
+    nseYears("c-nseyear", NSE.per_year);
   }
 
   document.addEventListener("DOMContentLoaded", () => { tables(DATA.per_year); draw(); });

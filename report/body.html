@@ -1,12 +1,12 @@
 <div class="wrap">
 
 <header class="mast">
-  <p class="eyebrow">Independent replication &middot; ES &amp; NQ &middot; Nifty 50 &amp; Nifty Bank &middot; 2001&ndash;Aug 2026</p>
+  <p class="eyebrow">Independent replication &middot; ES &amp; NQ &middot; Nifty indices &middot; 485 NSE stocks &middot; 2001&ndash;Aug 2026</p>
   <h1>The Dip Buy Audit</h1>
   <p class="standfirst">A widely-shared RSI(2) dip-buying strategy claims an 83% win rate and $335K since 2009 on one ES and one NQ contract. <strong>Every headline number checks out.</strong> The equity curve behind them still tells you something that isn't true &mdash; and the effect largely fails to survive the trip to India.</p>
   <div class="byline">
     <span>Source: <a href="https://x.com/MrMilkTrading/status/2093923934823403813">@MrMilkTrading, 30 Aug 2026</a></span>
-    <span>585 trades reconstructed across two markets</span>
+    <span>28,477 trades reconstructed across two markets</span>
     <span>Data through 28 Aug 2026</span>
   </div>
 </header>
@@ -30,7 +30,7 @@
   <div class="verdict" style="--v:var(--muted)">
     <span class="tag">Does not travel</span>
     <p class="claim">India breaks it</p>
-    <p>Same rules on Nifty 50 and Nifty Bank: profit factor 1.18, a drawdown 82% the size of eighteen years of profit, and RSI timing that barely beats random entry.</p>
+    <p>Same rules on Nifty 50, Nifty Bank and 340 NSE stocks: profit factor 1.18 on the indices, and on equities a timing edge of 0.075% a trade against 0.32% of round-trip cost.</p>
   </div>
 </div>
 
@@ -330,6 +330,82 @@
   </div>
 </section>
 
+
+<section>
+  <div class="sec-head">
+    <span class="num">NSE EQUITIES</span>
+    <div class="titles">
+      <h2>And on single stocks?</h2>
+      <p class="kicker">340 liquid Nifty 500 names, 27,892 trades, 2008 &ndash; Aug 2026</p>
+    </div>
+  </div>
+  <div class="col">
+    <p>Index futures are one thing; NSE cash equities are where most Indian retail traders would actually run this. So the same four rules were applied to every liquid Nifty 500 constituent &mdash; 340 stocks clearing &#8377;5 crore of median daily turnover &mdash; at a fixed &#8377;1 lakh per position.</p>
+    <p>The headline looks emphatic. <strong>27,892 trades, 67.2% winners, +0.545% per trade before costs, t = 18.0.</strong> A t-statistic of 18 is not a fluke. But it is measuring the wrong thing, and two numbers dismantle it.</p>
+  </div>
+
+  <figure>
+    <p class="fig-title">Where the 0.545% actually comes from</p>
+    <p class="fig-sub">Mean return per trade, decomposed &mdash; then set against what it costs to collect</p>
+    <div class="chart-scroll"><div class="chart-host" id="c-nsedecomp"></div></div>
+    <figcaption>Buying <em>random</em> days in the same 340 stocks above their 200-day SMA, holding for the same distribution of days, returns <strong>+0.470%</strong> a trade. The RSI(2) signal adds <strong>0.075%</strong> on top &mdash; 13.8% of the gross figure. Everything else is the well-known fact that stocks in uptrends drift up.</figcaption>
+  </figure>
+
+  <div class="callout">
+    <p><strong>The whole finding in one line.</strong> The real timing edge is 0.075% a trade. Delivery-equity round-trip friction is 0.32% &mdash; <strong>4.3&times; the edge it is trying to capture</strong>. Even as stock futures, at 0.126%, costs are still 1.7&times; the edge.</p>
+  </div>
+
+  <div class="col">
+    <p>The strategy still finishes positive after costs, at +0.222% a trade &mdash; but so would randomly buying uptrending stocks, at +0.147%. You are paying 0.32% in tax and spread to harvest 0.075% of signal on top of a drift anyone can have for free.</p>
+    <p style="font-size:15px;color:var(--muted)">The random-entry benchmark also settles the survivorship question. Today's Nifty 500 is a list of companies that made it, so a long-only backtest on it is flattered &mdash; but the benchmark trades that same survivor list, so the bias inflates both numbers equally. Only the 0.075% gap is survivorship-neutral.</p>
+  </div>
+
+  <figure>
+    <p class="fig-title">How much cost the edge survives</p>
+    <p class="fig-sub">Mean net return per trade against round-trip friction</p>
+    <div class="chart-scroll"><div class="chart-host" id="c-nsecost"></div></div>
+    <figcaption>At 0.5% round trip &mdash; ordinary for a mid-cap with a real spread &mdash; the edge is +0.045% a trade, which is nothing. The strategy is a bet on execution costs more than on price behaviour.</figcaption>
+  </figure>
+
+  <div class="col">
+    <h3 style="font-size:18px;font-weight:600;margin:34px 0 10px;letter-spacing:-.01em">You cannot take the trades anyway</h3>
+    <p>The 27,892 figure assumes unlimited capital. RSI(2) &lt; 10 is a market-wide condition: when India sells off, hundreds of stocks trip it at once. The uncapped book holds a <strong>median of 24 positions</strong>, 71 at the 90th percentile, and peaked at <strong>219 open positions on 26 October 2023</strong> &mdash; &#8377;2.19 crore deployed at &#8377;1 lakh each.</p>
+    <p>Cap it at something a person can actually run, and the result collapses:</p>
+    <div class="tbl-scroll" style="margin-top:16px">
+      <table>
+        <thead><tr><th>Max positions</th><th>Capital</th><th>Trades taken</th><th>Skipped</th><th>Return / yr</th><th>Max drawdown</th></tr></thead>
+        <tbody>
+          <tr><td>5</td><td>&#8377;5 L</td><td>3,899</td><td>23,993</td><td>7.0%</td><td class="neg">&minus;51.6%</td></tr>
+          <tr><td>10</td><td>&#8377;10 L</td><td>7,139</td><td>20,753</td><td class="neg">3.8%</td><td class="neg">&minus;49.8%</td></tr>
+          <tr><td>20</td><td>&#8377;20 L</td><td>12,288</td><td>15,604</td><td class="neg">2.7%</td><td class="neg">&minus;40.5%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:20px">A ten-position book earns <strong>3.8% a year and draws down 50%</strong> over eighteen and a half years. That is a fixed-deposit return carrying equity-crash risk. The capping is not a modelling artifact &mdash; it is the constraint any real account faces, and it lands hardest exactly when signals are most abundant, because that is when the market is falling.</p>
+  </div>
+
+  <figure>
+    <p class="fig-title">NSE equities, year by year</p>
+    <p class="fig-sub">Mean net return per trade after delivery costs, all 340 stocks</p>
+    <div class="chart-scroll"><div class="chart-host" id="c-nseyear"></div></div>
+    <figcaption>Ten green years out of nineteen &mdash; a coin flip. 2008 alone averaged &minus;3.56% a trade across 537 trades: the 200-day SMA filter let stocks in early that year and then the market fell through it. 2025 and 2026 are both negative.</figcaption>
+  </figure>
+
+  <div class="tiles">
+    <div class="tile"><p class="v">+0.075%</p><p class="l">Real timing edge / trade</p><p class="n">Above random entry in the same universe</p></div>
+    <div class="tile"><p class="v neg">0.32%</p><p class="l">Delivery cost / round trip</p><p class="n">4.3&times; the edge</p></div>
+    <div class="tile"><p class="v neg">&minus;70.6%</p><p class="l">Worst excursion</p><p class="n">ADANIENT, Jan 2023, no stop</p></div>
+    <div class="tile"><p class="v">10 / 19</p><p class="l">Green years</p><p class="n">14 / 18 for US futures</p></div>
+  </div>
+
+  <div class="col">
+    <p style="margin-top:26px">And single stocks bring a tail that indices do not. The average loss is <strong>&minus;4.61%</strong> against an average win of +2.88%. 11.3% of trades went more than 10% underwater and 1.6% went past 20%, with no stop to intervene. The worst was ADANIENT in January 2023 &mdash; entered on the dip, <strong>&minus;70.6% at its low</strong>, closed by the 10-session clock at &minus;54.5%. The 3,267 time-stop exits, 11.7% of trades, lost &#8377;2.78 crore between them while the 24,625 target exits made &#8377;3.40 crore.</p>
+    <div class="callout">
+      <p><strong>Verdict for NSE equities:</strong> the effect is statistically real and economically negligible. It is 0.075% a trade of genuine signal sitting under 0.32% of cost, in a strategy that wants 24 simultaneous positions and hands you a 50% drawdown for a 3.8% annual return when you size it like a human. A single-stock dip buy with no stop also carries &minus;70% excursions that no index version ever will.</p>
+    </div>
+  </div>
+</section>
+
 <section>
   <div class="sec-head">
     <span class="num">STRESS</span>
@@ -395,6 +471,7 @@
   <h3>Method &amp; caveats</h3>
   <p>Daily OHLC for ES=F, NQ=F, ^GSPC and ^NDX from the Yahoo Finance chart API, through 28 August 2026. Futures series back-adjusted for quarterly roll gaps, sized as the portion of each roll-day move the matching cash index does not explain. Wilder's RSI(2); 200-session simple moving average; $4 round-turn commission plus one tick per side unless noted. Entry and exit both at the daily close, as the rules specify. Position size is fixed at one contract throughout, also as specified. Significance tested by one-sample t-test on per-trade notional returns and by 2,000-path random-entry resampling matched on trade count, holding period and regime filter.</p>
   <p style="margin-top:12px"><strong>India:</strong> no usable continuous NSE futures series exists, so the Indian runs use the Nifty 50, Nifty Bank, Nifty IT and Sensex cash indices as futures proxies and charge the long-futures cost of carry explicitly at 5.2% a year (a ~6.5% repo rate less a ~1.3% dividend yield) over each holding period. Transaction costs model the full statutory stack &mdash; STT at 0.02% of the sell side, exchange and SEBI charges, stamp duty and GST, about 0.0257% of notional per round turn &mdash; plus &#8377;47 of brokerage and one index point of slippage per side (three on Nifty Bank). Rupee figures use current NSE lot sizes throughout, 75 for Nifty and 30 for Nifty Bank; percentage figures are lot-independent and are the primary unit for any cross-market comparison.</p>
+  <p style="margin-top:12px"><strong>NSE equities:</strong> all Nifty 500 constituents whose Yahoo history is available and whose median daily turnover since 2008 clears &#8377;5 crore &mdash; 340 of 485 downloaded names. Prices are split and bonus adjusted. Positions are a fixed &#8377;1 lakh, so no result depends on share price level. Delivery friction is modelled at 0.323% per round trip: STT 0.1% on each side, exchange charge 0.00297% a side, stamp duty 0.015% on the buy, SEBI and GST, plus 0.05% of slippage per side. The stock-futures column swaps STT for the 0.02% sell-side rate. The universe is today's index membership, so absolute returns carry survivorship bias; the random-entry benchmark trades the identical list, which is what makes the 0.075% timing gap survivorship-neutral. Capped-portfolio results break ties on a signal date by lowest entry RSI, which is known at the signal and introduces no look-ahead.</p>
   <p style="margin-top:12px">Yahoo daily futures data is not a tick-accurate settlement series; treat P&amp;L as accurate to a few percent. Margin figures are approximate CME initial requirements at current index levels. Full code, trade-by-trade output and the raw result files are in the repository under <code>src/</code> and <code>output/</code>.</p>
   <p style="margin-top:12px">Not financial advice.</p>
 </footer>

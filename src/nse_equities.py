@@ -278,5 +278,46 @@ def main() -> None:
     print(per_year.to_string())
 
 
+def export_charts() -> None:
+    """Series for the NSE-equities section of the published report."""
+    d = json.loads((OUT / "nse_equities.json").read_text())
+    t = pd.read_csv(OUT / "trades_nse_equities.csv")
+
+    per_year = [
+        {"year": int(y), "mean_net_pct": v["mean_net_pct"], "trades": int(v["trades"]),
+         "win_rate": v["win_rate"], "pnl_inr": round(v["pnl_inr"])}
+        for y, v in sorted(d["per_year"].items(), key=lambda kv: int(kv[0]))
+    ]
+    cost = [
+        {"cost_pct": float(k.replace("pct_rt", "")), "mean_net_pct": v["mean_net_pct"],
+         "win_rate": v["win_rate"]}
+        for k, v in d["cost_sensitivity"].items()
+    ]
+    # histogram of net trade returns, clipped for display
+    bins = np.arange(-15, 15.5, 1.0)
+    idx = np.clip(np.digitize(t["net_pct"] * 100, bins) - 1, 0, len(bins) - 2)
+    hist = [{"lo": float(bins[i]), "n": int((idx == i).sum())} for i in range(len(bins) - 1)]
+
+    payload = {
+        "per_year": per_year,
+        "cost_sensitivity": cost,
+        "hist": hist,
+        "decomposition": {
+            "random_baseline": d["random_entry"]["random_mean_gross_pct"],
+            "timing_edge": d["gross"]["mean_net_pct"] - d["random_entry"]["random_mean_gross_pct"],
+            "gross": d["gross"]["mean_net_pct"],
+            "delivery_cost": 0.323,
+            "fno_cost": 0.126,
+            "net_delivery": d["delivery"]["mean_net_pct"],
+        },
+        "capped": d["capped_portfolio"],
+        "concurrency": d["concurrency"],
+    }
+    (OUT / "nse_charts.json").write_text(json.dumps(payload, separators=(",", ":")))
+    print("wrote nse_charts.json")
+
+
 if __name__ == "__main__":
-    main()
+    if not (OUT / "nse_equities.json").exists():
+        main()
+    export_charts()

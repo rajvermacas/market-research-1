@@ -1,0 +1,260 @@
+{
+  "universe_file": "nifty500",
+  "capital_per_trade_inr": 100000.0,
+  "gross": {
+    "label": "Before costs",
+    "symbols": 340,
+    "trades": 27892,
+    "win_rate": 0.6721282088053923,
+    "mean_net_pct": 0.5454844850364082,
+    "median_net_pct": 1.4437715852935378,
+    "t_stat": 18.001410022703695,
+    "p_value": 4.860903537046464e-72,
+    "profit_factor": 1.357921239545721,
+    "avg_win_pct": 3.0790546006308674,
+    "avg_loss_pct": -4.6482649908574505,
+    "avg_bars": 5.124014054209092,
+    "worst_pct": -63.89480539649619,
+    "worst_mae_pct": -70.62407279739502,
+    "total_pnl_inr_at_1L": 15214653.256635498
+  },
+  "delivery": {
+    "label": "After delivery-equity costs (0.323% round trip)",
+    "symbols": 340,
+    "trades": 27892,
+    "win_rate": 0.645597303886419,
+    "mean_net_pct": 0.2224844850364083,
+    "median_net_pct": 1.1207715852935376,
+    "t_stat": 7.342160132314588,
+    "p_value": 2.159196539211171e-13,
+    "profit_factor": 1.1361424623952379,
+    "avg_win_pct": 2.8759227278188924,
+    "avg_loss_pct": -4.611148538512826,
+    "avg_bars": 5.124014054209092,
+    "worst_pct": -64.21780539649619,
+    "worst_mae_pct": -70.62407279739502,
+    "total_pnl_inr_at_1L": 6205537.2566355
+  },
+  "stock_futures": {
+    "label": "After stock-futures costs (0.126% round trip)",
+    "symbols": 340,
+    "trades": 27892,
+    "win_rate": 0.6617309622830919,
+    "mean_net_pct": 0.4194844850364083,
+    "median_net_pct": 1.3177715852935377,
+    "t_stat": 13.843312542242307,
+    "p_value": 1.944217222896755e-43,
+    "profit_factor": 1.2678726688572728,
+    "avg_win_pct": 3.000417448613715,
+    "avg_loss_pct": -4.629405786160874,
+    "avg_bars": 5.124014054209092,
+    "worst_pct": -64.0208053964962,
+    "worst_mae_pct": -70.62407279739502,
+    "total_pnl_inr_at_1L": 11700261.2566355
+  },
+  "cost_sensitivity": {
+    "0.000pct_rt": {
+      "mean_net_pct": 0.5454844850364082,
+      "win_rate": 0.6721282088053923,
+      "total_pnl_inr_at_1L": 15214653.256635498
+    },
+    "0.100pct_rt": {
+      "mean_net_pct": 0.44548448503640814,
+      "win_rate": 0.6634518858454037,
+      "total_pnl_inr_at_1L": 12425453.256635496
+    },
+    "0.200pct_rt": {
+      "mean_net_pct": 0.34548448503640816,
+      "win_rate": 0.6558152875376452,
+      "total_pnl_inr_at_1L": 9636253.256635496
+    },
+    "0.323pct_rt": {
+      "mean_net_pct": 0.2224844850364083,
+      "win_rate": 0.645597303886419,
+      "total_pnl_inr_at_1L": 6205537.2566355
+    },
+    "0.500pct_rt": {
+      "mean_net_pct": 0.045484485036408166,
+      "win_rate": 0.627599311630575,
+      "total_pnl_inr_at_1L": 1268653.2566354969
+    }
+  },
+  "per_year": {
+    "2008": {
+      "trades": 537.0,
+      "mean_net_pct": -3.559,
+      "win_rate": 0.48,
+      "pnl_inr": -1911198.0304418989
+    },
+    "2009": {
+      "trades": 1137.0,
+      "mean_net_pct": 1.569,
+      "win_rate": 0.718,
+      "pnl_inr": 1783814.493377931
+    },
+    "2010": {
+      "trades": 1599.0,
+      "mean_net_pct": 0.337,
+      "win_rate": 0.679,
+      "pnl_inr": 539629.6440039267
+    },
+    "2011": {
+      "trades": 734.0,
+      "mean_net_pct": -1.177,
+      "win_rate": 0.529,
+      "pnl_inr": -863714.2867373643
+    },
+    "2012": {
+      "trades": 1114.0,
+      "mean_net_pct": 0.395,
+      "win_rate": 0.665,
+      "pnl_inr": 440154.6269559655
+    },
+    "2013": {
+      "trades": 1092.0,
+      "mean_net_pct": -0.167,
+      "win_rate": 0.589,
+      "pnl_inr": -182583.98615284872
+    },
+    "2014": {
+      "trades": 1793.0,
+      "mean_net_pct": 0.894,
+      "win_rate": 0.67,
+      "pnl_inr": 1602625.7956568191
+    },
+    "2015": {
+      "trades": 1246.0,
+      "mean_net_pct": 0.507,
+      "win_rate": 0.665,
+      "pnl_inr": 631528.938109408
+    },
+    "2016": {
+      "trades": 1278.0,
+      "mean_net_pct": 0.097,
+      "win_rate": 0.674,
+      "pnl_inr": 123344.05119853886
+    },
+    "2017": {
+      "trades": 1608.0,
+      "mean_net_pct": 0.625,
+      "win_rate": 0.69,
+      "pnl_inr": 1004523.9007029074
+    },
+    "2018": {
+      "trades": 1129.0,
+      "mean_net_pct": -0.296,
+      "win_rate": 0.61,
+      "pnl_inr": -333666.3141121088
+    },
+    "2019": {
+      "trades": 1100.0,
+      "mean_net_pct": -0.054,
+      "win_rate": 0.618,
+      "pnl_inr": -58947.67945828404
+    },
+    "2020": {
+      "trades": 1353.0,
+      "mean_net_pct": -0.109,
+      "win_rate": 0.67,
+      "pnl_inr": -146916.33055091376
+    },
+    "2021": {
+      "trades": 2596.0,
+      "mean_net_pct": 0.475,
+      "win_rate": 0.646,
+      "pnl_inr": 1232860.2627254329
+    },
+    "2022": {
+      "trades": 1550.0,
+      "mean_net_pct": -0.151,
+      "win_rate": 0.606,
+      "pnl_inr": -234066.88388048753
+    },
+    "2023": {
+      "trades": 2151.0,
+      "mean_net_pct": 0.681,
+      "win_rate": 0.68,
+      "pnl_inr": 1465500.7295624355
+    },
+    "2024": {
+      "trades": 2891.0,
+      "mean_net_pct": 0.485,
+      "win_rate": 0.639,
+      "pnl_inr": 1400765.3717010692
+    },
+    "2025": {
+      "trades": 1931.0,
+      "mean_net_pct": -0.107,
+      "win_rate": 0.63,
+      "pnl_inr": -207374.14344481536
+    },
+    "2026": {
+      "trades": 1053.0,
+      "mean_net_pct": -0.077,
+      "win_rate": 0.625,
+      "pnl_inr": -80742.90258021308
+    }
+  },
+  "green_years": "10/19",
+  "concurrency": {
+    "median_open": 24.0,
+    "p90_open": 71.0,
+    "max_open": 219,
+    "max_open_date": "2023-10-26",
+    "capital_needed_at_max_inr": 21900000.0
+  },
+  "capped_portfolio": {
+    "5": {
+      "cap": 5,
+      "trades_taken": 3899,
+      "trades_skipped": 23993,
+      "win_rate": 0.6455501410618107,
+      "total_pnl_inr": 656495.6389873404,
+      "capital_deployed_inr": 500000.0,
+      "return_on_capital_pct_total": 131.2991277974681,
+      "return_on_capital_pct_yr": 7.039043949511995,
+      "max_dd_inr": -258158.74875812768,
+      "max_dd_pct_of_capital": -51.631749751625534,
+      "years": 18.652977412731005
+    },
+    "10": {
+      "cap": 10,
+      "trades_taken": 7139,
+      "trades_skipped": 20753,
+      "win_rate": 0.6461689312228603,
+      "total_pnl_inr": 708743.8601430827,
+      "capital_deployed_inr": 1000000.0,
+      "return_on_capital_pct_total": 70.87438601430827,
+      "return_on_capital_pct_yr": 3.799628576504638,
+      "max_dd_inr": -497904.15336478245,
+      "max_dd_pct_of_capital": -49.79041533647825,
+      "years": 18.652977412731005
+    },
+    "20": {
+      "cap": 20,
+      "trades_taken": 12288,
+      "trades_skipped": 15604,
+      "win_rate": 0.6429850260416666,
+      "total_pnl_inr": 1003823.3780262878,
+      "capital_deployed_inr": 2000000.0,
+      "return_on_capital_pct_total": 50.191168901314384,
+      "return_on_capital_pct_yr": 2.6907859153390694,
+      "max_dd_inr": -809293.5083072631,
+      "max_dd_pct_of_capital": -40.46467541536315,
+      "years": 18.652977412731005
+    }
+  },
+  "random_entry": {
+    "actual_mean_gross_pct": 0.5454844850364082,
+    "random_mean_gross_pct": 0.4701809165925699,
+    "random_p95_pct": 0.5241993493664494,
+    "percentile_of_actual": 99.5,
+    "n_sims": 400
+  },
+  "breadth": {
+    "symbols_with_10plus_trades": 330,
+    "share_of_symbols_profitable": 66.96969696969697,
+    "median_symbol_mean_pct": 0.26957313694674306,
+    "top10_share_of_total_pnl_pct": 21.90920936449839
+  }
+}
