@@ -24,12 +24,17 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import ast
+import contextlib
 import datetime as dt
 import io
 import json
+import logging
+import re
 import shutil
 import sys
 import time
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -37,7 +42,6 @@ import pandas as pd
 import polars as pl
 import requests
 import yfinance as yf
-import yfinance.shared as yf_shared
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = REPO_ROOT / "data"
@@ -70,8 +74,11 @@ NSE_CLOSE = dt.time(15, 30)
 # low, pause between batches, and back off for minutes (not seconds) once throttled —
 # hammering through a 429 just extends the block.
 YF_THREADS = 2
-BATCH_PAUSE_SECONDS = 0.5
+BATCH_PAUSE_SECONDS = 2.0  # a full-universe run trips Yahoo's throttle at ~1500 symbols
 RATE_LIMIT_SLEEP_SECONDS = 60
+# 60s doubling five times waits just over an hour in total before giving up on a block.
+# Yahoo's throttle outlasts a seconds-scale retry, and hammering it only extends the block.
+RATE_LIMIT_RETRIES = 5
 RATE_LIMIT_HINTS = ("too many requests", "rate limited", "429", "ratelimit")
 # The only messages that actually mean "Yahoo does not carry this ticker". Anything else
 # (empty frame, transient 5xx, dropped connection) is an unresolved failure, and must not
@@ -80,21 +87,53 @@ ABSENT_HINTS = ("no timezone found", "possibly delisted", "no price data found")
 CACHE_DIR = REPO_ROOT / ".cache" / "download"
 
 
-def error_reason(ticker: str) -> str:
-    return str(yf_shared._ERRORS.get(ticker, ""))
+# yfinance <= 1.6 exposed per-ticker failures on the module global
+# `yfinance.shared._ERRORS`. Since 1.7 those live on a context object local to each
+# download() call, and the global is left empty forever — so reading it silently reports
+# "no errors" through a rate limit, which is exactly the failure this code exists to catch.
+# The logger is the one channel yfinance still publishes them on. Its messages look like
+#     ['A.NS', 'B.NS']: YFRateLimitError('Too Many Requests. Rate limited...')
+_ERROR_LINE = re.compile(r"^(\[.*?\]): (.*)$", re.DOTALL)
 
 
-def confirmed_absent(ticker: str) -> bool:
-    reason = error_reason(ticker).lower()
-    return any(hint in reason for hint in ABSENT_HINTS)
+class YFErrorCollector(logging.Handler):
+    """Collects yfinance's per-ticker download failures for one download() call."""
+
+    def __init__(self) -> None:
+        super().__init__(level=logging.ERROR)
+        self.reasons: dict[str, str] = {}
+
+    def emit(self, record: logging.LogRecord) -> None:
+        match = _ERROR_LINE.match(record.getMessage())
+        if not match:  # the "N Failed downloads:" banner carries no ticker
+            return
+        try:
+            tickers = ast.literal_eval(match.group(1))
+        except (ValueError, SyntaxError):
+            return
+        for ticker in tickers:
+            self.reasons[str(ticker)] = match.group(2)
 
 
-def hit_rate_limit() -> bool:
-    """Inspect yfinance's per-ticker error map; it swallows 429s into an empty frame."""
-    return any(
-        any(hint in str(message).lower() for hint in RATE_LIMIT_HINTS)
-        for message in yf_shared._ERRORS.values()
-    )
+@contextlib.contextmanager
+def collect_yf_errors() -> Iterator[YFErrorCollector]:
+    logger = logging.getLogger("yfinance")
+    handler = YFErrorCollector()
+    logger.addHandler(handler)
+    try:
+        yield handler
+    finally:
+        logger.removeHandler(handler)
+
+
+def confirmed_absent(reason: str) -> bool:
+    """True only when Yahoo says outright that it does not carry the ticker."""
+    return any(hint in reason.lower() for hint in ABSENT_HINTS)
+
+
+def is_rate_limit(reasons: Iterable[str]) -> bool:
+    """Yahoo's 429 arrives as a per-ticker error, not an exception or an empty frame."""
+    return any(any(hint in str(r).lower() for hint in RATE_LIMIT_HINTS) for r in reasons)
 
 
 @dataclass(frozen=True)
@@ -272,46 +311,61 @@ def download_batch(
     request: dict,
     session: requests.Session,
     retries: int = 3,
-) -> tuple[pd.DataFrame, bool]:
-    """Returns (tidy frame, throttled). `throttled` means Yahoo refused, not that the
-    symbols have no data — the caller must not record those as unavailable."""
-    last_error: Exception | None = None
-    for attempt in range(retries):
-        yf_shared._ERRORS.clear()
-        raw = None
-        try:
-            raw = yf.download(
-                tickers,
-                interval=interval.yf_code,
-                **request,
-                auto_adjust=False,
-                actions=False,
-                progress=False,
-                threads=YF_THREADS,
-                group_by="column",
-                session=session,
-            )
-        except Exception as exc:
-            last_error = exc
+    rate_limit_retries: int = RATE_LIMIT_RETRIES,
+) -> tuple[pd.DataFrame, bool, dict[str, str]]:
+    """Returns (tidy frame, throttled, per-ticker failure reasons).
 
-        if hit_rate_limit():
-            wait = RATE_LIMIT_SLEEP_SECONDS * (2**attempt)
-            print(f"    rate limited by Yahoo — backing off {wait}s", flush=True)
+    `throttled` means Yahoo refused the request, not that the symbols have no data — the
+    caller must not record those as unavailable.
+    """
+    last_error: Exception | None = None
+    reasons: dict[str, str] = {}
+    attempt = 0
+    backoffs = 0
+    while attempt < retries:
+        raw = None
+        with collect_yf_errors() as collected:
+            try:
+                raw = yf.download(
+                    tickers,
+                    interval=interval.yf_code,
+                    **request,
+                    auto_adjust=False,
+                    actions=False,
+                    progress=False,
+                    threads=YF_THREADS,
+                    group_by="column",
+                    session=session,
+                )
+            except Exception as exc:
+                last_error = exc
+        reasons = dict(collected.reasons)
+        # A wholly refused call raises instead of reporting per ticker; check both.
+        signals = list(reasons.values()) + ([str(last_error)] if last_error else [])
+
+        if is_rate_limit(signals):
+            # A refusal is not a failed attempt — it means "come back later", so it burns a
+            # back-off rather than one of the retries reserved for genuine empty responses.
+            if backoffs >= rate_limit_retries:
+                return pd.DataFrame(), True, reasons
+            wait = RATE_LIMIT_SLEEP_SECONDS * (2**backoffs)
+            backoffs += 1
+            print(f"    rate limited by Yahoo — backing off {wait}s "
+                  f"({backoffs}/{rate_limit_retries})", flush=True)
             time.sleep(wait)
             continue
 
         if raw is not None and not raw.empty:
             if not isinstance(raw.columns, pd.MultiIndex):  # single-ticker shape
                 raw.columns = pd.MultiIndex.from_product([raw.columns, tickers])
-            return tidy_batch(raw, tickers, interval), False
+            return tidy_batch(raw, tickers, interval), False, reasons
 
         last_error = last_error or RuntimeError("empty response")
-        if attempt < retries - 1:
+        attempt += 1
+        if attempt < retries:
             time.sleep(2**attempt)
 
-    if hit_rate_limit():
-        return pd.DataFrame(), True
-    return pd.DataFrame(), False
+    return pd.DataFrame(), False, reasons
 
 
 def download_interval(
@@ -349,7 +403,7 @@ def download_interval(
             absorb(pl.read_parquet(checkpoint))
             continue
 
-        tidy, limited = download_batch(batch, interval, request, session)
+        tidy, limited, _ = download_batch(batch, interval, request, session)
         if limited:
             throttled += batch
         elif not tidy.empty:
@@ -380,9 +434,11 @@ def download_interval(
             if checkpoint.exists():
                 absorb(pl.read_parquet(checkpoint))
                 continue
-            tidy, limited = download_batch([ticker], interval, request, session, retries=3)
+            tidy, limited, reasons = download_batch(
+                [ticker], interval, request, session, retries=3
+            )
             if tidy.empty and not limited and fallback_request:
-                tidy, limited = download_batch(
+                tidy, limited, reasons = download_batch(
                     [ticker], interval, fallback_request, session, retries=3
                 )
             if limited:
@@ -391,7 +447,7 @@ def download_interval(
                 frame = to_polars(tidy, interval)
                 frame.write_parquet(checkpoint, compression="zstd")
                 absorb(frame)
-            elif confirmed_absent(ticker):
+            elif confirmed_absent(reasons.get(ticker, "")):
                 absent.append(ticker)
             else:
                 unresolved.append(ticker)
