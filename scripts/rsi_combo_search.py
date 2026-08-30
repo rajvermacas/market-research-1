@@ -37,6 +37,9 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 OPTIONAL = {
     "dailyRSI>60":   pl.col("rsi_daily") > 60,
     "emaRSI<53":     pl.col("rsi_ema") < 53,
+    # Paired with emaRSI<53 this brackets the smoothed RSI into 40-53: the hourly cooled
+    # off, but did not collapse. Below 40 the "pullback" is a decline.
+    "emaRSI>40":     pl.col("rsi_ema") > 40,
     "marubozu>=.8":  pl.col("close_pos") >= 0.8,
     "risk>=2%":      pl.col("risk_pct") >= 0.02,
     "vol>=1.5x":     pl.col("vol_ratio") >= 1.5,
