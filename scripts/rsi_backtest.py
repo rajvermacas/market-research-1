@@ -361,6 +361,18 @@ def main() -> int:
               f"median hold {trades['bars_held'].median():.0f} bars")
         print(f"  CAGR {cagr * 100:+.2f}%   max drawdown {maxdd * 100:.2f}%   "
               f"final equity x{equity[-1]:.3f}")
+        # How much of the result rests on a handful of trades, and does it survive being
+        # cut in half? A wide target wins rarely, so the whole edge can sit in a few
+        # outliers that a different three years would not have produced.
+        mid = prices["datetime"][prices.height // 2].timestamp() * 1_000_000
+        h1 = closed.filter(pl.col("entry_time") < mid)
+        h2 = closed.filter(pl.col("entry_time") >= mid)
+        ranked = closed["ret"].sort(descending=True)
+        top10 = float(ranked.head(10).sum())
+        gross = float(ranked.filter(ranked > 0).sum())
+        print(f"  half-split mean trade: h1 {float(h1['ret'].mean()) * 100:+.3f}%  "
+              f"h2 {float(h2['ret'].mean()) * 100:+.3f}%"
+              f"   | top 10 winners = {top10 / gross:.0%} of all gains")
         summary.append({
             "reward_risk": f"1:{reward_risk:g}", "trades": trades.height, "taken": taken,
             "target_hits": hit["target"], "stopped": hit["stop"], "open_at_end": hit["open"],
