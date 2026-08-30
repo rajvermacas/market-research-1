@@ -35,6 +35,8 @@ scripts/ema_support.py                    how reliably each name holds its daily
 scripts/n_pattern.py                      impulse/pullback/resumption "N" on a rising 10 EMA
 scripts/hourly_rsi_screener.py            hourly RSI cross above 60 under a daily/weekly/monthly
                                           RSI > 60 regime filter
+scripts/kite_download.py                  deep intraday history from Kite Connect (back to
+                                          ~2015, vs Yahoo's ~730 trading days)
 ```
 
 ## Conventions
@@ -56,6 +58,14 @@ scripts/hourly_rsi_screener.py            hourly RSI cross above 60 under a dail
 - After changing anything that touches the data files, run `python scripts/validate_data.py`.
 - `_manifest.json` is the source of truth for snapshot stats. Do not hard-code row counts in prose
   that will silently go stale — point at the manifest.
+
+## Credentials
+
+Kite Connect keys are read from `KITE_API_KEY` / `KITE_ACCESS_TOKEN` in the environment and
+nowhere else. Never pass them as CLI arguments — they end up in shell history and in `ps`
+output — and never write them into a file in the repository. The access token expires daily
+and refreshing it needs an interactive login, so `kite_download.py` is run deliberately, not
+on a schedule.
 
 ## Known data caveats
 
