@@ -167,7 +167,22 @@ def find_trades(frame: pl.DataFrame, cost: float, reward_risk: float,
             })
     if not rows:
         return pl.DataFrame()
-    return pl.DataFrame(rows).sort("entry_time")
+    trades = pl.DataFrame(rows).sort("entry_time")
+
+    # Invariant: never two live positions in one symbol. The forward walk enforces it via
+    # last_exit, but a backtest that quietly doubles up on a name inflates both the trade
+    # count and the return, so it is checked rather than assumed.
+    overlap = (
+        trades.sort("symbol", "entry_time")
+        .with_columns(pl.col("exit_time").shift(1).over("symbol").alias("prev_exit"))
+        .filter(pl.col("entry_time") <= pl.col("prev_exit"))
+    )
+    if overlap.height:
+        raise AssertionError(
+            f"{overlap.height} re-entries overlap an open position in the same symbol, "
+            f"e.g. {overlap['symbol'][0]}"
+        )
+    return trades
 
 
 # ---------------------------------------------------------------------------- portfolio
@@ -204,6 +219,8 @@ def simulate(trades: pl.DataFrame, prices: pl.DataFrame, slots: int, cost: float
             if allocation <= 0:
                 skipped += 1
                 continue
+            if any(p[0] == column[row["symbol"]] for p in open_pos):
+                raise AssertionError(f"{row['symbol']} opened while already held")
             shares = allocation * (1 - cost) / row["entry"]
             cash -= allocation
             open_pos.append([
