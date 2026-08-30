@@ -252,6 +252,47 @@ def simulate(trades: pl.DataFrame, prices: pl.DataFrame, slots: int, cost: float
     return equity, taken, skipped, blocked, max_stacked
 
 
+def simulate_fixed(trades: pl.DataFrame, prices: pl.DataFrame, notional: float,
+                   cost: float):
+    """Unlimited cash, a fixed rupee ticket per trade: every signal is taken.
+
+    Nothing compounds — position size never grows with the account — so "return" needs a
+    capital base to divide by. The honest one is the most you ever had at risk at once:
+    peak concurrent positions x the ticket. That is the cash you must actually possess to
+    run the strategy, so the account is modelled as starting there and ending there plus
+    total P&L.
+    """
+    grid = prices["datetime"].dt.epoch("us").to_numpy()
+    symbols = [c for c in prices.columns if c != "datetime"]
+    column = {s: i for i, s in enumerate(symbols)}
+    matrix = prices.select(symbols).to_numpy()
+
+    entry_at: dict[int, list] = {}
+    for row in trades.iter_rows(named=True):
+        entry_at.setdefault(int(np.searchsorted(grid, row["entry_time"])), []).append(row)
+
+    realised = 0.0
+    open_pos: list = []               # [col, shares, exit_index, exit_price]
+    pnl = np.empty(len(grid))
+    deployed = np.empty(len(grid))
+    peak_open = 0
+
+    for t in range(len(grid)):
+        for position in [p for p in open_pos if p[2] == t]:
+            realised += position[1] * position[3] * (1 - cost) - notional
+            open_pos.remove(position)
+        for row in entry_at.get(t, []):
+            open_pos.append([column[row["symbol"]], notional * (1 - cost) / row["entry"],
+                             int(np.searchsorted(grid, row["exit_time"])), row["exit"]])
+        peak_open = max(peak_open, len(open_pos))
+        unrealised = sum(p[1] * matrix[t, p[0]] - notional for p in open_pos)
+        pnl[t] = realised + unrealised
+        deployed[t] = len(open_pos) * notional
+
+    base = max(peak_open, 1) * notional
+    return pnl, base, peak_open, deployed
+
+
 def performance(equity: np.ndarray, bars: int) -> tuple[float, float]:
     years = bars / BARS_PER_YEAR
     cagr = equity[-1] ** (1 / years) - 1
@@ -276,6 +317,9 @@ def main() -> int:
                         help="target as a multiple of risk; several sweeps them (default 1..5)")
     parser.add_argument("--slots", type=int, default=10,
                         help="max concurrent positions (default 10)")
+    parser.add_argument("--fixed-notional", type=float, default=None,
+                        help="unlimited cash, this many rupees per trade; every signal is "
+                             "taken and nothing compounds (e.g. 100000 for 1 lakh)")
     parser.add_argument("--per-symbol", type=int, default=None,
                         help="max concurrent positions in ONE symbol; omit for unlimited, "
                              "so a signal re-enters a name whose earlier trade is still open")
@@ -387,17 +431,29 @@ def main() -> int:
         trades = find_trades(frame, cost, reward_risk)
         if trades.is_empty():
             print("  no trades"); continue
-        equity, taken, skipped, blocked, max_stacked = simulate(
-            trades, prices, args.slots, cost, args.per_symbol)
+        if args.fixed_notional:
+            pnl, base, peak_open, deployed = simulate_fixed(
+                trades, prices, args.fixed_notional, cost)
+            equity = (base + pnl) / base       # normalise so CAGR/DD read as usual
+            taken, skipped, blocked, max_stacked = trades.height, 0, 0, 0
+        else:
+            equity, taken, skipped, blocked, max_stacked = simulate(
+                trades, prices, args.slots, cost, args.per_symbol)
         cagr, maxdd = performance(equity, bars)
         closed = trades.filter(pl.col("outcome") != "open")
         wins = closed.filter(pl.col("ret") > 0).height
         hit = {o: trades.filter(pl.col("outcome") == o).height for o in ("target", "stop", "open")}
+        if args.fixed_notional:
+            print(f"  {trades.height:,} signals, ALL taken | peak {peak_open} positions "
+                  f"open at once = Rs {base:,.0f} capital needed | "
+                  f"avg deployed Rs {deployed.mean():,.0f}")
+            print(f"  total P&L Rs {pnl[-1]:,.0f} on Rs {base:,.0f} base "
+                  f"({pnl[-1] / base * 100:+.1f}% over the window)")
         print(f"  {trades.height:,} signals, {taken:,} taken, {skipped:,} skipped "
               f"(no free slot at {args.slots})"
               + (f", {blocked:,} blocked by the {args.per_symbol}/symbol cap"
                  if args.per_symbol else "")
-              + f" | deepest stack in one name: {max_stacked + 1}")
+              + f" | deepest stack in one name: {max_stacked + 1}") if not args.fixed_notional else None
         print(f"  target {hit['target']:,} | stop {hit['stop']:,} | still open {hit['open']:,}")
         print(f"  win rate {wins / max(closed.height, 1):.1%}  "
               f"mean trade {closed['ret'].mean() * 100:+.2f}%  "
@@ -420,8 +476,13 @@ def main() -> int:
             "reward_risk": f"1:{reward_risk:g}", "trades": trades.height, "taken": taken,
             "target_hits": hit["target"], "stopped": hit["stop"], "open_at_end": hit["open"],
             "win_rate_pct": round(wins / max(closed.height, 1) * 100, 1),
+            "mean_trade_pct": round(float(closed["ret"].mean()) * 100, 3),
             "cagr_pct": round(cagr * 100, 2), "max_drawdown_pct": round(maxdd * 100, 2),
             "final_equity": round(float(equity[-1]), 3),
+            "h1_mean_pct": round(float(h1["ret"].mean()) * 100, 3),
+            "h2_mean_pct": round(float(h2["ret"].mean()) * 100, 3),
+            "top10_share_pct": round(top10 / gross * 100, 1),
+            "max_stacked": max_stacked + 1,
         })
         if args.out:
             trades.write_csv(f"{args.out.rstrip('.csv')}_rr{reward_risk:g}.csv")
