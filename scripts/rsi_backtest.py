@@ -245,6 +245,8 @@ def simulate(trades: pl.DataFrame, prices: pl.DataFrame, slots: int, cost: float
                 int(np.searchsorted(grid, row["exit_time"])), row["exit"],
             ])
             taken += 1
+            # open_pos already holds the position just appended, so this count is the
+            # concurrent depth in that name — it must not be incremented again on the way out.
             same = sum(1 for p in open_pos if p[0] == column[row["symbol"]])
             max_stacked = max(max_stacked, same)
 
@@ -453,7 +455,7 @@ def main() -> int:
               f"(no free slot at {args.slots})"
               + (f", {blocked:,} blocked by the {args.per_symbol}/symbol cap"
                  if args.per_symbol else "")
-              + f" | deepest stack in one name: {max_stacked + 1}") if not args.fixed_notional else None
+              + f" | deepest stack in one name: {max_stacked}") if not args.fixed_notional else None
         print(f"  target {hit['target']:,} | stop {hit['stop']:,} | still open {hit['open']:,}")
         print(f"  win rate {wins / max(closed.height, 1):.1%}  "
               f"mean trade {closed['ret'].mean() * 100:+.2f}%  "
@@ -482,7 +484,7 @@ def main() -> int:
             "h1_mean_pct": round(float(h1["ret"].mean()) * 100, 3),
             "h2_mean_pct": round(float(h2["ret"].mean()) * 100, 3),
             "top10_share_pct": round(top10 / gross * 100, 1),
-            "max_stacked": max_stacked + 1,
+            "max_stacked": max_stacked,
         })
         if args.out:
             trades.write_csv(f"{args.out.rstrip('.csv')}_rr{reward_risk:g}.csv")
