@@ -1,0 +1,402 @@
+<div class="wrap">
+
+<header class="mast">
+  <p class="eyebrow">Independent replication &middot; ES &amp; NQ &middot; Nifty 50 &amp; Nifty Bank &middot; 2001&ndash;Aug 2026</p>
+  <h1>The Dip Buy Audit</h1>
+  <p class="standfirst">A widely-shared RSI(2) dip-buying strategy claims an 83% win rate and $335K since 2009 on one ES and one NQ contract. <strong>Every headline number checks out.</strong> The equity curve behind them still tells you something that isn't true &mdash; and the effect largely fails to survive the trip to India.</p>
+  <div class="byline">
+    <span>Source: <a href="https://x.com/MrMilkTrading/status/2093923934823403813">@MrMilkTrading, 30 Aug 2026</a></span>
+    <span>585 trades reconstructed across two markets</span>
+    <span>Data through 28 Aug 2026</span>
+  </div>
+</header>
+
+<div class="verdicts">
+  <div class="verdict" style="--v:var(--pos)">
+    <span class="tag">Replicates</span>
+    <p class="claim">The numbers are honest</p>
+    <p>83.1% win rate since 2022 against 83% claimed, 14/18 green years, $77.9K YTD against $76K. The edge also survives randomisation and an out-of-sample decade.</p>
+  </div>
+  <div class="verdict" style="--v:var(--neg)">
+    <span class="tag">Overstated</span>
+    <p class="claim">The curve is a price chart</p>
+    <p>The exponential bend is the index quadrupling, not the strategy improving. Measured as a percentage of what it risks, the edge has been flat for 18 years.</p>
+  </div>
+  <div class="verdict" style="--v:var(--s2)">
+    <span class="tag">Omitted</span>
+    <p class="claim">Holding beat it by 2.6&times;</p>
+    <p>Buy and hold the same two contracts: $818K. The strategy: $315K &mdash; 38% of it &mdash; with a &minus;$47.5K drawdown and no stop by design.</p>
+  </div>
+  <div class="verdict" style="--v:var(--muted)">
+    <span class="tag">Does not travel</span>
+    <p class="claim">India breaks it</p>
+    <p>Same rules on Nifty 50 and Nifty Bank: profit factor 1.18, a drawdown 82% the size of eighteen years of profit, and RSI timing that barely beats random entry.</p>
+  </div>
+</div>
+
+<section>
+  <div class="sec-head">
+    <span class="num">RULES</span>
+    <div class="titles">
+      <h2>What was tested</h2>
+      <p class="kicker">Reconstructed verbatim from the post, with nothing added</p>
+    </div>
+  </div>
+  <div class="col">
+    <div class="rules">
+      <ol>
+        <li>RSI(2) on daily closes</li>
+        <li>Buy the close when RSI(2) &lt; 10 and price &gt; 200 day SMA</li>
+        <li>Sell the close when RSI(2) &gt; 70, or after 10 sessions, whichever comes first</li>
+        <li>Long only. ES and NQ, 1 contract each. No stop.</li>
+      </ol>
+      <p class="src">Originally from Larry Connors &amp; Cesar Alvarez, <em>Short Term Trading Strategies That Work</em>.</p>
+    </div>
+    <p style="font-size:14px;color:var(--muted);margin-top:14px">Wilder's RSI. $4 round-turn commission plus one tick of slippage per side, as the post specifies. ES at $50/point, NQ at $20/point. Yahoo daily futures, back-adjusted for quarterly roll gaps &mdash; see finding 5.</p>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <span class="num">01 / 06</span>
+    <div class="titles">
+      <h2>The claims reproduce</h2>
+      <p class="kicker">Independently, from raw data, without seeing the author's code</p>
+    </div>
+  </div>
+  <div class="col">
+    <p>This is the part that usually fails. It doesn't here. Rebuilding the strategy from the four rules and running it on daily ES and NQ history lands within a few percent of every published figure &mdash; and lands on the green-year count exactly.</p>
+  </div>
+
+  <figure>
+    <p class="fig-title">Claimed against replicated</p>
+    <p class="fig-sub">Portfolio of 1 ES + 1 NQ, 2009 &ndash; Aug 2026, roll-adjusted series</p>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Metric</th><th>Claimed</th><th>Replicated</th><th>Verdict</th></tr></thead>
+        <tbody>
+          <tr><td>Win rate since 2022</td><td>83%</td><td>83.1%</td><td><span class="chip ok">match</span></td></tr>
+          <tr><td>Profit factor since 2022</td><td>2.53</td><td>2.54</td><td><span class="chip ok">match</span></td></tr>
+          <tr><td>Green years</td><td>14 / 18</td><td>14 / 18</td><td><span class="chip ok">match</span></td></tr>
+          <tr><td>2026 YTD, 1+1 contracts</td><td>$76,000</td><td>$77,934</td><td><span class="chip ok">match</span></td></tr>
+          <tr><td>Cumulative net since 2009</td><td>$335,000</td><td>$314,790</td><td><span class="chip ok">&minus;6%</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <figcaption>The only gap of any size is the cumulative total, and finding 5 accounts for it: on the unadjusted series the same code returns $342,275, which brackets the claim from the other side.</figcaption>
+  </figure>
+
+  <div class="col">
+    <p style="margin-top:26px">The edge is also statistically real, not a run of luck. Mean return per trade is <strong>+0.435% of notional</strong> across 298 trades, <span class="mono">t = 5.00</span>, <span class="mono">p &lt; 10<sup>&minus;6</sup></span>. Replacing the RSI signal with random entry days &mdash; same 200-SMA filter, same number of trades, same holding periods, 2,000 simulations &mdash; the actual result lands at the <strong>99.9th percentile on ES</strong> and the <strong>98.3rd on NQ</strong>. The timing is doing work that being long alone does not explain.</p>
+    <p>And it holds out of sample. The published curve starts in 2009; run the same rules across 2001&ndash;2008, all the futures history available, and it returns 91 trades at a 75.8% win rate and a 2.23 profit factor through the dot-com bust and the financial crisis.</p>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <span class="num">02 / 06</span>
+    <div class="titles">
+      <h2>The hockey stick is the index, not the edge</h2>
+      <p class="kicker">The single most important thing the chart gets wrong</p>
+    </div>
+  </div>
+  <div class="col">
+    <p>The published equity curve bends sharply upward after 2021 &mdash; the visual signature of a strategy hitting its stride. It is nothing of the kind. One NQ contract is a $590,000 position today and was a $130,000 position in 2012. Holding size fixed at one contract while the index quadruples converts a <em>flat</em> edge into an exponential chart.</p>
+    <p>Here is the same strategy measured two ways. Same trades, same dates. Only the unit changes.</p>
+  </div>
+
+  <figure>
+    <p class="fig-title">Same trades, two units</p>
+    <p class="fig-sub">Net result per year in dollars, then as a percentage of the notional actually risked</p>
+    <div class="chart-scroll"><div class="chart-host" id="c-yeardollars"></div></div>
+    <div class="chart-scroll" style="margin-top:6px"><div class="chart-host" id="c-yearpct"></div></div>
+    <figcaption>Regressed on time, the dollar series slopes up <strong>$2,769 a year</strong> (p&nbsp;=&nbsp;0.027) &mdash; apparent improvement. The percentage series slopes <strong>0.28% a year with p&nbsp;=&nbsp;0.50 and R&sup2;&nbsp;=&nbsp;0.03</strong> &mdash; no trend at all. 2013 returned 12.2% of notional; 2025 returned 8.9%.</figcaption>
+  </figure>
+
+  <div class="tiles">
+    <div class="tile"><p class="v">0.427%</p><p class="l">Mean per trade, 2009&ndash;17</p></div>
+    <div class="tile"><p class="v">0.443%</p><p class="l">Mean per trade, 2018&ndash;26</p><p class="n">Statistically indistinguishable</p></div>
+    <div class="tile"><p class="v">$126,603</p><p class="l">Mean notional, 2009&ndash;17</p></div>
+    <div class="tile"><p class="v">$315,074</p><p class="l">Mean notional, 2018&ndash;26</p><p class="n">2.5&times; the position, same edge</p></div>
+  </div>
+
+  <div class="callout">
+    <p><strong>Where the money lands.</strong> 60% of all profit since 2009 falls in 2024&ndash;2026, and 25% in 2026 alone &mdash; not because those years were exceptional, but because a percentage point was worth three times more by then.</p>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <span class="num">03 / 06</span>
+    <div class="titles">
+      <h2>It captures 38% of doing nothing</h2>
+      <p class="kicker">In the same dollars-per-contract unit the post uses</p>
+    </div>
+  </div>
+  <div class="col">
+    <p>If dollars per contract is the yardstick, it has to be applied consistently. Buying one ES and one NQ in January 2009 and never touching them again returns <strong>$818,063</strong> by August 2026. The strategy returns $314,790.</p>
+    <p>The fair defence is exposure: the strategy is in the market on only 15% of sessions and holds an average of 4.5 days, so per unit of time at risk it is far more efficient, and the 200-SMA filter kept it almost entirely out of 2022 &mdash; four trades all year. That is a genuine strength. It is also not what a $335K headline over a rising equity curve communicates.</p>
+  </div>
+
+  <figure>
+    <p class="fig-title">Strategy against simply holding</p>
+    <p class="fig-sub">Cumulative net P&amp;L, 1 ES + 1 NQ, January 2009 &ndash; August 2026</p>
+    <div class="legend">
+      <span class="k"><i style="background:var(--s1)"></i>Dip Buy strategy</span>
+      <span class="k"><i style="background:var(--s2)"></i>Buy and hold</span>
+    </div>
+    <div class="chart-scroll"><div class="chart-host" id="c-equity"></div></div>
+    <figcaption>Both lines are the same two contracts over the same window. The strategy's flatness through 2022 is the 200-SMA filter working exactly as intended &mdash; it is the reason the curve has so few bad years, and the reason it leaves most of the market's return on the table.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <div class="sec-head">
+    <span class="num">04 / 06</span>
+    <div class="titles">
+      <h2>An 83% win rate that loses more than it wins</h2>
+      <p class="kicker">The payoff shape a win rate is designed to hide</p>
+    </div>
+  </div>
+  <div class="col">
+    <p>Win rate is the headline because it is the most flattering number this strategy produces. The average winner is $2,352. The average loser is <strong>$3,588</strong> &mdash; 1.53 times larger. The strategy is profitable because it wins four times out of five, not because its wins are big.</p>
+    <p>That asymmetry is structural, not bad luck. Exits split two ways: 284 trades closed on the RSI target for a combined <strong>+$438,428</strong>; 14 trades ran out the 10-session clock while the dip kept dipping, for <strong>&minus;$123,638</strong>. Those fourteen trades are the entire risk profile. With no stop, "no stop" <em>is</em> the risk model.</p>
+  </div>
+
+  <figure>
+    <p class="fig-title">Every trade, by size of result</p>
+    <p class="fig-sub">298 trades, 2009 &ndash; Aug 2026, as a percentage of notional at entry</p>
+    <div class="legend">
+      <span class="k"><i style="background:var(--s1)"></i>Closed on RSI target (284)</span>
+      <span class="k"><i style="background:var(--s2)"></i>Ran the 10-session clock (14)</span>
+    </div>
+    <div class="chart-scroll"><div class="chart-host" id="c-hist"></div></div>
+    <figcaption>The right side is a dense stack of small, reliable wins. The left side is short and long &mdash; few losses, but they reach much further out. Every trade past &minus;3% is a time-stop exit.</figcaption>
+  </figure>
+
+  <div class="tiles">
+    <div class="tile"><p class="v neg">&minus;$29,004</p><p class="l">Worst single trade</p><p class="n">NQ, entered 21 Feb 2025, held the full 10 sessions</p></div>
+    <div class="tile"><p class="v neg">&minus;13.3%</p><p class="l">Deepest excursion</p><p class="n">How far one trade went underwater before it closed</p></div>
+    <div class="tile"><p class="v">6.7%</p><p class="l">Trades 5%+ underwater</p><p class="n">One in fifteen, with no stop to cap it</p></div>
+    <div class="tile"><p class="v">1.53&times;</p><p class="l">Avg loss &divide; avg win</p><p class="n">$3,588 against $2,352</p></div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <span class="num">05 / 06</span>
+    <div class="titles">
+      <h2>The drawdown, and what it costs to survive</h2>
+      <p class="kicker">Marked to market daily, not on closed trades</p>
+    </div>
+  </div>
+  <div class="col">
+    <p>A closed-trade equity curve books a loss only on the day you exit, which flatters any strategy that holds losers. Marked to market every session, the deepest hole is <strong>&minus;$47,531</strong>, dug between February and May 2025 and not filled until October &mdash; <strong>251 days underwater</strong>, in the most recent third of the record.</p>
+    <p>That sets the capital. Initial margin on one ES and one NQ at current levels runs about $58,600; funding the drawdown on top means an account near <strong>$106,000</strong>. $314,790 over 17.7 years on that base is roughly <strong>16.8% a year</strong>. A real return, and a very different sentence from "$335K".</p>
+  </div>
+
+  <figure>
+    <p class="fig-title">Underwater curve</p>
+    <p class="fig-sub">Distance below the running peak, marked to market, 2009 &ndash; Aug 2026</p>
+    <div class="chart-scroll"><div class="chart-host" id="c-underwater"></div></div>
+    <figcaption>Fourteen green years out of eighteen is accurate, and it is compatible with this. Annual buckets hide drawdowns that open and close inside a year &mdash; and the worst one here spans two.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <div class="sec-head">
+    <span class="num">06 / 06</span>
+    <div class="titles">
+      <h2>Two things the data itself adds</h2>
+      <p class="kicker">Neither is the author's doing; both change the total</p>
+    </div>
+  </div>
+  <div class="col">
+    <p><strong>Roll gaps are worth 8% of the profit.</strong> Yahoo's <span class="mono">ES=F</span> and <span class="mono">NQ=F</span> stitch each quarterly contract to the next at expiry without back-adjusting, so every roll injects a price jump of roughly +0.5% to +1.5% in contango that no position ever earned. A long-only backtest collects them as free money. Removing them with a Panama adjustment takes <strong>$342,275 down to $314,790</strong> &mdash; $27,485 that was never there. Anyone reproducing this on Yahoo data without adjusting will land near the higher number.</p>
+    <p><strong>"Buy the close" is not quite executable.</strong> The signal is RSI(2) computed on the very close you are filled at &mdash; you cannot know it until the print. Taking the next open instead, the honest bound:</p>
+  </div>
+
+  <figure>
+    <p class="fig-title">The cost of the fill assumption</p>
+    <p class="fig-sub">Identical rules, differing only in when the entry is filled</p>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Entry</th><th>Net P&amp;L</th><th>Profit factor</th><th>Max drawdown</th></tr></thead>
+        <tbody>
+          <tr><td>At the signal close, as stated</td><td>$314,790</td><td>2.35</td><td class="neg">&minus;$41,683</td></tr>
+          <tr><td>At the next open</td><td>$280,145</td><td>2.11</td><td class="neg">&minus;$66,003</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <figcaption>11% of the profit and a 58% larger drawdown live inside that one assumption. A market-on-close order against an estimated RSI lands somewhere between the two rows &mdash; closer to the top one, but not on it.</figcaption>
+  </figure>
+
+  <div class="col">
+    <p style="margin-top:26px">Costs, by contrast, barely register. Going from zero slippage to four ticks a side moves the 18-year total only from $319,930 to $299,370. The $4 round-turn assumption in the post is not where the risk is.</p>
+  </div>
+</section>
+
+
+<section>
+  <div class="sec-head">
+    <span class="num">INDIA</span>
+    <div class="titles">
+      <h2>Does it work on the Nifty?</h2>
+      <p class="kicker">The hardest out-of-sample test available: a different market, same rules</p>
+    </div>
+  </div>
+  <div class="col">
+    <p>Everything above concerns two US contracts. A mean-reversion effect that is real should show up wherever the same forces do &mdash; so the identical rules were run on the two most-traded NSE index contracts, <strong>Nifty 50</strong> and <strong>Nifty Bank</strong>, over 2008&ndash;Aug 2026.</p>
+    <p>It does not travel. The effect is present in the raw prices and too weak to trade after what it costs to trade it in India.</p>
+  </div>
+
+  <figure>
+    <p class="fig-title">Same strategy, two markets</p>
+    <p class="fig-sub">2008 &ndash; Aug 2026, net of each market's own costs, as a percentage of notional risked</p>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>&nbsp;</th><th>US &middot; ES + NQ</th><th>India &middot; Nifty + Bank Nifty</th></tr></thead>
+        <tbody>
+          <tr><td>Trades</td><td>300</td><td>287</td></tr>
+          <tr><td>Win rate</td><td>78.0%</td><td class="neg">62.7%</td></tr>
+          <tr><td>Profit factor</td><td>2.31</td><td class="neg">1.18</td></tr>
+          <tr><td>Mean gross return per trade</td><td>+0.423%</td><td>+0.341%</td></tr>
+          <tr><td>Significance of that edge</td><td>t = 4.85</td><td class="neg">t = 2.45</td></tr>
+          <tr><td>Beats random entry at</td><td>99.9th pct</td><td class="neg">80th / 60th pct</td></tr>
+          <tr><td>Costs as a share of the edge</td><td>3.3%</td><td class="neg">46.5%</td></tr>
+          <tr><td>Green years</td><td>14 / 18</td><td class="neg">11 / 18</td></tr>
+          <tr class="total"><td>Cumulative, net of costs</td><td class="pos">+122.6%</td><td>+52.4%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <figcaption>Indian results use the cash indices as futures proxies, with the long-futures cost of carry charged explicitly &mdash; see the method note. Contract sizes are the current NSE lots: 75 for Nifty, 30 for Nifty Bank.</figcaption>
+  </figure>
+
+  <figure>
+    <p class="fig-title">Cumulative return, net of costs</p>
+    <p class="fig-sub">Sum of per-trade returns as a percentage of notional, so the two markets are directly comparable</p>
+    <div class="legend">
+      <span class="k"><i style="background:var(--s1)"></i>US &middot; ES + NQ</span>
+      <span class="k"><i style="background:var(--s3)"></i>India &middot; Nifty + Nifty Bank</span>
+    </div>
+    <div class="chart-scroll"><div class="chart-host" id="c-intl"></div></div>
+    <figcaption>Measured in the unit that lets two markets be compared at all, the US version earns more than twice as much per rupee or dollar at risk &mdash; and does it with a steadier line. India's has not made a new high since March 2026.</figcaption>
+  </figure>
+
+  <div class="col">
+    <h3 style="font-size:18px;font-weight:600;margin:34px 0 10px;letter-spacing:-.01em">Why it breaks: the cost stack</h3>
+    <p>The Indian edge starts smaller and is then taxed much harder. Securities transaction tax alone is 0.02% of the sell side, and &mdash; the piece most backtests miss &mdash; a long futures position gives up the basis as it converges. At a ~6.5% repo rate against a ~1.3% dividend yield, holding for the strategy's average 4.8 sessions costs <strong>0.10% of notional before anything else</strong>.</p>
+  </div>
+
+  <figure>
+    <p class="fig-title">What is left of the edge after costs</p>
+    <p class="fig-sub">Mean return per trade, in percent of notional, as each cost layer is applied</p>
+    <div class="chart-scroll"><div class="chart-host" id="c-costs"></div></div>
+    <figcaption>Costs take 46.5% of the Indian edge and 3.3% of the US one. That single difference &mdash; not the price behaviour &mdash; is most of what separates the two markets here.</figcaption>
+  </figure>
+
+  <div class="tiles">
+    <div class="tile"><p class="v neg">1.18</p><p class="l">Profit factor, India</p><p class="n">2.31 in the US over the same window</p></div>
+    <div class="tile"><p class="v neg">&minus;&#8377;2.67L</p><p class="l">Max drawdown</p><p class="n">82% the size of eighteen years of profit</p></div>
+    <div class="tile"><p class="v neg">&minus;29.3%</p><p class="l">Deepest excursion</p><p class="n">Nifty Bank, Feb&ndash;Mar 2020, no stop</p></div>
+    <div class="tile"><p class="v">1.05</p><p class="l">Nifty Bank profit factor</p><p class="n">t = 1.50, p = 0.14 &mdash; not significant</p></div>
+  </div>
+
+  <figure>
+    <p class="fig-title">India, year by year</p>
+    <p class="fig-sub">Net of all costs, as a percentage of notional risked, 1 Nifty + 1 Nifty Bank lot</p>
+    <div class="chart-scroll"><div class="chart-host" id="c-indiayear"></div></div>
+    <figcaption>Seven losing years out of eighteen, against four in the US. 2026 is the worst on record so far at &minus;&#8377;1.51 lakh across five trades &mdash; and no new signal has fired since March.</figcaption>
+  </figure>
+
+  <div class="col">
+    <h3 style="font-size:18px;font-weight:600;margin:34px 0 10px;letter-spacing:-.01em">Is the effect there at all?</h3>
+    <p>Before costs, weakly. Across four Indian indices, only the Nifty 50 clears conventional significance, and only barely:</p>
+    <div class="tbl-scroll" style="margin-top:16px">
+      <table>
+        <thead><tr><th>Index</th><th>Trades</th><th>Win rate</th><th>Mean gross return</th><th>t</th><th>p</th></tr></thead>
+        <tbody>
+          <tr><td>Nifty 50</td><td>146</td><td>68.5%</td><td>+0.349%</td><td>2.04</td><td>0.043</td></tr>
+          <tr><td>Nifty Bank</td><td>141</td><td>64.5%</td><td>+0.333%</td><td>1.50</td><td class="neg">0.136</td></tr>
+          <tr><td>Nifty IT</td><td>108</td><td>74.1%</td><td>+0.297%</td><td>1.11</td><td class="neg">0.268</td></tr>
+          <tr><td>Sensex</td><td>144</td><td>68.1%</td><td>+0.242%</td><td>1.35</td><td class="neg">0.179</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:20px">The random-entry test is more damning than the p-values. In the US, the RSI(2) signal beats randomly chosen entry days above the 200 SMA at the 99.9th percentile &mdash; the timing is unambiguously doing work. In India the same test puts Nifty at the <strong>80th percentile</strong> and Nifty Bank at the <strong>60th</strong>. At the 60th percentile you are not timing anything; you are just long an index that rose.</p>
+    <div class="callout">
+      <p><strong>Verdict for Indian traders:</strong> the published edge is a US phenomenon at these parameters. On the Nifty it survives as a marginal gross effect that the STT-and-carry stack consumes almost half of; on the Nifty Bank it does not survive at all. Anyone porting these rules to NSE futures should expect a profit factor near 1.2 and a drawdown roughly the size of their lifetime profit &mdash; not 83% winners.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <span class="num">STRESS</span>
+    <div class="titles">
+      <h2>Does it survive being poked?</h2>
+      <p class="kicker">Mostly yes &mdash; with one sensitivity worth knowing</p>
+    </div>
+  </div>
+  <div class="col">
+    <p>A strategy that only works at its published parameters is a curve fit. This one isn't: every perturbation below stays profitable, and most stay near the original profit factor. That is a real point in its favour.</p>
+    <p>The exception is which RSI you use. Wilder's smoothing &mdash; Connors' definition, and the one used throughout this audit &mdash; gives a 2.35 profit factor. The simple-average variant that several charting packages default to gives <strong>1.62 on two and a half times the trades</strong>. Same rules, different indicator library, materially different strategy.</p>
+  </div>
+
+  <figure>
+    <p class="fig-title">Parameter sensitivity</p>
+    <p class="fig-sub">Portfolio, 2009 &ndash; Aug 2026, one change at a time from the stated rules</p>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Variant</th><th>Trades</th><th>Win rate</th><th>PF</th><th>Net P&amp;L</th><th>Max DD</th></tr></thead>
+        <tbody id="tb-robust"></tbody>
+      </table>
+    </div>
+    <figcaption>Loosening the entry threshold to RSI&nbsp;&lt;&nbsp;15 makes more money on more trades at a similar profit factor, which suggests the published threshold is not a fitted optimum but a round number that happens to work.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <div class="sec-head">
+    <span class="num">LEDGER</span>
+    <div class="titles">
+      <h2>Year by year</h2>
+      <p class="kicker">Every year of the record, in both units</p>
+    </div>
+  </div>
+  <figure style="margin-top:0">
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Year</th><th>Trades</th><th>Win rate</th><th>Net P&amp;L</th><th>% of notional</th><th>Avg notional</th></tr></thead>
+        <tbody id="tb-years"></tbody>
+      </table>
+    </div>
+    <figcaption>Read the two middle-right columns against each other. 2021 returned 21.2% of notional for $64,686; 2024 returned an almost identical 21.0% for $75,677; 2026 has returned 16.7% so far, for more money than any full year before 2021.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <div class="sec-head">
+    <span class="num">VERDICT</span>
+    <div class="titles">
+      <h2>What it actually is</h2>
+    </div>
+  </div>
+  <div class="col">
+    <p>A well-behaved short-term mean-reversion effect in index futures, worth about <strong>0.44% of notional per trade</strong>, roughly 17 trades a year, in the market 15% of the time. It is statistically significant, it holds out of sample back to 2001, it is robust to its parameters, and the person who posted it reported its numbers accurately.</p>
+    <p>What the presentation oversells is not the arithmetic. It is the unit. Dollars per contract on an index that has quadrupled is the most flattering measure available, and it turns eighteen years of a constant edge into a chart that looks like a discovery compounding. Priced properly &mdash; against the capital it needs, against the drawdown it puts you through, against simply holding the same two contracts &mdash; it is a decent overlay returning something like 17% a year, with a rare but real left tail that no stop protects.</p>
+    <div class="callout">
+      <p><strong>The one thing to check before trading it:</strong> which RSI your platform computes. Wilder's gives you the strategy above. The simple-average variant gives you a different, meaningfully worse one under the same name.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <h3>Method &amp; caveats</h3>
+  <p>Daily OHLC for ES=F, NQ=F, ^GSPC and ^NDX from the Yahoo Finance chart API, through 28 August 2026. Futures series back-adjusted for quarterly roll gaps, sized as the portion of each roll-day move the matching cash index does not explain. Wilder's RSI(2); 200-session simple moving average; $4 round-turn commission plus one tick per side unless noted. Entry and exit both at the daily close, as the rules specify. Position size is fixed at one contract throughout, also as specified. Significance tested by one-sample t-test on per-trade notional returns and by 2,000-path random-entry resampling matched on trade count, holding period and regime filter.</p>
+  <p style="margin-top:12px"><strong>India:</strong> no usable continuous NSE futures series exists, so the Indian runs use the Nifty 50, Nifty Bank, Nifty IT and Sensex cash indices as futures proxies and charge the long-futures cost of carry explicitly at 5.2% a year (a ~6.5% repo rate less a ~1.3% dividend yield) over each holding period. Transaction costs model the full statutory stack &mdash; STT at 0.02% of the sell side, exchange and SEBI charges, stamp duty and GST, about 0.0257% of notional per round turn &mdash; plus &#8377;47 of brokerage and one index point of slippage per side (three on Nifty Bank). Rupee figures use current NSE lot sizes throughout, 75 for Nifty and 30 for Nifty Bank; percentage figures are lot-independent and are the primary unit for any cross-market comparison.</p>
+  <p style="margin-top:12px">Yahoo daily futures data is not a tick-accurate settlement series; treat P&amp;L as accurate to a few percent. Margin figures are approximate CME initial requirements at current index levels. Full code, trade-by-trade output and the raw result files are in the repository under <code>src/</code> and <code>output/</code>.</p>
+  <p style="margin-top:12px">Not financial advice.</p>
+</footer>
+
+</div>

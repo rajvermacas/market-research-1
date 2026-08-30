@@ -49,9 +49,16 @@ def main():
         trades=("net_usd", "size"),
         win_rate=("net_usd", lambda x: round((x > 0).mean(), 3)),
         mean_notional=("notional_usd", "mean"),
-    ).round(0)
+    )
     payload["per_year"] = [
-        {"year": int(y), **{k: float(v) for k, v in row.items()}}
+        {
+            "year": int(y),
+            "net_usd": round(float(row["net_usd"])),
+            "sum_ret_pct": round(float(row["sum_ret_pct"]), 2),
+            "trades": int(row["trades"]),
+            "win_rate": round(float(row["win_rate"]), 3),
+            "mean_notional": round(float(row["mean_notional"])),
+        }
         for y, row in per_year.iterrows()
     ]
 

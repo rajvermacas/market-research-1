@@ -144,6 +144,80 @@ GFC. But the dollars are trivial next to the later years, for the same reason as
 Finding 1: the index was a quarter of its current level, and the 200 SMA filter kept
 the strategy out of most of both bear markets.
 
+
+## Does it work in India?
+
+The strategy was published for ES and NQ. The hardest available out-of-sample test
+is a different market, so the identical rules were run on the two most-traded NSE
+index contracts over 2008–Aug 2026.
+
+**It does not travel.** The effect is present in raw Indian prices and too weak to
+trade after what it costs to trade it there.
+
+| | US · ES + NQ | India · Nifty + Nifty Bank |
+|---|---|---|
+| Trades | 300 | 287 |
+| Win rate | 78.0% | **62.7%** |
+| Profit factor | 2.31 | **1.18** |
+| Mean gross return per trade | +0.423% | +0.341% |
+| Significance | t = 4.85 | **t = 2.45** |
+| Beats random entry at | 99.9th pct | **80th / 60th pct** |
+| Costs as a share of the edge | 3.3% | **46.5%** |
+| Green years | 14 / 18 | **11 / 18** |
+| Cumulative, net of costs | **+122.6%** | +52.4% |
+
+Three things break it:
+
+**1. The gross edge is smaller and barely significant.** Across four Indian indices,
+only the Nifty 50 clears conventional significance, and only just:
+
+| Index | Trades | Win rate | Mean gross return | t | p |
+|---|---|---|---|---|---|
+| Nifty 50 | 146 | 68.5% | +0.349% | 2.04 | 0.043 |
+| Nifty Bank | 141 | 64.5% | +0.333% | 1.50 | 0.136 |
+| Nifty IT | 108 | 74.1% | +0.297% | 1.11 | 0.268 |
+| Sensex | 144 | 68.1% | +0.242% | 1.35 | 0.179 |
+
+**2. The RSI timing adds almost nothing.** The random-entry test is more damning
+than the p-values. In the US the signal beats randomly chosen entry days above the
+200 SMA at the 99.9th percentile. In India the same test puts Nifty at the **80th
+percentile** and Nifty Bank at the **60th**. At the 60th percentile there is no
+timing edge — only a long position in an index that rose.
+
+**3. Indian costs eat almost half of what is left.** STT is 0.02% of the sell side,
+and — the piece most backtests miss — a long futures position gives up the basis as
+it converges. At a ~6.5% repo rate against a ~1.3% dividend yield, the strategy's
+average 4.8-session hold costs 0.10% of notional before anything else:
+
+| Mean return per trade | India | US |
+|---|---|---|
+| Gross price move | +0.341% | +0.423% |
+| After fees and slippage | +0.293% | — |
+| After cost of carry | **+0.193%** | **+0.409%** |
+
+Total costs take **46.5%** of the Indian edge and **3.3%** of the US one.
+
+The risk is also worse in every dimension: max drawdown ₹2.67 lakh against ₹3.28
+lakh of profit across eighteen years (82%), a −29.3% worst excursion on Nifty Bank
+in Feb–Mar 2020, and 2026 the worst year on record so far at −₹1.51 lakh.
+
+**Verdict for Indian traders:** the published edge is a US phenomenon at these
+parameters. On the Nifty it survives as a marginal gross effect that the STT-and-carry
+stack consumes almost half of; on the Nifty Bank it does not survive at all. Expect a
+profit factor near 1.2 and a drawdown roughly the size of your lifetime profit — not
+83% winners.
+
+### Indian method notes
+
+No usable continuous NSE futures series exists, so the Indian runs use the Nifty 50,
+Nifty Bank, Nifty IT and Sensex **cash indices** as futures proxies and charge the
+long-futures cost of carry explicitly at 5.2%/yr over each holding period. Transaction
+costs model the full statutory stack — STT at 0.02% of the sell side, exchange and
+SEBI charges, stamp duty and GST, about 0.0257% of notional per round turn — plus ₹47
+of brokerage and one index point of slippage per side (three on Nifty Bank). Rupee
+figures use current NSE lot sizes (75 Nifty, 30 Nifty Bank); percentage figures are
+lot-independent and are the primary unit for any cross-market comparison.
+
 ## Verdict
 
 The strategy is real, the post's numbers are honest, and the edge survives
@@ -160,9 +234,12 @@ What the chart oversells:
    a −13.3% worst excursion, with no stop by design.
 5. You need ~$106K to trade it through its own drawdown, making it ~16.8%/yr simple.
 
+6. It is a US effect at these parameters. On the Nifty it is marginal and mostly
+   eaten by costs; on the Nifty Bank it does not survive at all.
+
 The honest framing: a well-behaved mean-reversion overlay worth roughly 0.44% of
-notional per trade, ~24 trades a year, in the market 15% of the time — not a
-$335K machine.
+notional per trade, ~17 trades a year, in the market 15% of the time — not a
+$335K machine, and not a strategy that ports to NSE futures as published.
 
 ## Reproducing
 
@@ -172,6 +249,7 @@ python src/fetch_data.py       # ES=F, NQ=F, ^GSPC, ^NDX daily from Yahoo -> dat
 python src/run_analysis.py     # reproduction, robustness, costs -> output/results.json
 python src/deep_dive.py        # MTM drawdown, concentration, significance -> output/deep_dive.json
 python src/export_charts.py    # series for the report -> output/chart_data.json
+python src/india.py            # same rules on NSE indices -> output/india.json
 ```
 
 | File | Purpose |
@@ -182,6 +260,7 @@ python src/export_charts.py    # series for the report -> output/chart_data.json
 | `src/backtest.py` | Strategy engine, contract specs, trade metrics |
 | `src/run_analysis.py` | Claim reproduction, robustness grid, cost and random-entry tests |
 | `src/deep_dive.py` | Mark-to-market drawdown, concentration, edge significance, capital needed |
+| `src/india.py` | The same rules on Nifty 50, Nifty Bank, Nifty IT and Sensex, with the Indian cost stack |
 | `src/export_charts.py` | Chart series for the published report |
 
 ## Caveats

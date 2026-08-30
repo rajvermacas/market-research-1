@@ -283,8 +283,8 @@ def main() -> None:
     # ---------- cost sensitivity ----------
     costs = {}
     for slip in (0.0, 1.0, 2.0, 4.0):
-        e = Contract("ES", 50.0, 0.25, slippage_ticks=slip)
-        n = Contract("NQ", 20.0, 0.25, slippage_ticks=slip)
+        e = Contract("ES", 50.0, slippage_points=0.25 * slip)
+        n = Contract("NQ", 20.0, slippage_points=0.25 * slip)
         port = slice_years(combine([run(es_adj, e, base), run(nq_adj, n, base)]), 2009, 2026)
         costs[f"{slip:g}_tick_slippage"] = {
             "net_usd": float(port["net_usd"].sum()),

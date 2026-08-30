@@ -17,20 +17,56 @@ from indicators import sma, sma_rsi, wilder_rsi
 
 @dataclass(frozen=True)
 class Contract:
+    """One futures contract, with a cost model rich enough for two markets.
+
+    US index futures are dominated by flat commission plus tick slippage. Indian
+    index futures are dominated by *percentage* costs - STT alone is 0.02% of the
+    sell side - so both a flat and a proportional term are needed.
+    """
+
     name: str
-    point_value: float   # $ per index point
-    tick_size: float     # minimum price increment
-    commission_rt: float = 4.0   # $ per round turn, as claimed in the source post
-    slippage_ticks: float = 1.0  # ticks paid on each side of the trade
+    point_value: float            # currency per index point (US$ or INR)
+    slippage_points: float = 0.25  # points given up on each side of the trade
+    commission_rt: float = 4.0     # flat cost per round turn
+    pct_cost_rt: float = 0.0       # taxes and fees as a fraction of notional, round turn
+    carry_pct_yr: float = 0.0      # long-futures cost of carry (r - q), annualised
+    currency: str = "USD"
+    label: str = ""
 
     @property
     def cost_per_trade(self) -> float:
-        slip = 2 * self.slippage_ticks * self.tick_size * self.point_value
-        return self.commission_rt + slip
+        """Fixed component only - the flat part of a round turn."""
+        return self.commission_rt + 2 * self.slippage_points * self.point_value
+
+    def cost(self, notional: float, bars_held: int = 0) -> float:
+        """Total round-turn cost, including proportional taxes and carry.
+
+        `carry_pct_yr` is only non-zero when the backtest runs on a *cash* index
+        as a stand-in for futures: a long futures position gives up the basis as
+        it converges, which a cash index series does not show.
+        """
+        carry = self.carry_pct_yr * (bars_held / 252.0) * notional
+        return self.cost_per_trade + self.pct_cost_rt * notional + carry
 
 
-ES = Contract("ES", point_value=50.0, tick_size=0.25)
-NQ = Contract("NQ", point_value=20.0, tick_size=0.25)
+# --- US: costs as claimed in the source post ($4 round turn, 1 tick a side) ---
+ES = Contract("ES", point_value=50.0, slippage_points=0.25, label="E-mini S&P 500")
+NQ = Contract("NQ", point_value=20.0, slippage_points=0.25, label="E-mini Nasdaq 100")
+
+# --- India: NSE lot sizes and the statutory cost stack ---
+# STT 0.02% (sell side) + exchange charge 0.00173%/side + SEBI fee + stamp duty
+# ~= 0.0257% of notional per round turn, plus about Rs 47 of brokerage and GST.
+# Backtested on the cash index, so the long-futures cost of carry is charged
+# explicitly: repo ~6.5% less a ~1.3% dividend yield.
+INDIA_PCT_COST = 0.000257
+INDIA_CARRY = 0.052
+
+NIFTY = Contract("NIFTY", point_value=75.0, slippage_points=1.0, commission_rt=47.0,
+                 pct_cost_rt=INDIA_PCT_COST, carry_pct_yr=INDIA_CARRY,
+                 currency="INR", label="Nifty 50 futures (lot 75)")
+BANKNIFTY = Contract("BANKNIFTY", point_value=30.0, slippage_points=3.0, commission_rt=47.0,
+                     pct_cost_rt=INDIA_PCT_COST, carry_pct_yr=INDIA_CARRY,
+                     currency="INR", label="Nifty Bank futures (lot 30)")
 
 
 @dataclass
@@ -81,6 +117,8 @@ def run(df: pd.DataFrame, contract: Contract, p: Params | None = None) -> pd.Dat
                 exit_px = row["close"]
                 gross_pts = exit_px - entry_px
                 hold = d.loc[entry_i + 1 : i]
+                notional = entry_px * contract.point_value
+                cost = contract.cost(notional, bars_held)
                 trades.append(
                     {
                         "entry_date": d.loc[entry_i, "date"],
@@ -91,13 +129,13 @@ def run(df: pd.DataFrame, contract: Contract, p: Params | None = None) -> pd.Dat
                         "exit_reason": reason,
                         "gross_pts": gross_pts,
                         "gross_usd": gross_pts * contract.point_value,
-                        "cost_usd": contract.cost_per_trade,
-                        "net_usd": gross_pts * contract.point_value - contract.cost_per_trade,
+                        "cost_usd": cost,
+                        "net_usd": gross_pts * contract.point_value - cost,
                         "entry_rsi": d.loc[entry_i, "rsi"],
                         # notional-normalised return: the only way to compare a
                         # 1-contract P&L across an index that has 10x'd
                         "ret_pct": gross_pts / entry_px,
-                        "notional_usd": entry_px * contract.point_value,
+                        "notional_usd": notional,
                         # how far underwater the trade went - matters a lot with no stop
                         "mae_pct": (hold["low"].min() - entry_px) / entry_px if len(hold) else 0.0,
                         "mfe_pct": (hold["high"].max() - entry_px) / entry_px if len(hold) else 0.0,

@@ -1,0 +1,1055 @@
+<title>The Dip Buy Audit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  color-scheme: light;
+  --plane:#eef1f4; --surface:#fbfcfd; --surface-2:#f4f6f8;
+  --ink:#101418; --ink-2:#454c53; --muted:#6d747b;
+  --rule:#dce1e6; --rule-strong:#c2c9d0;
+  --accent:#1c5cab; --accent-soft:#e6eefa;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a;
+  --neg:#c4362f; --neg-soft:#fbeae9; --pos:#0a7a37; --pos-soft:#e6f4ec;
+  --grid:#e5e9ed; --shadow:0 1px 2px rgba(16,20,24,.05),0 8px 24px -16px rgba(16,20,24,.18);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --plane:#0e1113; --surface:#16191c; --surface-2:#1c2023;
+    --ink:#eef1f3; --ink-2:#b3bac1; --muted:#868e96;
+    --rule:#272c30; --rule-strong:#39403f;
+    --accent:#6ba5ec; --accent-soft:#182534;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+    --neg:#e07068; --neg-soft:#2a1c1b; --pos:#3fa96a; --pos-soft:#152420;
+    --grid:#23282c; --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -16px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --plane:#0e1113; --surface:#16191c; --surface-2:#1c2023;
+  --ink:#eef1f3; --ink-2:#b3bac1; --muted:#868e96;
+  --rule:#272c30; --rule-strong:#39403f;
+  --accent:#6ba5ec; --accent-soft:#182534;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+  --neg:#e07068; --neg-soft:#2a1c1b; --pos:#3fa96a; --pos-soft:#152420;
+  --grid:#23282c; --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -16px rgba(0,0,0,.7);
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--plane); color:var(--ink);
+  font-family:"Source Serif 4",Georgia,"Times New Roman",serif;
+  font-size:17px; line-height:1.62; margin:0;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px 96px}
+.col{max-width:660px}
+.mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+h1,h2,h3,.disp{font-family:Archivo,system-ui,-apple-system,"Segoe UI",sans-serif;text-wrap:balance}
+a{color:var(--accent)}
+p{margin:0 0 1.05em}
+.eyebrow{
+  font-family:"IBM Plex Mono",monospace; font-size:11.5px; font-weight:500;
+  letter-spacing:.16em; text-transform:uppercase; color:var(--muted); margin:0 0 14px;
+}
+
+/* ---------- masthead ---------- */
+header.mast{border-bottom:2px solid var(--ink);padding:56px 0 26px;margin-bottom:38px}
+header.mast h1{
+  font-size:clamp(38px,6.4vw,66px); line-height:1.0; font-weight:700;
+  letter-spacing:-.028em; margin:0 0 20px;
+}
+.standfirst{font-size:20px;line-height:1.5;color:var(--ink-2);max-width:660px;margin:0 0 26px}
+.standfirst strong{color:var(--ink);font-weight:600}
+.byline{
+  display:flex;flex-wrap:wrap;gap:8px 22px;align-items:baseline;
+  font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted);
+}
+.byline a{text-decoration:none;border-bottom:1px solid var(--rule-strong);color:var(--ink-2)}
+.byline a:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ---------- verdict ---------- */
+.verdicts{display:grid;grid-template-columns:repeat(auto-fit,minmax(238px,1fr));gap:14px;margin:0 0 44px}
+.verdict{
+  background:var(--surface);border:1px solid var(--rule);border-radius:3px;
+  padding:20px 22px;box-shadow:var(--shadow);border-left:3px solid var(--v,var(--accent));
+}
+.verdict .tag{
+  font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--v,var(--accent));margin:0 0 8px;display:block;
+}
+.verdict .claim{font-family:Archivo,sans-serif;font-size:19px;font-weight:600;line-height:1.25;margin:0 0 7px;letter-spacing:-.01em}
+.verdict p{font-size:15px;line-height:1.5;color:var(--ink-2);margin:0}
+
+/* ---------- sections ---------- */
+section{margin:0 0 60px}
+h2{font-size:15px;font-weight:600;letter-spacing:-.005em;margin:0 0 6px}
+.sec-head{border-top:1px solid var(--ink);padding-top:14px;margin-bottom:26px;display:flex;gap:18px;align-items:baseline;flex-wrap:wrap}
+.sec-head .num{
+  font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;color:var(--muted);
+  letter-spacing:.1em;flex:0 0 auto;padding-top:3px;
+}
+.sec-head .titles{flex:1 1 300px;min-width:0}
+.sec-head h2{font-size:27px;font-weight:700;letter-spacing:-.022em;line-height:1.16;margin:0}
+.sec-head .kicker{font-size:15px;color:var(--muted);margin:5px 0 0;font-style:italic}
+
+/* ---------- figures & charts ---------- */
+figure{margin:26px 0 0;background:var(--surface);border:1px solid var(--rule);border-radius:3px;padding:20px 22px 16px;box-shadow:var(--shadow)}
+figure .fig-title{font-family:Archivo,sans-serif;font-size:15.5px;font-weight:600;margin:0 0 3px;letter-spacing:-.008em}
+figure .fig-sub{font-size:13.5px;color:var(--muted);margin:0 0 16px;line-height:1.45}
+figcaption{font-size:13.5px;color:var(--ink-2);line-height:1.5;margin-top:14px;padding-top:12px;border-top:1px solid var(--rule)}
+.chart-scroll{overflow-x:auto;overflow-y:hidden}
+.chart-host{position:relative;min-width:520px}
+svg.chart{display:block;width:100%;height:auto;overflow:visible}
+.gridline{stroke:var(--grid);stroke-width:1}
+.axisline{stroke:var(--rule-strong);stroke-width:1}
+.tick{font-family:"IBM Plex Mono",monospace;font-size:10.5px;fill:var(--muted);font-variant-numeric:tabular-nums}
+.dlabel{font-family:Archivo,sans-serif;font-size:12px;font-weight:600}
+.legend{display:flex;flex-wrap:wrap;gap:6px 20px;margin:0 0 14px;font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--ink-2)}
+.legend span.k{display:inline-flex;align-items:center;gap:7px}
+.legend i{width:14px;height:3px;border-radius:2px;display:inline-block}
+
+/* tooltip */
+.tip{
+  position:absolute;pointer-events:none;opacity:0;transition:opacity .1s;
+  background:var(--surface);border:1px solid var(--rule-strong);border-radius:3px;
+  box-shadow:var(--shadow);padding:9px 11px;font-family:"IBM Plex Mono",monospace;
+  font-size:11.5px;color:var(--ink);white-space:nowrap;z-index:5;font-variant-numeric:tabular-nums;
+}
+.tip b{display:block;font-weight:600;margin-bottom:5px;color:var(--muted);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase}
+.tip .row{display:flex;gap:12px;justify-content:space-between;align-items:center}
+.tip .row i{width:9px;height:9px;border-radius:2px;flex:0 0 auto;margin-right:-4px}
+
+/* ---------- tables ---------- */
+.tbl-scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-family:"IBM Plex Mono",monospace;font-size:13px;font-variant-numeric:tabular-nums;min-width:520px}
+th,td{text-align:right;padding:9px 12px;border-bottom:1px solid var(--rule);white-space:nowrap}
+th:first-child,td:first-child{text-align:left;white-space:normal}
+thead th{
+  font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);border-bottom:1px solid var(--rule-strong);padding-bottom:8px;
+}
+tbody tr:last-child td{border-bottom:none}
+tbody tr.total td{border-top:1px solid var(--rule-strong);font-weight:600}
+td.pos{color:var(--pos)} td.neg{color:var(--neg)}
+.chip{
+  display:inline-block;padding:1px 7px;border-radius:2px;font-size:10.5px;font-weight:600;
+  letter-spacing:.06em;text-transform:uppercase;
+}
+.chip.ok{background:var(--pos-soft);color:var(--pos)}
+.chip.warn{background:var(--neg-soft);color:var(--neg)}
+
+/* ---------- stat tiles ---------- */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(172px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:3px;overflow:hidden;margin:26px 0 0}
+.tile{background:var(--surface);padding:17px 18px}
+.tile .v{font-family:Archivo,sans-serif;font-size:29px;font-weight:700;letter-spacing:-.03em;line-height:1.05;margin:0 0 5px}
+.tile .v.neg{color:var(--neg)} .tile .v.pos{color:var(--pos)}
+.tile .l{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);line-height:1.4}
+.tile .n{font-size:13px;color:var(--ink-2);margin:6px 0 0;line-height:1.4}
+
+/* ---------- rules block ---------- */
+.rules{background:var(--surface-2);border:1px solid var(--rule);border-radius:3px;padding:22px 24px;margin:0 0 8px}
+.rules ol{margin:0;padding-left:20px;font-family:"IBM Plex Mono",monospace;font-size:13.5px;line-height:1.85;color:var(--ink)}
+.rules li::marker{color:var(--muted)}
+.rules .src{font-size:13px;color:var(--muted);margin:14px 0 0;font-family:"Source Serif 4",serif;font-style:italic}
+
+.callout{
+  border-left:3px solid var(--accent);background:var(--accent-soft);
+  padding:16px 20px;border-radius:0 3px 3px 0;margin:24px 0;font-size:16px;line-height:1.55;
+}
+.callout p{margin:0}
+.callout strong{font-weight:600}
+
+ul.plain{padding-left:20px;margin:0 0 1.05em}
+ul.plain li{margin-bottom:.5em}
+ul.plain li::marker{color:var(--muted)}
+
+footer{border-top:1px solid var(--rule-strong);padding-top:24px;margin-top:20px;font-size:14px;color:var(--muted);line-height:1.6}
+footer h3{font-family:Archivo,sans-serif;font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);margin:0 0 10px}
+footer code{font-family:"IBM Plex Mono",monospace;font-size:12.5px;background:var(--surface-2);padding:1px 5px;border-radius:2px;color:var(--ink-2)}
+
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media (max-width:640px){
+  body{font-size:16px}
+  .wrap{padding:0 16px 64px}
+  header.mast{padding-top:36px}
+}
+</style>
+<div class="wrap">
+
+<header class="mast">
+  <p class="eyebrow">Independent replication &middot; ES &amp; NQ &middot; Nifty 50 &amp; Nifty Bank &middot; 2001&ndash;Aug 2026</p>
+  <h1>The Dip Buy Audit</h1>
+  <p class="standfirst">A widely-shared RSI(2) dip-buying strategy claims an 83% win rate and $335K since 2009 on one ES and one NQ contract. <strong>Every headline number checks out.</strong> The equity curve behind them still tells you something that isn't true &mdash; and the effect largely fails to survive the trip to India.</p>
+  <div class="byline">
+    <span>Source: <a href="https://x.com/MrMilkTrading/status/2093923934823403813">@MrMilkTrading, 30 Aug 2026</a></span>
+    <span>585 trades reconstructed across two markets</span>
+    <span>Data through 28 Aug 2026</span>
+  </div>
+</header>
+
+<div class="verdicts">
+  <div class="verdict" style="--v:var(--pos)">
+    <span class="tag">Replicates</span>
+    <p class="claim">The numbers are honest</p>
+    <p>83.1% win rate since 2022 against 83% claimed, 14/18 green years, $77.9K YTD against $76K. The edge also survives randomisation and an out-of-sample decade.</p>
+  </div>
+  <div class="verdict" style="--v:var(--neg)">
+    <span class="tag">Overstated</span>
+    <p class="claim">The curve is a price chart</p>
+    <p>The exponential bend is the index quadrupling, not the strategy improving. Measured as a percentage of what it risks, the edge has been flat for 18 years.</p>
+  </div>
+  <div class="verdict" style="--v:var(--s2)">
+    <span class="tag">Omitted</span>
+    <p class="claim">Holding beat it by 2.6&times;</p>
+    <p>Buy and hold the same two contracts: $818K. The strategy: $315K &mdash; 38% of it &mdash; with a &minus;$47.5K drawdown and no stop by design.</p>
+  </div>
+  <div class="verdict" style="--v:var(--muted)">
+    <span class="tag">Does not travel</span>
+    <p class="claim">India breaks it</p>
+    <p>Same rules on Nifty 50 and Nifty Bank: profit factor 1.18, a drawdown 82% the size of eighteen years of profit, and RSI timing that barely beats random entry.</p>
+  </div>
+</div>
+
+<section>
+  <div class="sec-head">
+    <span class="num">RULES</span>
+    <div class="titles">
+      <h2>What was tested</h2>
+      <p class="kicker">Reconstructed verbatim from the post, with nothing added</p>
+    </div>
+  </div>
+  <div class="col">
+    <div class="rules">
+      <ol>
+        <li>RSI(2) on daily closes</li>
+        <li>Buy the close when RSI(2) &lt; 10 and price &gt; 200 day SMA</li>
+        <li>Sell the close when RSI(2) &gt; 70, or after 10 sessions, whichever comes first</li>
+        <li>Long only. ES and NQ, 1 contract each. No stop.</li>
+      </ol>
+      <p class="src">Originally from Larry Connors &amp; Cesar Alvarez, <em>Short Term Trading Strategies That Work</em>.</p>
+    </div>
+    <p style="font-size:14px;color:var(--muted);margin-top:14px">Wilder's RSI. $4 round-turn commission plus one tick of slippage per side, as the post specifies. ES at $50/point, NQ at $20/point. Yahoo daily futures, back-adjusted for quarterly roll gaps &mdash; see finding 5.</p>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <span class="num">01 / 06</span>
+    <div class="titles">
+      <h2>The claims reproduce</h2>
+      <p class="kicker">Independently, from raw data, without seeing the author's code</p>
+    </div>
+  </div>
+  <div class="col">
+    <p>This is the part that usually fails. It doesn't here. Rebuilding the strategy from the four rules and running it on daily ES and NQ history lands within a few percent of every published figure &mdash; and lands on the green-year count exactly.</p>
+  </div>
+
+  <figure>
+    <p class="fig-title">Claimed against replicated</p>
+    <p class="fig-sub">Portfolio of 1 ES + 1 NQ, 2009 &ndash; Aug 2026, roll-adjusted series</p>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Metric</th><th>Claimed</th><th>Replicated</th><th>Verdict</th></tr></thead>
+        <tbody>
+          <tr><td>Win rate since 2022</td><td>83%</td><td>83.1%</td><td><span class="chip ok">match</span></td></tr>
+          <tr><td>Profit factor since 2022</td><td>2.53</td><td>2.54</td><td><span class="chip ok">match</span></td></tr>
+          <tr><td>Green years</td><td>14 / 18</td><td>14 / 18</td><td><span class="chip ok">match</span></td></tr>
+          <tr><td>2026 YTD, 1+1 contracts</td><td>$76,000</td><td>$77,934</td><td><span class="chip ok">match</span></td></tr>
+          <tr><td>Cumulative net since 2009</td><td>$335,000</td><td>$314,790</td><td><span class="chip ok">&minus;6%</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <figcaption>The only gap of any size is the cumulative total, and finding 5 accounts for it: on the unadjusted series the same code returns $342,275, which brackets the claim from the other side.</figcaption>
+  </figure>
+
+  <div class="col">
+    <p style="margin-top:26px">The edge is also statistically real, not a run of luck. Mean return per trade is <strong>+0.435% of notional</strong> across 298 trades, <span class="mono">t = 5.00</span>, <span class="mono">p &lt; 10<sup>&minus;6</sup></span>. Replacing the RSI signal with random entry days &mdash; same 200-SMA filter, same number of trades, same holding periods, 2,000 simulations &mdash; the actual result lands at the <strong>99.9th percentile on ES</strong> and the <strong>98.3rd on NQ</strong>. The timing is doing work that being long alone does not explain.</p>
+    <p>And it holds out of sample. The published curve starts in 2009; run the same rules across 2001&ndash;2008, all the futures history available, and it returns 91 trades at a 75.8% win rate and a 2.23 profit factor through the dot-com bust and the financial crisis.</p>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <span class="num">02 / 06</span>
+    <div class="titles">
+      <h2>The hockey stick is the index, not the edge</h2>
+      <p class="kicker">The single most important thing the chart gets wrong</p>
+    </div>
+  </div>
+  <div class="col">
+    <p>The published equity curve bends sharply upward after 2021 &mdash; the visual signature of a strategy hitting its stride. It is nothing of the kind. One NQ contract is a $590,000 position today and was a $130,000 position in 2012. Holding size fixed at one contract while the index quadruples converts a <em>flat</em> edge into an exponential chart.</p>
+    <p>Here is the same strategy measured two ways. Same trades, same dates. Only the unit changes.</p>
+  </div>
+
+  <figure>
+    <p class="fig-title">Same trades, two units</p>
+    <p class="fig-sub">Net result per year in dollars, then as a percentage of the notional actually risked</p>
+    <div class="chart-scroll"><div class="chart-host" id="c-yeardollars"></div></div>
+    <div class="chart-scroll" style="margin-top:6px"><div class="chart-host" id="c-yearpct"></div></div>
+    <figcaption>Regressed on time, the dollar series slopes up <strong>$2,769 a year</strong> (p&nbsp;=&nbsp;0.027) &mdash; apparent improvement. The percentage series slopes <strong>0.28% a year with p&nbsp;=&nbsp;0.50 and R&sup2;&nbsp;=&nbsp;0.03</strong> &mdash; no trend at all. 2013 returned 12.2% of notional; 2025 returned 8.9%.</figcaption>
+  </figure>
+
+  <div class="tiles">
+    <div class="tile"><p class="v">0.427%</p><p class="l">Mean per trade, 2009&ndash;17</p></div>
+    <div class="tile"><p class="v">0.443%</p><p class="l">Mean per trade, 2018&ndash;26</p><p class="n">Statistically indistinguishable</p></div>
+    <div class="tile"><p class="v">$126,603</p><p class="l">Mean notional, 2009&ndash;17</p></div>
+    <div class="tile"><p class="v">$315,074</p><p class="l">Mean notional, 2018&ndash;26</p><p class="n">2.5&times; the position, same edge</p></div>
+  </div>
+
+  <div class="callout">
+    <p><strong>Where the money lands.</strong> 60% of all profit since 2009 falls in 2024&ndash;2026, and 25% in 2026 alone &mdash; not because those years were exceptional, but because a percentage point was worth three times more by then.</p>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <span class="num">03 / 06</span>
+    <div class="titles">
+      <h2>It captures 38% of doing nothing</h2>
+      <p class="kicker">In the same dollars-per-contract unit the post uses</p>
+    </div>
+  </div>
+  <div class="col">
+    <p>If dollars per contract is the yardstick, it has to be applied consistently. Buying one ES and one NQ in January 2009 and never touching them again returns <strong>$818,063</strong> by August 2026. The strategy returns $314,790.</p>
+    <p>The fair defence is exposure: the strategy is in the market on only 15% of sessions and holds an average of 4.5 days, so per unit of time at risk it is far more efficient, and the 200-SMA filter kept it almost entirely out of 2022 &mdash; four trades all year. That is a genuine strength. It is also not what a $335K headline over a rising equity curve communicates.</p>
+  </div>
+
+  <figure>
+    <p class="fig-title">Strategy against simply holding</p>
+    <p class="fig-sub">Cumulative net P&amp;L, 1 ES + 1 NQ, January 2009 &ndash; August 2026</p>
+    <div class="legend">
+      <span class="k"><i style="background:var(--s1)"></i>Dip Buy strategy</span>
+      <span class="k"><i style="background:var(--s2)"></i>Buy and hold</span>
+    </div>
+    <div class="chart-scroll"><div class="chart-host" id="c-equity"></div></div>
+    <figcaption>Both lines are the same two contracts over the same window. The strategy's flatness through 2022 is the 200-SMA filter working exactly as intended &mdash; it is the reason the curve has so few bad years, and the reason it leaves most of the market's return on the table.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <div class="sec-head">
+    <span class="num">04 / 06</span>
+    <div class="titles">
+      <h2>An 83% win rate that loses more than it wins</h2>
+      <p class="kicker">The payoff shape a win rate is designed to hide</p>
+    </div>
+  </div>
+  <div class="col">
+    <p>Win rate is the headline because it is the most flattering number this strategy produces. The average winner is $2,352. The average loser is <strong>$3,588</strong> &mdash; 1.53 times larger. The strategy is profitable because it wins four times out of five, not because its wins are big.</p>
+    <p>That asymmetry is structural, not bad luck. Exits split two ways: 284 trades closed on the RSI target for a combined <strong>+$438,428</strong>; 14 trades ran out the 10-session clock while the dip kept dipping, for <strong>&minus;$123,638</strong>. Those fourteen trades are the entire risk profile. With no stop, "no stop" <em>is</em> the risk model.</p>
+  </div>
+
+  <figure>
+    <p class="fig-title">Every trade, by size of result</p>
+    <p class="fig-sub">298 trades, 2009 &ndash; Aug 2026, as a percentage of notional at entry</p>
+    <div class="legend">
+      <span class="k"><i style="background:var(--s1)"></i>Closed on RSI target (284)</span>
+      <span class="k"><i style="background:var(--s2)"></i>Ran the 10-session clock (14)</span>
+    </div>
+    <div class="chart-scroll"><div class="chart-host" id="c-hist"></div></div>
+    <figcaption>The right side is a dense stack of small, reliable wins. The left side is short and long &mdash; few losses, but they reach much further out. Every trade past &minus;3% is a time-stop exit.</figcaption>
+  </figure>
+
+  <div class="tiles">
+    <div class="tile"><p class="v neg">&minus;$29,004</p><p class="l">Worst single trade</p><p class="n">NQ, entered 21 Feb 2025, held the full 10 sessions</p></div>
+    <div class="tile"><p class="v neg">&minus;13.3%</p><p class="l">Deepest excursion</p><p class="n">How far one trade went underwater before it closed</p></div>
+    <div class="tile"><p class="v">6.7%</p><p class="l">Trades 5%+ underwater</p><p class="n">One in fifteen, with no stop to cap it</p></div>
+    <div class="tile"><p class="v">1.53&times;</p><p class="l">Avg loss &divide; avg win</p><p class="n">$3,588 against $2,352</p></div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <span class="num">05 / 06</span>
+    <div class="titles">
+      <h2>The drawdown, and what it costs to survive</h2>
+      <p class="kicker">Marked to market daily, not on closed trades</p>
+    </div>
+  </div>
+  <div class="col">
+    <p>A closed-trade equity curve books a loss only on the day you exit, which flatters any strategy that holds losers. Marked to market every session, the deepest hole is <strong>&minus;$47,531</strong>, dug between February and May 2025 and not filled until October &mdash; <strong>251 days underwater</strong>, in the most recent third of the record.</p>
+    <p>That sets the capital. Initial margin on one ES and one NQ at current levels runs about $58,600; funding the drawdown on top means an account near <strong>$106,000</strong>. $314,790 over 17.7 years on that base is roughly <strong>16.8% a year</strong>. A real return, and a very different sentence from "$335K".</p>
+  </div>
+
+  <figure>
+    <p class="fig-title">Underwater curve</p>
+    <p class="fig-sub">Distance below the running peak, marked to market, 2009 &ndash; Aug 2026</p>
+    <div class="chart-scroll"><div class="chart-host" id="c-underwater"></div></div>
+    <figcaption>Fourteen green years out of eighteen is accurate, and it is compatible with this. Annual buckets hide drawdowns that open and close inside a year &mdash; and the worst one here spans two.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <div class="sec-head">
+    <span class="num">06 / 06</span>
+    <div class="titles">
+      <h2>Two things the data itself adds</h2>
+      <p class="kicker">Neither is the author's doing; both change the total</p>
+    </div>
+  </div>
+  <div class="col">
+    <p><strong>Roll gaps are worth 8% of the profit.</strong> Yahoo's <span class="mono">ES=F</span> and <span class="mono">NQ=F</span> stitch each quarterly contract to the next at expiry without back-adjusting, so every roll injects a price jump of roughly +0.5% to +1.5% in contango that no position ever earned. A long-only backtest collects them as free money. Removing them with a Panama adjustment takes <strong>$342,275 down to $314,790</strong> &mdash; $27,485 that was never there. Anyone reproducing this on Yahoo data without adjusting will land near the higher number.</p>
+    <p><strong>"Buy the close" is not quite executable.</strong> The signal is RSI(2) computed on the very close you are filled at &mdash; you cannot know it until the print. Taking the next open instead, the honest bound:</p>
+  </div>
+
+  <figure>
+    <p class="fig-title">The cost of the fill assumption</p>
+    <p class="fig-sub">Identical rules, differing only in when the entry is filled</p>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Entry</th><th>Net P&amp;L</th><th>Profit factor</th><th>Max drawdown</th></tr></thead>
+        <tbody>
+          <tr><td>At the signal close, as stated</td><td>$314,790</td><td>2.35</td><td class="neg">&minus;$41,683</td></tr>
+          <tr><td>At the next open</td><td>$280,145</td><td>2.11</td><td class="neg">&minus;$66,003</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <figcaption>11% of the profit and a 58% larger drawdown live inside that one assumption. A market-on-close order against an estimated RSI lands somewhere between the two rows &mdash; closer to the top one, but not on it.</figcaption>
+  </figure>
+
+  <div class="col">
+    <p style="margin-top:26px">Costs, by contrast, barely register. Going from zero slippage to four ticks a side moves the 18-year total only from $319,930 to $299,370. The $4 round-turn assumption in the post is not where the risk is.</p>
+  </div>
+</section>
+
+
+<section>
+  <div class="sec-head">
+    <span class="num">INDIA</span>
+    <div class="titles">
+      <h2>Does it work on the Nifty?</h2>
+      <p class="kicker">The hardest out-of-sample test available: a different market, same rules</p>
+    </div>
+  </div>
+  <div class="col">
+    <p>Everything above concerns two US contracts. A mean-reversion effect that is real should show up wherever the same forces do &mdash; so the identical rules were run on the two most-traded NSE index contracts, <strong>Nifty 50</strong> and <strong>Nifty Bank</strong>, over 2008&ndash;Aug 2026.</p>
+    <p>It does not travel. The effect is present in the raw prices and too weak to trade after what it costs to trade it in India.</p>
+  </div>
+
+  <figure>
+    <p class="fig-title">Same strategy, two markets</p>
+    <p class="fig-sub">2008 &ndash; Aug 2026, net of each market's own costs, as a percentage of notional risked</p>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>&nbsp;</th><th>US &middot; ES + NQ</th><th>India &middot; Nifty + Bank Nifty</th></tr></thead>
+        <tbody>
+          <tr><td>Trades</td><td>300</td><td>287</td></tr>
+          <tr><td>Win rate</td><td>78.0%</td><td class="neg">62.7%</td></tr>
+          <tr><td>Profit factor</td><td>2.31</td><td class="neg">1.18</td></tr>
+          <tr><td>Mean gross return per trade</td><td>+0.423%</td><td>+0.341%</td></tr>
+          <tr><td>Significance of that edge</td><td>t = 4.85</td><td class="neg">t = 2.45</td></tr>
+          <tr><td>Beats random entry at</td><td>99.9th pct</td><td class="neg">80th / 60th pct</td></tr>
+          <tr><td>Costs as a share of the edge</td><td>3.3%</td><td class="neg">46.5%</td></tr>
+          <tr><td>Green years</td><td>14 / 18</td><td class="neg">11 / 18</td></tr>
+          <tr class="total"><td>Cumulative, net of costs</td><td class="pos">+122.6%</td><td>+52.4%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <figcaption>Indian results use the cash indices as futures proxies, with the long-futures cost of carry charged explicitly &mdash; see the method note. Contract sizes are the current NSE lots: 75 for Nifty, 30 for Nifty Bank.</figcaption>
+  </figure>
+
+  <figure>
+    <p class="fig-title">Cumulative return, net of costs</p>
+    <p class="fig-sub">Sum of per-trade returns as a percentage of notional, so the two markets are directly comparable</p>
+    <div class="legend">
+      <span class="k"><i style="background:var(--s1)"></i>US &middot; ES + NQ</span>
+      <span class="k"><i style="background:var(--s3)"></i>India &middot; Nifty + Nifty Bank</span>
+    </div>
+    <div class="chart-scroll"><div class="chart-host" id="c-intl"></div></div>
+    <figcaption>Measured in the unit that lets two markets be compared at all, the US version earns more than twice as much per rupee or dollar at risk &mdash; and does it with a steadier line. India's has not made a new high since March 2026.</figcaption>
+  </figure>
+
+  <div class="col">
+    <h3 style="font-size:18px;font-weight:600;margin:34px 0 10px;letter-spacing:-.01em">Why it breaks: the cost stack</h3>
+    <p>The Indian edge starts smaller and is then taxed much harder. Securities transaction tax alone is 0.02% of the sell side, and &mdash; the piece most backtests miss &mdash; a long futures position gives up the basis as it converges. At a ~6.5% repo rate against a ~1.3% dividend yield, holding for the strategy's average 4.8 sessions costs <strong>0.10% of notional before anything else</strong>.</p>
+  </div>
+
+  <figure>
+    <p class="fig-title">What is left of the edge after costs</p>
+    <p class="fig-sub">Mean return per trade, in percent of notional, as each cost layer is applied</p>
+    <div class="chart-scroll"><div class="chart-host" id="c-costs"></div></div>
+    <figcaption>Costs take 46.5% of the Indian edge and 3.3% of the US one. That single difference &mdash; not the price behaviour &mdash; is most of what separates the two markets here.</figcaption>
+  </figure>
+
+  <div class="tiles">
+    <div class="tile"><p class="v neg">1.18</p><p class="l">Profit factor, India</p><p class="n">2.31 in the US over the same window</p></div>
+    <div class="tile"><p class="v neg">&minus;&#8377;2.67L</p><p class="l">Max drawdown</p><p class="n">82% the size of eighteen years of profit</p></div>
+    <div class="tile"><p class="v neg">&minus;29.3%</p><p class="l">Deepest excursion</p><p class="n">Nifty Bank, Feb&ndash;Mar 2020, no stop</p></div>
+    <div class="tile"><p class="v">1.05</p><p class="l">Nifty Bank profit factor</p><p class="n">t = 1.50, p = 0.14 &mdash; not significant</p></div>
+  </div>
+
+  <figure>
+    <p class="fig-title">India, year by year</p>
+    <p class="fig-sub">Net of all costs, as a percentage of notional risked, 1 Nifty + 1 Nifty Bank lot</p>
+    <div class="chart-scroll"><div class="chart-host" id="c-indiayear"></div></div>
+    <figcaption>Seven losing years out of eighteen, against four in the US. 2026 is the worst on record so far at &minus;&#8377;1.51 lakh across five trades &mdash; and no new signal has fired since March.</figcaption>
+  </figure>
+
+  <div class="col">
+    <h3 style="font-size:18px;font-weight:600;margin:34px 0 10px;letter-spacing:-.01em">Is the effect there at all?</h3>
+    <p>Before costs, weakly. Across four Indian indices, only the Nifty 50 clears conventional significance, and only barely:</p>
+    <div class="tbl-scroll" style="margin-top:16px">
+      <table>
+        <thead><tr><th>Index</th><th>Trades</th><th>Win rate</th><th>Mean gross return</th><th>t</th><th>p</th></tr></thead>
+        <tbody>
+          <tr><td>Nifty 50</td><td>146</td><td>68.5%</td><td>+0.349%</td><td>2.04</td><td>0.043</td></tr>
+          <tr><td>Nifty Bank</td><td>141</td><td>64.5%</td><td>+0.333%</td><td>1.50</td><td class="neg">0.136</td></tr>
+          <tr><td>Nifty IT</td><td>108</td><td>74.1%</td><td>+0.297%</td><td>1.11</td><td class="neg">0.268</td></tr>
+          <tr><td>Sensex</td><td>144</td><td>68.1%</td><td>+0.242%</td><td>1.35</td><td class="neg">0.179</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:20px">The random-entry test is more damning than the p-values. In the US, the RSI(2) signal beats randomly chosen entry days above the 200 SMA at the 99.9th percentile &mdash; the timing is unambiguously doing work. In India the same test puts Nifty at the <strong>80th percentile</strong> and Nifty Bank at the <strong>60th</strong>. At the 60th percentile you are not timing anything; you are just long an index that rose.</p>
+    <div class="callout">
+      <p><strong>Verdict for Indian traders:</strong> the published edge is a US phenomenon at these parameters. On the Nifty it survives as a marginal gross effect that the STT-and-carry stack consumes almost half of; on the Nifty Bank it does not survive at all. Anyone porting these rules to NSE futures should expect a profit factor near 1.2 and a drawdown roughly the size of their lifetime profit &mdash; not 83% winners.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <span class="num">STRESS</span>
+    <div class="titles">
+      <h2>Does it survive being poked?</h2>
+      <p class="kicker">Mostly yes &mdash; with one sensitivity worth knowing</p>
+    </div>
+  </div>
+  <div class="col">
+    <p>A strategy that only works at its published parameters is a curve fit. This one isn't: every perturbation below stays profitable, and most stay near the original profit factor. That is a real point in its favour.</p>
+    <p>The exception is which RSI you use. Wilder's smoothing &mdash; Connors' definition, and the one used throughout this audit &mdash; gives a 2.35 profit factor. The simple-average variant that several charting packages default to gives <strong>1.62 on two and a half times the trades</strong>. Same rules, different indicator library, materially different strategy.</p>
+  </div>
+
+  <figure>
+    <p class="fig-title">Parameter sensitivity</p>
+    <p class="fig-sub">Portfolio, 2009 &ndash; Aug 2026, one change at a time from the stated rules</p>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Variant</th><th>Trades</th><th>Win rate</th><th>PF</th><th>Net P&amp;L</th><th>Max DD</th></tr></thead>
+        <tbody id="tb-robust"></tbody>
+      </table>
+    </div>
+    <figcaption>Loosening the entry threshold to RSI&nbsp;&lt;&nbsp;15 makes more money on more trades at a similar profit factor, which suggests the published threshold is not a fitted optimum but a round number that happens to work.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <div class="sec-head">
+    <span class="num">LEDGER</span>
+    <div class="titles">
+      <h2>Year by year</h2>
+      <p class="kicker">Every year of the record, in both units</p>
+    </div>
+  </div>
+  <figure style="margin-top:0">
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Year</th><th>Trades</th><th>Win rate</th><th>Net P&amp;L</th><th>% of notional</th><th>Avg notional</th></tr></thead>
+        <tbody id="tb-years"></tbody>
+      </table>
+    </div>
+    <figcaption>Read the two middle-right columns against each other. 2021 returned 21.2% of notional for $64,686; 2024 returned an almost identical 21.0% for $75,677; 2026 has returned 16.7% so far, for more money than any full year before 2021.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <div class="sec-head">
+    <span class="num">VERDICT</span>
+    <div class="titles">
+      <h2>What it actually is</h2>
+    </div>
+  </div>
+  <div class="col">
+    <p>A well-behaved short-term mean-reversion effect in index futures, worth about <strong>0.44% of notional per trade</strong>, roughly 17 trades a year, in the market 15% of the time. It is statistically significant, it holds out of sample back to 2001, it is robust to its parameters, and the person who posted it reported its numbers accurately.</p>
+    <p>What the presentation oversells is not the arithmetic. It is the unit. Dollars per contract on an index that has quadrupled is the most flattering measure available, and it turns eighteen years of a constant edge into a chart that looks like a discovery compounding. Priced properly &mdash; against the capital it needs, against the drawdown it puts you through, against simply holding the same two contracts &mdash; it is a decent overlay returning something like 17% a year, with a rare but real left tail that no stop protects.</p>
+    <div class="callout">
+      <p><strong>The one thing to check before trading it:</strong> which RSI your platform computes. Wilder's gives you the strategy above. The simple-average variant gives you a different, meaningfully worse one under the same name.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <h3>Method &amp; caveats</h3>
+  <p>Daily OHLC for ES=F, NQ=F, ^GSPC and ^NDX from the Yahoo Finance chart API, through 28 August 2026. Futures series back-adjusted for quarterly roll gaps, sized as the portion of each roll-day move the matching cash index does not explain. Wilder's RSI(2); 200-session simple moving average; $4 round-turn commission plus one tick per side unless noted. Entry and exit both at the daily close, as the rules specify. Position size is fixed at one contract throughout, also as specified. Significance tested by one-sample t-test on per-trade notional returns and by 2,000-path random-entry resampling matched on trade count, holding period and regime filter.</p>
+  <p style="margin-top:12px"><strong>India:</strong> no usable continuous NSE futures series exists, so the Indian runs use the Nifty 50, Nifty Bank, Nifty IT and Sensex cash indices as futures proxies and charge the long-futures cost of carry explicitly at 5.2% a year (a ~6.5% repo rate less a ~1.3% dividend yield) over each holding period. Transaction costs model the full statutory stack &mdash; STT at 0.02% of the sell side, exchange and SEBI charges, stamp duty and GST, about 0.0257% of notional per round turn &mdash; plus &#8377;47 of brokerage and one index point of slippage per side (three on Nifty Bank). Rupee figures use current NSE lot sizes throughout, 75 for Nifty and 30 for Nifty Bank; percentage figures are lot-independent and are the primary unit for any cross-market comparison.</p>
+  <p style="margin-top:12px">Yahoo daily futures data is not a tick-accurate settlement series; treat P&amp;L as accurate to a few percent. Margin figures are approximate CME initial requirements at current index levels. Full code, trade-by-trade output and the raw result files are in the repository under <code>src/</code> and <code>output/</code>.</p>
+  <p style="margin-top:12px">Not financial advice.</p>
+</footer>
+
+</div>
+<script>
+const DATA = {"equity":[{"d":"2009-05","v":871},{"d":"2009-06","v":1201},{"d":"2009-07","v":1916},{"d":"2009-08","v":2857},{"d":"2009-09","v":5866},{"d":"2009-10","v":7478},{"d":"2009-11","v":8553},{"d":"2009-12","v":8553},{"d":"2010-01","v":9424},{"d":"2010-02","v":10445},{"d":"2010-03","v":10445},{"d":"2010-04","v":11628},{"d":"2010-05","v":14000},{"d":"2010-06","v":14000},{"d":"2010-07","v":12786},{"d":"2010-08","v":12807},{"d":"2010-09","v":12807},{"d":"2010-10","v":13623},{"d":"2010-11","v":13702},{"d":"2010-12","v":13702},{"d":"2011-01","v":15009},{"d":"2011-02","v":16471},{"d":"2011-03","v":17916},{"d":"2011-04","v":18776},{"d":"2011-05","v":21218},{"d":"2011-06","v":20918},{"d":"2011-07","v":22004},{"d":"2011-08","v":7731},{"d":"2011-09","v":7731},{"d":"2011-10","v":7731},{"d":"2011-11","v":6772},{"d":"2011-12","v":6772},{"d":"2012-01","v":6772},{"d":"2012-02","v":6772},{"d":"2012-03","v":8919},{"d":"2012-04","v":11332},{"d":"2012-05","v":7926},{"d":"2012-06","v":11858},{"d":"2012-07","v":15997},{"d":"2012-08","v":15997},{"d":"2012-09","v":18939},{"d":"2012-10","v":18323},{"d":"2012-11","v":18724},{"d":"2012-12","v":18724},{"d":"2013-01","v":21007},{"d":"2013-02","v":21007},{"d":"2013-03","v":21091},{"d":"2013-04","v":21687},{"d":"2013-05","v":21898},{"d":"2013-06","v":26208},{"d":"2013-07","v":26208},{"d":"2013-08","v":27068},{"d":"2013-09","v":27068},{"d":"2013-10","v":28914},{"d":"2013-11","v":30550},{"d":"2013-12","v":32793},{"d":"2014-01","v":33719},{"d":"2014-02","v":29888},{"d":"2014-03","v":32520},{"d":"2014-04","v":35656},{"d":"2014-05","v":37052},{"d":"2014-06","v":37573},{"d":"2014-07","v":37573},{"d":"2014-08","v":37885},{"d":"2014-09","v":39276},{"d":"2014-10","v":41558},{"d":"2014-11","v":41558},{"d":"2014-12","v":41681},{"d":"2015-01","v":44657},{"d":"2015-02","v":48979},{"d":"2015-03","v":50338},{"d":"2015-04","v":51914},{"d":"2015-05","v":54194},{"d":"2015-06","v":57239},{"d":"2015-07","v":59741},{"d":"2015-08","v":56692},{"d":"2015-09","v":56692},{"d":"2015-10","v":56692},{"d":"2015-11","v":57176},{"d":"2015-12","v":57176},{"d":"2016-01","v":57176},{"d":"2016-02","v":57176},{"d":"2016-03","v":57176},{"d":"2016-04","v":57176},{"d":"2016-05","v":55308},{"d":"2016-06","v":55407},{"d":"2016-07","v":55407},{"d":"2016-08","v":57087},{"d":"2016-09","v":62459},{"d":"2016-10","v":62441},{"d":"2016-11","v":62253},{"d":"2016-12","v":64344},{"d":"2017-01","v":66053},{"d":"2017-02","v":66053},{"d":"2017-03","v":68166},{"d":"2017-04","v":68318},{"d":"2017-05","v":70052},{"d":"2017-06","v":71089},{"d":"2017-07","v":72371},{"d":"2017-08","v":76584},{"d":"2017-09","v":76831},{"d":"2017-10","v":76831},{"d":"2017-11","v":79283},{"d":"2017-12","v":79619},{"d":"2018-01","v":81641},{"d":"2018-02","v":72943},{"d":"2018-03","v":72943},{"d":"2018-04","v":63375},{"d":"2018-05","v":63375},{"d":"2018-06","v":65421},{"d":"2018-07","v":64288},{"d":"2018-08","v":69288},{"d":"2018-09","v":68925},{"d":"2018-10","v":61859},{"d":"2018-11","v":61859},{"d":"2018-12","v":61859},{"d":"2019-01","v":61859},{"d":"2019-02","v":61859},{"d":"2019-03","v":61859},{"d":"2019-04","v":61859},{"d":"2019-05","v":64805},{"d":"2019-06","v":64805},{"d":"2019-07","v":65926},{"d":"2019-08","v":61150},{"d":"2019-09","v":61150},{"d":"2019-10","v":55332},{"d":"2019-11","v":55332},{"d":"2019-12","v":61019},{"d":"2020-01","v":66240},{"d":"2020-02","v":69211},{"d":"2020-03","v":57598},{"d":"2020-04","v":57598},{"d":"2020-05","v":57598},{"d":"2020-06","v":63494},{"d":"2020-07","v":70180},{"d":"2020-08","v":76101},{"d":"2020-09","v":81375},{"d":"2020-10","v":82671},{"d":"2020-11","v":69288},{"d":"2020-12","v":71659},{"d":"2021-01","v":71659},{"d":"2021-02","v":76276},{"d":"2021-03","v":82188},{"d":"2021-04","v":82188},{"d":"2021-05","v":98888},{"d":"2021-06","v":101791},{"d":"2021-07","v":106493},{"d":"2021-08","v":113325},{"d":"2021-09","v":119700},{"d":"2021-10","v":122354},{"d":"2021-11","v":126585},{"d":"2021-12","v":136345},{"d":"2022-01","v":118764},{"d":"2022-02","v":118764},{"d":"2022-03","v":118764},{"d":"2022-04","v":118764},{"d":"2022-05","v":118764},{"d":"2022-06","v":118764},{"d":"2022-07","v":118764},{"d":"2022-08","v":118764},{"d":"2022-09","v":118764},{"d":"2022-10","v":118764},{"d":"2022-11","v":118764},{"d":"2022-12","v":118764},{"d":"2023-01","v":118764},{"d":"2023-02","v":118764},{"d":"2023-03","v":125211},{"d":"2023-04","v":136469},{"d":"2023-05","v":144498},{"d":"2023-06","v":144498},{"d":"2023-07","v":144498},{"d":"2023-08","v":137740},{"d":"2023-09","v":143267},{"d":"2023-10","v":124407},{"d":"2023-11","v":124407},{"d":"2023-12","v":124407},{"d":"2024-01","v":131623},{"d":"2024-02","v":141824},{"d":"2024-03","v":141824},{"d":"2024-04","v":136760},{"d":"2024-05","v":136760},{"d":"2024-06","v":137669},{"d":"2024-07","v":127993},{"d":"2024-08","v":144728},{"d":"2024-09","v":168027},{"d":"2024-10","v":169661},{"d":"2024-11","v":190077},{"d":"2024-12","v":200084},{"d":"2025-01","v":217363},{"d":"2025-02","v":225584},{"d":"2025-03","v":183901},{"d":"2025-04","v":183901},{"d":"2025-05","v":193583},{"d":"2025-06","v":193583},{"d":"2025-07","v":193583},{"d":"2025-08","v":210782},{"d":"2025-09","v":210782},{"d":"2025-10","v":231454},{"d":"2025-11","v":234259},{"d":"2025-12","v":236857},{"d":"2026-01","v":264806},{"d":"2026-02","v":282116},{"d":"2026-03","v":276937},{"d":"2026-04","v":276937},{"d":"2026-05","v":276937},{"d":"2026-06","v":296225},{"d":"2026-07","v":311213},{"d":"2026-08","v":314790}],"equity_raw":[{"d":"2009-06","v":330},{"d":"2009-07","v":261},{"d":"2009-08","v":1202},{"d":"2009-09","v":4161},{"d":"2009-10","v":5773},{"d":"2009-11","v":6849},{"d":"2009-12","v":6849},{"d":"2010-01","v":7720},{"d":"2010-02","v":8740},{"d":"2010-03","v":8740},{"d":"2010-04","v":9924},{"d":"2010-05","v":12295},{"d":"2010-06","v":12295},{"d":"2010-07","v":10596},{"d":"2010-08","v":10596},{"d":"2010-09","v":11705},{"d":"2010-10","v":12521},{"d":"2010-11","v":12600},{"d":"2010-12","v":12600},{"d":"2011-01","v":13907},{"d":"2011-02","v":15369},{"d":"2011-03","v":16204},{"d":"2011-04","v":17064},{"d":"2011-05","v":19506},{"d":"2011-06","v":19206},{"d":"2011-07","v":20292},{"d":"2011-08","v":6019},{"d":"2011-09","v":6019},{"d":"2011-10","v":6019},{"d":"2011-11","v":6019},{"d":"2011-12","v":6019},{"d":"2012-01","v":6019},{"d":"2012-02","v":6019},{"d":"2012-03","v":9437},{"d":"2012-04","v":11850},{"d":"2012-05","v":8444},{"d":"2012-06","v":10330},{"d":"2012-07","v":14469},{"d":"2012-08","v":14469},{"d":"2012-09","v":17411},{"d":"2012-10","v":18207},{"d":"2012-11","v":18608},{"d":"2012-12","v":18608},{"d":"2013-01","v":20892},{"d":"2013-02","v":20892},{"d":"2013-03","v":21879},{"d":"2013-04","v":22475},{"d":"2013-05","v":22686},{"d":"2013-06","v":28326},{"d":"2013-07","v":28326},{"d":"2013-08","v":29185},{"d":"2013-09","v":29185},{"d":"2013-10","v":29152},{"d":"2013-11","v":30788},{"d":"2013-12","v":33031},{"d":"2014-01","v":33957},{"d":"2014-02","v":30127},{"d":"2014-03","v":32759},{"d":"2014-04","v":37029},{"d":"2014-05","v":38425},{"d":"2014-06","v":38946},{"d":"2014-07","v":38946},{"d":"2014-08","v":39258},{"d":"2014-09","v":40649},{"d":"2014-10","v":42931},{"d":"2014-11","v":42931},{"d":"2014-12","v":43054},{"d":"2015-01","v":46031},{"d":"2015-02","v":50353},{"d":"2015-03","v":51712},{"d":"2015-04","v":53288},{"d":"2015-05","v":55567},{"d":"2015-06","v":58613},{"d":"2015-07","v":59064},{"d":"2015-08","v":59064},{"d":"2015-09","v":59064},{"d":"2015-10","v":59064},{"d":"2015-11","v":59549},{"d":"2015-12","v":59549},{"d":"2016-01","v":52335},{"d":"2016-02","v":52335},{"d":"2016-03","v":52335},{"d":"2016-04","v":52335},{"d":"2016-05","v":50467},{"d":"2016-06","v":50446},{"d":"2016-07","v":50446},{"d":"2016-08","v":52126},{"d":"2016-09","v":56693},{"d":"2016-10","v":56675},{"d":"2016-11","v":56487},{"d":"2016-12","v":58578},{"d":"2017-01","v":60287},{"d":"2017-02","v":60287},{"d":"2017-03","v":62400},{"d":"2017-04","v":62552},{"d":"2017-05","v":64286},{"d":"2017-06","v":64782},{"d":"2017-07","v":66064},{"d":"2017-08","v":70277},{"d":"2017-09","v":70714},{"d":"2017-10","v":70714},{"d":"2017-11","v":73166},{"d":"2017-12","v":73502},{"d":"2018-01","v":75524},{"d":"2018-02","v":66826},{"d":"2018-03","v":66826},{"d":"2018-04","v":58487},{"d":"2018-05","v":58487},{"d":"2018-06","v":60533},{"d":"2018-07","v":61600},{"d":"2018-08","v":66600},{"d":"2018-09","v":66237},{"d":"2018-10","v":59171},{"d":"2018-11","v":59171},{"d":"2018-12","v":59171},{"d":"2019-01","v":59171},{"d":"2019-02","v":59171},{"d":"2019-03","v":59171},{"d":"2019-04","v":59171},{"d":"2019-05","v":62117},{"d":"2019-06","v":63574},{"d":"2019-07","v":64695},{"d":"2019-08","v":59919},{"d":"2019-09","v":59919},{"d":"2019-10","v":57249},{"d":"2019-11","v":57249},{"d":"2019-12","v":62936},{"d":"2020-01","v":68157},{"d":"2020-02","v":71128},{"d":"2020-03","v":59515},{"d":"2020-04","v":59515},{"d":"2020-05","v":59515},{"d":"2020-06","v":59515},{"d":"2020-07","v":66201},{"d":"2020-08","v":72122},{"d":"2020-09","v":74460},{"d":"2020-10","v":75756},{"d":"2020-11","v":62373},{"d":"2020-12","v":64744},{"d":"2021-01","v":64744},{"d":"2021-02","v":69361},{"d":"2021-03","v":75273},{"d":"2021-04","v":75273},{"d":"2021-05","v":91973},{"d":"2021-06","v":94394},{"d":"2021-07","v":99096},{"d":"2021-08","v":105928},{"d":"2021-09","v":110289},{"d":"2021-10","v":112943},{"d":"2021-11","v":117174},{"d":"2021-12","v":133280},{"d":"2022-01","v":115699},{"d":"2022-02","v":115699},{"d":"2022-03","v":115699},{"d":"2022-04","v":115699},{"d":"2022-05","v":115699},{"d":"2022-06","v":115699},{"d":"2022-07","v":115699},{"d":"2022-08","v":115699},{"d":"2022-09","v":115699},{"d":"2022-10","v":115699},{"d":"2022-11","v":115699},{"d":"2022-12","v":115699},{"d":"2023-01","v":115699},{"d":"2023-02","v":115699},{"d":"2023-03","v":122146},{"d":"2023-04","v":133404},{"d":"2023-05","v":141433},{"d":"2023-06","v":141433},{"d":"2023-07","v":141433},{"d":"2023-08","v":134675},{"d":"2023-09","v":140202},{"d":"2023-10","v":116776},{"d":"2023-11","v":116776},{"d":"2023-12","v":116776},{"d":"2024-01","v":123991},{"d":"2024-02","v":134192},{"d":"2024-03","v":134192},{"d":"2024-04","v":134194},{"d":"2024-05","v":134194},{"d":"2024-06","v":135102},{"d":"2024-07","v":125427},{"d":"2024-08","v":142161},{"d":"2024-09","v":165461},{"d":"2024-10","v":167094},{"d":"2024-11","v":187511},{"d":"2024-12","v":208465},{"d":"2025-01","v":231652},{"d":"2025-02","v":239873},{"d":"2025-03","v":198190},{"d":"2025-04","v":198190},{"d":"2025-05","v":207872},{"d":"2025-06","v":207872},{"d":"2025-07","v":207872},{"d":"2025-08","v":225071},{"d":"2025-09","v":225071},{"d":"2025-10","v":245743},{"d":"2025-11","v":248547},{"d":"2025-12","v":264542},{"d":"2026-01","v":292491},{"d":"2026-02","v":309801},{"d":"2026-03","v":309318},{"d":"2026-04","v":309318},{"d":"2026-05","v":309318},{"d":"2026-06","v":323710},{"d":"2026-07","v":338698},{"d":"2026-08","v":342275}],"buy_hold":[{"d":"2009-01","v":-6875},{"d":"2009-02","v":-9425},{"d":"2009-03","v":-3265},{"d":"2009-04","v":1640},{"d":"2009-05","v":5425},{"d":"2009-06","v":6417},{"d":"2009-07","v":12014},{"d":"2009-08","v":15407},{"d":"2009-09","v":17785},{"d":"2009-10","v":20685},{"d":"2009-11","v":21455},{"d":"2009-12","v":25971},{"d":"2010-01","v":20821},{"d":"2010-02","v":24056},{"d":"2010-03","v":31062},{"d":"2010-04","v":35524},{"d":"2010-05","v":25317},{"d":"2010-06","v":24693},{"d":"2010-07","v":26671},{"d":"2010-08","v":23143},{"d":"2010-09","v":32526},{"d":"2010-10","v":36426},{"d":"2010-11","v":37081},{"d":"2010-12","v":42620},{"d":"2011-01","v":44295},{"d":"2011-02","v":48213},{"d":"2011-03","v":48511},{"d":"2011-04","v":50731},{"d":"2011-05","v":49821},{"d":"2011-06","v":45400},{"d":"2011-07","v":49655},{"d":"2011-08","v":40125},{"d":"2011-09","v":39261},{"d":"2011-10","v":50714},{"d":"2011-11","v":39359},{"d":"2011-12","v":48095},{"d":"2012-01","v":54263},{"d":"2012-02","v":59705},{"d":"2012-03","v":64405},{"d":"2012-04","v":64790},{"d":"2012-05","v":56360},{"d":"2012-06","v":58974},{"d":"2012-07","v":63132},{"d":"2012-08","v":67154},{"d":"2012-09","v":67995},{"d":"2012-10","v":63998},{"d":"2012-11","v":63390},{"d":"2012-12","v":61995},{"d":"2013-01","v":70422},{"d":"2013-02","v":71515},{"d":"2013-03","v":75421},{"d":"2013-04","v":76498},{"d":"2013-05","v":83433},{"d":"2013-06","v":78323},{"d":"2013-07","v":86070},{"d":"2013-08","v":85835},{"d":"2013-09","v":91084},{"d":"2013-10","v":97474},{"d":"2013-11","v":100762},{"d":"2013-12","v":106408},{"d":"2014-01","v":102923},{"d":"2014-02","v":108181},{"d":"2014-03","v":105090},{"d":"2014-04","v":104915},{"d":"2014-05","v":109655},{"d":"2014-06","v":116555},{"d":"2014-07","v":120010},{"d":"2014-08","v":124040},{"d":"2014-09","v":123415},{"d":"2014-10","v":122383},{"d":"2014-11","v":133778},{"d":"2014-12","v":134211},{"d":"2015-01","v":131334},{"d":"2015-02","v":137904},{"d":"2015-03","v":133076},{"d":"2015-04","v":140109},{"d":"2015-05","v":139456},{"d":"2015-06","v":139847},{"d":"2015-07","v":140559},{"d":"2015-08","v":131597},{"d":"2015-09","v":126273},{"d":"2015-10","v":141571},{"d":"2015-11","v":144191},{"d":"2015-12","v":137477},{"d":"2016-01","v":124454},{"d":"2016-02","v":124432},{"d":"2016-03","v":132711},{"d":"2016-04","v":136956},{"d":"2016-05","v":138404},{"d":"2016-06","v":131393},{"d":"2016-07","v":148170},{"d":"2016-08","v":149363},{"d":"2016-09","v":151058},{"d":"2016-10","v":148336},{"d":"2016-11","v":153961},{"d":"2016-12","v":157921},{"d":"2017-01","v":163776},{"d":"2017-02","v":171191},{"d":"2017-03","v":171361},{"d":"2017-04","v":177184},{"d":"2017-05","v":183081},{"d":"2017-06","v":185413},{"d":"2017-07","v":189136},{"d":"2017-08","v":186043},{"d":"2017-09","v":190716},{"d":"2017-10","v":200256},{"d":"2017-11","v":205346},{"d":"2017-12","v":208329},{"d":"2018-01","v":230684},{"d":"2018-02","v":221986},{"d":"2018-03","v":206097},{"d":"2018-04","v":212094},{"d":"2018-05","v":220242},{"d":"2018-06","v":226640},{"d":"2018-07","v":231110},{"d":"2018-08","v":237962},{"d":"2018-09","v":241815},{"d":"2018-10","v":214100},{"d":"2018-11","v":204855},{"d":"2018-12","v":188318},{"d":"2019-01","v":207153},{"d":"2019-02","v":219480},{"d":"2019-03","v":225716},{"d":"2019-04","v":239699},{"d":"2019-05","v":223716},{"d":"2019-06","v":236906},{"d":"2019-07","v":247439},{"d":"2019-08","v":228684},{"d":"2019-09","v":235287},{"d":"2019-10","v":244802},{"d":"2019-11","v":254259},{"d":"2019-12","v":269651},{"d":"2020-01","v":279676},{"d":"2020-02","v":288234},{"d":"2020-03","v":225922},{"d":"2020-04","v":265207},{"d":"2020-05","v":291657},{"d":"2020-06","v":296994},{"d":"2020-07","v":318714},{"d":"2020-08","v":364394},{"d":"2020-09","v":334438},{"d":"2020-10","v":353203},{"d":"2020-11","v":374321},{"d":"2020-12","v":388851},{"d":"2021-01","v":393499},{"d":"2021-02","v":398694},{"d":"2021-03","v":409382},{"d":"2021-04","v":438924},{"d":"2021-05","v":435664},{"d":"2021-06","v":455067},{"d":"2021-07","v":476834},{"d":"2021-08","v":488529},{"d":"2021-09","v":488455},{"d":"2021-10","v":506412},{"d":"2021-11","v":510600},{"d":"2021-12","v":524631},{"d":"2022-01","v":472686},{"d":"2022-02","v":465474},{"d":"2022-03","v":481057},{"d":"2022-04","v":439549},{"d":"2022-05","v":420459},{"d":"2022-06","v":393634},{"d":"2022-07","v":421117},{"d":"2022-08","v":410397},{"d":"2022-09","v":364666},{"d":"2022-10","v":378983},{"d":"2022-11","v":388961},{"d":"2022-12","v":364153},{"d":"2023-01","v":397818},{"d":"2023-02","v":387888},{"d":"2023-03","v":403555},{"d":"2023-04","v":421518},{"d":"2023-05","v":443000},{"d":"2023-06","v":459544},{"d":"2023-07","v":486204},{"d":"2023-08","v":459227},{"d":"2023-09","v":447768},{"d":"2023-10","v":424521},{"d":"2023-11","v":481161},{"d":"2023-12","v":503849},{"d":"2024-01","v":518732},{"d":"2024-02","v":537274},{"d":"2024-03","v":549271},{"d":"2024-04","v":527836},{"d":"2024-05","v":557941},{"d":"2024-06","v":588966},{"d":"2024-07","v":572786},{"d":"2024-08","v":592786},{"d":"2024-09","v":601077},{"d":"2024-10","v":609359},{"d":"2024-11","v":623429},{"d":"2024-12","v":622852},{"d":"2025-01","v":632419},{"d":"2025-02","v":622567},{"d":"2025-03","v":566371},{"d":"2025-04","v":564274},{"d":"2025-05","v":606431},{"d":"2025-06","v":654953},{"d":"2025-07","v":678410},{"d":"2025-08","v":681608},{"d":"2025-09","v":708869},{"d":"2025-10","v":731044},{"d":"2025-11","v":732124},{"d":"2025-12","v":732340},{"d":"2026-01","v":728165},{"d":"2026-02","v":713625},{"d":"2026-03","v":641322},{"d":"2026-04","v":762577},{"d":"2026-05","v":842032},{"d":"2026-06","v":799580},{"d":"2026-07","v":780148},{"d":"2026-08","v":818063}],"underwater":[{"d":"2009-01","v":0},{"d":"2009-02","v":0},{"d":"2009-03","v":0},{"d":"2009-04","v":0},{"d":"2009-05","v":0},{"d":"2009-06","v":0},{"d":"2009-07","v":-835},{"d":"2009-08","v":0},{"d":"2009-09","v":0},{"d":"2009-10","v":0},{"d":"2009-11","v":-1360},{"d":"2009-12","v":0},{"d":"2010-01","v":-2195},{"d":"2010-02","v":0},{"d":"2010-03","v":0},{"d":"2010-04","v":0},{"d":"2010-05","v":-2692},{"d":"2010-06","v":-1225},{"d":"2010-07","v":-3585},{"d":"2010-08","v":-2684},{"d":"2010-09","v":-2213},{"d":"2010-10","v":-2213},{"d":"2010-11","v":-1397},{"d":"2010-12","v":-1318},{"d":"2011-01","v":-1318},{"d":"2011-02","v":-11},{"d":"2011-03","v":0},{"d":"2011-04","v":-31},{"d":"2011-05","v":-635},{"d":"2011-06","v":-1885},{"d":"2011-07","v":-495},{"d":"2011-08","v":-14273},{"d":"2011-09","v":-14273},{"d":"2011-10","v":-14273},{"d":"2011-11","v":-16688},{"d":"2011-12","v":-15232},{"d":"2012-01","v":-15232},{"d":"2012-02","v":-15232},{"d":"2012-03","v":-15232},{"d":"2012-04","v":-13085},{"d":"2012-05","v":-17448},{"d":"2012-06","v":-14078},{"d":"2012-07","v":-10146},{"d":"2012-08","v":-6007},{"d":"2012-09","v":-5412},{"d":"2012-10","v":-5443},{"d":"2012-11","v":-3280},{"d":"2012-12","v":-4618},{"d":"2013-01","v":-997},{"d":"2013-02","v":-997},{"d":"2013-03","v":-1024},{"d":"2013-04","v":-913},{"d":"2013-05","v":-317},{"d":"2013-06","v":-106},{"d":"2013-07","v":0},{"d":"2013-08","v":-262},{"d":"2013-09","v":0},{"d":"2013-10","v":0},{"d":"2013-11","v":0},{"d":"2013-12","v":-53},{"d":"2014-01","v":-2113},{"d":"2014-02","v":-3831},{"d":"2014-03","v":-4168},{"d":"2014-04","v":-428},{"d":"2014-05","v":0},{"d":"2014-06","v":0},{"d":"2014-07","v":0},{"d":"2014-08","v":-543},{"d":"2014-09","v":0},{"d":"2014-10","v":0},{"d":"2014-11","v":0},{"d":"2014-12","v":-3252},{"d":"2015-01","v":-1618},{"d":"2015-02","v":0},{"d":"2015-03","v":-2975},{"d":"2015-04","v":0},{"d":"2015-05","v":-35},{"d":"2015-06","v":0},{"d":"2015-07","v":-1253},{"d":"2015-08","v":-3310},{"d":"2015-09","v":-3049},{"d":"2015-10","v":-3049},{"d":"2015-11","v":-8594},{"d":"2015-12","v":-2565},{"d":"2016-01","v":-2565},{"d":"2016-02","v":-2565},{"d":"2016-03","v":-2565},{"d":"2016-04","v":-2565},{"d":"2016-05","v":-5641},{"d":"2016-06","v":-5415},{"d":"2016-07","v":-4334},{"d":"2016-08","v":-3163},{"d":"2016-09","v":-2654},{"d":"2016-10","v":-680},{"d":"2016-11","v":-4973},{"d":"2016-12","v":-166},{"d":"2017-01","v":-450},{"d":"2017-02","v":0},{"d":"2017-03","v":0},{"d":"2017-04","v":-2093},{"d":"2017-05","v":-136},{"d":"2017-06","v":-770},{"d":"2017-07","v":-450},{"d":"2017-08","v":0},{"d":"2017-09","v":-190},{"d":"2017-10","v":0},{"d":"2017-11","v":0},{"d":"2017-12","v":-1384},{"d":"2018-01","v":0},{"d":"2018-02","v":-13647},{"d":"2018-03","v":-23377},{"d":"2018-04","v":-24345},{"d":"2018-05","v":-18266},{"d":"2018-06","v":-16557},{"d":"2018-07","v":-18592},{"d":"2018-08","v":-13662},{"d":"2018-09","v":-14893},{"d":"2018-10","v":-25831},{"d":"2018-11","v":-19782},{"d":"2018-12","v":-19782},{"d":"2019-01","v":-19782},{"d":"2019-02","v":-19782},{"d":"2019-03","v":-19782},{"d":"2019-04","v":-19782},{"d":"2019-05","v":-17181},{"d":"2019-06","v":-16836},{"d":"2019-07","v":-17236},{"d":"2019-08","v":-21493},{"d":"2019-09","v":-26949},{"d":"2019-10","v":-26309},{"d":"2019-11","v":-26309},{"d":"2019-12","v":-26309},{"d":"2020-01","v":-20622},{"d":"2020-02","v":-16176},{"d":"2020-03","v":-38933},{"d":"2020-04","v":-24043},{"d":"2020-05","v":-24043},{"d":"2020-06","v":-24043},{"d":"2020-07","v":-18147},{"d":"2020-08","v":-11461},{"d":"2020-09","v":-15373},{"d":"2020-10","v":-266},{"d":"2020-11","v":-18783},{"d":"2020-12","v":-13648},{"d":"2021-01","v":-13227},{"d":"2021-02","v":-19960},{"d":"2021-03","v":-8424},{"d":"2021-04","v":-748},{"d":"2021-05","v":-748},{"d":"2021-06","v":0},{"d":"2021-07","v":0},{"d":"2021-08","v":0},{"d":"2021-09","v":-1700},{"d":"2021-10","v":0},{"d":"2021-11","v":0},{"d":"2021-12","v":-9577},{"d":"2022-01","v":-21203},{"d":"2022-02","v":-19453},{"d":"2022-03","v":-19453},{"d":"2022-04","v":-19453},{"d":"2022-05","v":-19453},{"d":"2022-06","v":-19453},{"d":"2022-07","v":-19453},{"d":"2022-08","v":-19453},{"d":"2022-09","v":-19453},{"d":"2022-10","v":-19453},{"d":"2022-11","v":-19453},{"d":"2022-12","v":-19453},{"d":"2023-01","v":-19453},{"d":"2023-02","v":-22948},{"d":"2023-03","v":-13006},{"d":"2023-04","v":-13006},{"d":"2023-05","v":0},{"d":"2023-06","v":0},{"d":"2023-07","v":0},{"d":"2023-08","v":-14763},{"d":"2023-09","v":-11181},{"d":"2023-10","v":-24577},{"d":"2023-11","v":-20091},{"d":"2023-12","v":-20091},{"d":"2024-01","v":-27911},{"d":"2024-02","v":-12875},{"d":"2024-03","v":-2674},{"d":"2024-04","v":-21352},{"d":"2024-05","v":-7738},{"d":"2024-06","v":-7225},{"d":"2024-07","v":-26027},{"d":"2024-08","v":-16505},{"d":"2024-09","v":0},{"d":"2024-10","v":0},{"d":"2024-11","v":0},{"d":"2024-12","v":-4894},{"d":"2025-01","v":0},{"d":"2025-02","v":0},{"d":"2025-03","v":-41683},{"d":"2025-04","v":-41683},{"d":"2025-05","v":-47530},{"d":"2025-06","v":-32001},{"d":"2025-07","v":-32001},{"d":"2025-08","v":-37488},{"d":"2025-09","v":-14802},{"d":"2025-10","v":-14802},{"d":"2025-11","v":-15057},{"d":"2025-12","v":-1837},{"d":"2026-01","v":-1030},{"d":"2026-02","v":0},{"d":"2026-03","v":-9437},{"d":"2026-04","v":-5179},{"d":"2026-05","v":-5179},{"d":"2026-06","v":-5179},{"d":"2026-07","v":0},{"d":"2026-08","v":-5102}],"per_year":[{"year":2009,"net_usd":8553,"sum_ret_pct":11.39,"trades":15,"win_rate":0.867,"mean_notional":89346},{"year":2010,"net_usd":5149,"sum_ret_pct":7.04,"trades":14,"win_rate":0.643,"mean_notional":92968},{"year":2011,"net_usd":-6930,"sum_ret_pct":-7.31,"trades":19,"win_rate":0.737,"mean_notional":108134},{"year":2012,"net_usd":11952,"sum_ret_pct":11.62,"trades":22,"win_rate":0.773,"mean_notional":111449},{"year":2013,"net_usd":14069,"sum_ret_pct":12.2,"trades":16,"win_rate":1.0,"mean_notional":123130},{"year":2014,"net_usd":8888,"sum_ret_pct":6.63,"trades":18,"win_rate":0.722,"mean_notional":135777},{"year":2015,"net_usd":15496,"sum_ret_pct":11.74,"trades":23,"win_rate":0.87,"mean_notional":147029},{"year":2016,"net_usd":7167,"sum_ret_pct":5.33,"trades":13,"win_rate":0.615,"mean_notional":149396},{"year":2017,"net_usd":15275,"sum_ret_pct":9.29,"trades":19,"win_rate":0.895,"mean_notional":170729},{"year":2018,"net_usd":-17760,"sum_ret_pct":-9.33,"trades":17,"win_rate":0.529,"mean_notional":188809},{"year":2019,"net_usd":-840,"sum_ret_pct":-0.49,"trades":10,"win_rate":0.6,"mean_notional":199714},{"year":2020,"net_usd":10640,"sum_ret_pct":5.66,"trades":15,"win_rate":0.667,"mean_notional":236138},{"year":2021,"net_usd":64686,"sum_ret_pct":21.24,"trades":20,"win_rate":0.85,"mean_notional":312677},{"year":2022,"net_usd":-17581,"sum_ret_pct":-5.35,"trades":4,"win_rate":0.5,"mean_notional":330165},{"year":2023,"net_usd":5644,"sum_ret_pct":3.27,"trades":16,"win_rate":0.688,"mean_notional":298198},{"year":2024,"net_usd":75677,"sum_ret_pct":21.03,"trades":22,"win_rate":0.864,"mean_notional":352829},{"year":2025,"net_usd":36773,"sum_ret_pct":8.91,"trades":19,"win_rate":0.895,"mean_notional":410747},{"year":2026,"net_usd":77934,"sum_ret_pct":16.65,"trades":16,"win_rate":0.938,"mean_notional":445912}],"trades":[{"y":2009,"usd":871,"ret":0.872,"mae":-0.15,"sym":"NQ","r":"rsi_target","d":"2009-05-13"},{"y":2009,"usd":104,"ret":0.22,"mae":-1.66,"sym":"ES","r":"rsi_target","d":"2009-06-15"},{"y":2009,"usd":227,"ret":0.232,"mae":-0.37,"sym":"NQ","r":"rsi_target","d":"2009-06-15"},{"y":2009,"usd":784,"ret":1.389,"mae":-1.2,"sym":"ES","r":"rsi_target","d":"2009-07-07"},{"y":2009,"usd":-69,"ret":-0.053,"mae":-1.02,"sym":"NQ","r":"rsi_target","d":"2009-07-02"},{"y":2009,"usd":941,"ret":0.902,"mae":-0.05,"sym":"NQ","r":"rsi_target","d":"2009-08-17"},{"y":2009,"usd":846,"ret":1.36,"mae":-0.43,"sym":"ES","r":"rsi_target","d":"2009-09-01"},{"y":2009,"usd":791,"ret":0.756,"mae":-0.21,"sym":"NQ","r":"rsi_target","d":"2009-09-01"},{"y":2009,"usd":871,"ret":1.345,"mae":-0.39,"sym":"ES","r":"rsi_target","d":"2009-09-25"},{"y":2009,"usd":501,"ret":0.474,"mae":-0.17,"sym":"NQ","r":"rsi_target","d":"2009-09-25"},{"y":2009,"usd":1021,"ret":1.585,"mae":-1.17,"sym":"ES","r":"rsi_target","d":"2009-10-01"},{"y":2009,"usd":591,"ret":0.559,"mae":-0.38,"sym":"NQ","r":"rsi_target","d":"2009-10-01"},{"y":2009,"usd":-674,"ret":-0.605,"mae":-1.27,"sym":"NQ","r":"rsi_target","d":"2009-10-27"},{"y":2009,"usd":1208,"ret":1.852,"mae":-0.94,"sym":"ES","r":"rsi_target","d":"2009-10-28"},{"y":2009,"usd":541,"ret":0.504,"mae":-0.02,"sym":"NQ","r":"rsi_target","d":"2009-11-20"},{"y":2009,"usd":871,"ret":1.273,"mae":0.18,"sym":"ES","r":"rsi_target","d":"2009-12-31"},{"y":2010,"usd":284,"ret":0.448,"mae":-1.76,"sym":"ES","r":"rsi_target","d":"2010-01-22"},{"y":2010,"usd":-259,"ret":-0.22,"mae":-1.19,"sym":"NQ","r":"rsi_target","d":"2010-01-22"},{"y":2010,"usd":996,"ret":1.508,"mae":-0.15,"sym":"ES","r":"rsi_target","d":"2010-02-08"},{"y":2010,"usd":1184,"ret":1.615,"mae":-0.28,"sym":"ES","r":"rsi_target","d":"2010-04-27"},{"y":2010,"usd":1671,"ret":2.356,"mae":-2.2,"sym":"ES","r":"rsi_target","d":"2010-05-06"},{"y":2010,"usd":1721,"ret":1.53,"mae":-1.42,"sym":"NQ","r":"rsi_target","d":"2010-05-06"},{"y":2010,"usd":-916,"ret":-1.233,"mae":-5.7,"sym":"ES","r":"rsi_target","d":"2010-05-18"},{"y":2010,"usd":-104,"ret":-0.08,"mae":-2.02,"sym":"NQ","r":"rsi_target","d":"2010-05-19"},{"y":2010,"usd":-1214,"ret":-1.064,"mae":-2.69,"sym":"NQ","r":"rsi_target","d":"2010-06-24"},{"y":2010,"usd":21,"ret":0.031,"mae":-0.67,"sym":"NQ","r":"rsi_target","d":"2010-08-11"},{"y":2010,"usd":816,"ret":0.718,"mae":-0.03,"sym":"NQ","r":"rsi_target","d":"2010-10-04"},{"y":2010,"usd":84,"ret":0.147,"mae":-1.6,"sym":"ES","r":"rsi_target","d":"2010-11-12"},{"y":2010,"usd":-4,"ret":0.008,"mae":-0.85,"sym":"NQ","r":"rsi_target","d":"2010-11-12"},{"y":2010,"usd":676,"ret":0.572,"mae":0.05,"sym":"NQ","r":"rsi_target","d":"2010-12-31"},{"y":2011,"usd":631,"ret":0.53,"mae":-0.07,"sym":"NQ","r":"rsi_target","d":"2011-01-21"},{"y":2011,"usd":466,"ret":0.391,"mae":-0.68,"sym":"NQ","r":"rsi_target","d":"2011-02-22"},{"y":2011,"usd":996,"ret":1.245,"mae":-0.79,"sym":"ES","r":"rsi_target","d":"2011-02-23"},{"y":2011,"usd":1419,"ret":1.811,"mae":-0.77,"sym":"ES","r":"rsi_target","d":"2011-03-16"},{"y":2011,"usd":26,"ret":0.033,"mae":-1.55,"sym":"NQ","r":"rsi_target","d":"2011-03-10"},{"y":2011,"usd":-66,"ret":-0.045,"mae":-1.27,"sym":"ES","r":"rsi_target","d":"2011-04-11"},{"y":2011,"usd":926,"ret":0.764,"mae":-0.94,"sym":"NQ","r":"rsi_target","d":"2011-04-11"},{"y":2011,"usd":36,"ret":0.04,"mae":-0.33,"sym":"NQ","r":"rsi_target","d":"2011-05-04"},{"y":2011,"usd":508,"ret":0.633,"mae":-1.05,"sym":"ES","r":"rsi_target","d":"2011-05-04"},{"y":2011,"usd":676,"ret":0.559,"mae":-0.26,"sym":"NQ","r":"rsi_target","d":"2011-05-16"},{"y":2011,"usd":621,"ret":0.779,"mae":-0.67,"sym":"ES","r":"rsi_target","d":"2011-05-24"},{"y":2011,"usd":601,"ret":0.501,"mae":-0.34,"sym":"NQ","r":"rsi_target","d":"2011-05-24"},{"y":2011,"usd":-342,"ret":-0.379,"mae":-1.89,"sym":"ES","r":"rsi_target","d":"2011-06-03"},{"y":2011,"usd":41,"ret":0.045,"mae":-0.55,"sym":"NQ","r":"rsi_target","d":"2011-06-08"},{"y":2011,"usd":1086,"ret":0.885,"mae":-0.25,"sym":"NQ","r":"rsi_target","d":"2011-07-14"},{"y":2011,"usd":-8804,"ret":-10.534,"mae":-13.33,"sym":"ES","r":"time_stop","d":"2011-07-27"},{"y":2011,"usd":-5469,"ret":-4.374,"mae":-6.18,"sym":"NQ","r":"time_stop","d":"2011-07-27"},{"y":2011,"usd":-959,"ret":-0.767,"mae":-2.15,"sym":"NQ","r":"rsi_target","d":"2011-11-17"},{"y":2012,"usd":1196,"ret":1.419,"mae":-0.04,"sym":"ES","r":"rsi_target","d":"2012-03-06"},{"y":2012,"usd":951,"ret":0.743,"mae":-0.02,"sym":"NQ","r":"rsi_target","d":"2012-03-06"},{"y":2012,"usd":521,"ret":0.622,"mae":-1.27,"sym":"ES","r":"rsi_target","d":"2012-04-09"},{"y":2012,"usd":821,"ret":0.631,"mae":0.01,"sym":"NQ","r":"rsi_target","d":"2012-04-10"},{"y":2012,"usd":1071,"ret":0.826,"mae":-0.39,"sym":"NQ","r":"rsi_target","d":"2012-04-23"},{"y":2012,"usd":-3616,"ret":-4.089,"mae":-4.15,"sym":"ES","r":"time_stop","d":"2012-05-04"},{"y":2012,"usd":-3159,"ret":-2.402,"mae":-2.41,"sym":"NQ","r":"time_stop","d":"2012-05-04"},{"y":2012,"usd":1558,"ret":1.887,"mae":-0.21,"sym":"ES","r":"rsi_target","d":"2012-05-18"},{"y":2012,"usd":1811,"ret":1.428,"mae":-0.05,"sym":"NQ","r":"rsi_target","d":"2012-05-18"},{"y":2012,"usd":2046,"ret":2.491,"mae":-0.72,"sym":"ES","r":"rsi_target","d":"2012-06-01"},{"y":2012,"usd":1886,"ret":1.49,"mae":-0.33,"sym":"NQ","r":"rsi_target","d":"2012-06-01"},{"y":2012,"usd":784,"ret":0.935,"mae":-0.91,"sym":"ES","r":"rsi_target","d":"2012-07-10"},{"y":2012,"usd":166,"ret":0.138,"mae":-0.94,"sym":"NQ","r":"rsi_target","d":"2012-07-10"},{"y":2012,"usd":1234,"ret":1.457,"mae":-0.48,"sym":"ES","r":"rsi_target","d":"2012-07-24"},{"y":2012,"usd":1956,"ret":1.518,"mae":-0.21,"sym":"NQ","r":"rsi_target","d":"2012-07-25"},{"y":2012,"usd":1521,"ret":1.719,"mae":-0.31,"sym":"ES","r":"rsi_target","d":"2012-08-23"},{"y":2012,"usd":1421,"ret":1.071,"mae":-0.16,"sym":"NQ","r":"rsi_target","d":"2012-08-30"},{"y":2012,"usd":-554,"ret":-0.569,"mae":-1.49,"sym":"ES","r":"rsi_target","d":"2012-09-24"},{"y":2012,"usd":-619,"ret":-0.447,"mae":-1.12,"sym":"NQ","r":"rsi_target","d":"2012-09-24"},{"y":2012,"usd":-54,"ret":-0.027,"mae":-1.06,"sym":"ES","r":"rsi_target","d":"2012-10-09"},{"y":2012,"usd":611,"ret":0.469,"mae":-0.44,"sym":"NQ","r":"rsi_target","d":"2012-10-09"},{"y":2012,"usd":401,"ret":0.315,"mae":-0.9,"sym":"NQ","r":"rsi_target","d":"2012-10-19"},{"y":2012,"usd":2284,"ret":2.551,"mae":-1.57,"sym":"ES","r":"rsi_target","d":"2012-12-27"},{"y":2013,"usd":84,"ret":0.073,"mae":-0.5,"sym":"NQ","r":"rsi_target","d":"2013-03-19"},{"y":2013,"usd":596,"ret":0.64,"mae":-0.65,"sym":"ES","r":"rsi_target","d":"2013-04-15"},{"y":2013,"usd":211,"ret":0.163,"mae":-0.42,"sym":"NQ","r":"rsi_target","d":"2013-05-23"},{"y":2013,"usd":1496,"ret":1.513,"mae":-0.57,"sym":"ES","r":"rsi_target","d":"2013-06-05"},{"y":2013,"usd":826,"ret":0.612,"mae":-0.41,"sym":"NQ","r":"rsi_target","d":"2013-06-05"},{"y":2013,"usd":1451,"ret":1.07,"mae":-0.33,"sym":"NQ","r":"rsi_target","d":"2013-06-12"},{"y":2013,"usd":471,"ret":0.5,"mae":-2.16,"sym":"ES","r":"rsi_target","d":"2013-06-20"},{"y":2013,"usd":66,"ret":0.059,"mae":-1.14,"sym":"NQ","r":"rsi_target","d":"2013-06-21"},{"y":2013,"usd":601,"ret":0.441,"mae":-0.22,"sym":"NQ","r":"rsi_target","d":"2013-08-15"},{"y":2013,"usd":258,"ret":0.279,"mae":-1.18,"sym":"ES","r":"rsi_target","d":"2013-08-15"},{"y":2013,"usd":1846,"ret":1.315,"mae":0.0,"sym":"NQ","r":"rsi_target","d":"2013-10-09"},{"y":2013,"usd":1636,"ret":1.137,"mae":-0.13,"sym":"NQ","r":"rsi_target","d":"2013-11-07"},{"y":2013,"usd":646,"ret":0.608,"mae":-0.62,"sym":"ES","r":"rsi_target","d":"2013-12-03"},{"y":2013,"usd":546,"ret":0.522,"mae":-0.67,"sym":"ES","r":"rsi_target","d":"2013-12-12"},{"y":2013,"usd":1051,"ret":0.72,"mae":-0.51,"sym":"NQ","r":"rsi_target","d":"2013-12-12"},{"y":2014,"usd":926,"ret":0.628,"mae":-0.02,"sym":"NQ","r":"rsi_target","d":"2014-01-06"},{"y":2014,"usd":-2916,"ret":-2.556,"mae":-4.08,"sym":"ES","r":"rsi_target","d":"2014-01-23"},{"y":2014,"usd":-914,"ret":-0.6,"mae":-1.6,"sym":"NQ","r":"rsi_target","d":"2014-01-24"},{"y":2014,"usd":1171,"ret":1.052,"mae":-0.71,"sym":"ES","r":"rsi_target","d":"2014-03-13"},{"y":2014,"usd":1461,"ret":0.971,"mae":-0.25,"sym":"NQ","r":"rsi_target","d":"2014-03-14"},{"y":2014,"usd":771,"ret":0.522,"mae":-1.01,"sym":"NQ","r":"rsi_target","d":"2014-03-24"},{"y":2014,"usd":1308,"ret":1.184,"mae":-0.32,"sym":"ES","r":"rsi_target","d":"2014-04-07"},{"y":2014,"usd":1056,"ret":0.719,"mae":-0.85,"sym":"NQ","r":"rsi_target","d":"2014-04-04"},{"y":2014,"usd":1396,"ret":1.247,"mae":-0.43,"sym":"ES","r":"rsi_target","d":"2014-05-06"},{"y":2014,"usd":521,"ret":0.468,"mae":-0.17,"sym":"ES","r":"rsi_target","d":"2014-06-12"},{"y":2014,"usd":-79,"ret":-0.042,"mae":-1.46,"sym":"ES","r":"rsi_target","d":"2014-07-31"},{"y":2014,"usd":391,"ret":0.259,"mae":-0.75,"sym":"NQ","r":"rsi_target","d":"2014-07-31"},{"y":2014,"usd":1391,"ret":0.883,"mae":-0.27,"sym":"NQ","r":"rsi_target","d":"2014-09-15"},{"y":2014,"usd":946,"ret":0.815,"mae":-0.94,"sym":"ES","r":"rsi_target","d":"2014-10-01"},{"y":2014,"usd":1336,"ret":0.872,"mae":-1.48,"sym":"NQ","r":"rsi_target","d":"2014-10-13"},{"y":2014,"usd":1058,"ret":0.869,"mae":0.0,"sym":"ES","r":"rsi_target","d":"2014-12-01"},{"y":2014,"usd":-642,"ret":-0.494,"mae":-2.35,"sym":"ES","r":"rsi_target","d":"2014-12-10"},{"y":2014,"usd":-294,"ret":-0.17,"mae":-2.37,"sym":"NQ","r":"rsi_target","d":"2014-12-08"},{"y":2014,"usd":96,"ret":0.099,"mae":-2.71,"sym":"ES","r":"rsi_target","d":"2014-12-31"},{"y":2014,"usd":-24,"ret":-0.006,"mae":-1.85,"sym":"NQ","r":"rsi_target","d":"2014-12-31"},{"y":2015,"usd":1358,"ret":1.132,"mae":-0.76,"sym":"ES","r":"rsi_target","d":"2015-01-15"},{"y":2015,"usd":1546,"ret":0.973,"mae":-0.59,"sym":"NQ","r":"rsi_target","d":"2015-01-15"},{"y":2015,"usd":2496,"ret":2.058,"mae":-0.72,"sym":"ES","r":"rsi_target","d":"2015-01-28"},{"y":2015,"usd":1826,"ret":1.143,"mae":-0.48,"sym":"NQ","r":"rsi_target","d":"2015-01-28"},{"y":2015,"usd":258,"ret":0.227,"mae":-1.28,"sym":"ES","r":"rsi_target","d":"2015-03-06"},{"y":2015,"usd":-924,"ret":-0.546,"mae":-1.4,"sym":"NQ","r":"rsi_target","d":"2015-03-06"},{"y":2015,"usd":1058,"ret":0.862,"mae":-0.81,"sym":"ES","r":"rsi_target","d":"2015-03-25"},{"y":2015,"usd":966,"ret":0.595,"mae":-0.65,"sym":"NQ","r":"rsi_target","d":"2015-03-25"},{"y":2015,"usd":1576,"ret":0.962,"mae":0.04,"sym":"NQ","r":"rsi_target","d":"2015-04-17"},{"y":2015,"usd":1484,"ret":1.186,"mae":0.06,"sym":"ES","r":"rsi_target","d":"2015-04-30"},{"y":2015,"usd":796,"ret":0.487,"mae":-0.91,"sym":"NQ","r":"rsi_target","d":"2015-04-30"},{"y":2015,"usd":521,"ret":0.427,"mae":-0.43,"sym":"ES","r":"rsi_target","d":"2015-05-26"},{"y":2015,"usd":1408,"ret":1.128,"mae":-0.37,"sym":"ES","r":"rsi_target","d":"2015-06-08"},{"y":2015,"usd":1116,"ret":0.677,"mae":-0.5,"sym":"NQ","r":"rsi_target","d":"2015-06-08"},{"y":2015,"usd":1134,"ret":0.915,"mae":-0.64,"sym":"ES","r":"rsi_target","d":"2015-06-29"},{"y":2015,"usd":591,"ret":0.364,"mae":-0.56,"sym":"NQ","r":"rsi_target","d":"2015-06-29"},{"y":2015,"usd":121,"ret":0.116,"mae":-1.62,"sym":"ES","r":"rsi_target","d":"2015-07-23"},{"y":2015,"usd":656,"ret":0.394,"mae":-0.76,"sym":"NQ","r":"rsi_target","d":"2015-07-24"},{"y":2015,"usd":-3049,"ret":-1.826,"mae":-5.51,"sym":"NQ","r":"rsi_target","d":"2015-08-20"},{"y":2015,"usd":308,"ret":0.263,"mae":-2.9,"sym":"ES","r":"rsi_target","d":"2015-11-09"},{"y":2015,"usd":176,"ret":0.11,"mae":-2.19,"sym":"NQ","r":"rsi_target","d":"2015-11-10"},{"y":2016,"usd":-2764,"ret":-1.646,"mae":-2.33,"sym":"NQ","r":"time_stop","d":"2016-04-22"},{"y":2016,"usd":896,"ret":0.732,"mae":-1.13,"sym":"ES","r":"rsi_target","d":"2016-04-29"},{"y":2016,"usd":562,"ret":0.464,"mae":-1.13,"sym":"ES","r":"rsi_target","d":"2016-06-13"},{"y":2016,"usd":-463,"ret":-0.269,"mae":-1.25,"sym":"NQ","r":"rsi_target","d":"2016-06-10"},{"y":2016,"usd":1171,"ret":0.91,"mae":-0.28,"sym":"ES","r":"rsi_target","d":"2016-08-02"},{"y":2016,"usd":508,"ret":0.405,"mae":-0.15,"sym":"ES","r":"rsi_target","d":"2016-08-26"},{"y":2016,"usd":3291,"ret":1.919,"mae":-0.49,"sym":"NQ","r":"rsi_target","d":"2016-09-09"},{"y":2016,"usd":2082,"ret":1.618,"mae":-0.6,"sym":"ES","r":"rsi_target","d":"2016-09-09"},{"y":2016,"usd":-4,"ret":0.019,"mae":-0.9,"sym":"ES","r":"rsi_target","d":"2016-10-12"},{"y":2016,"usd":-14,"ret":0.0,"mae":-0.83,"sym":"NQ","r":"rsi_target","d":"2016-10-11"},{"y":2016,"usd":246,"ret":0.21,"mae":-1.71,"sym":"ES","r":"rsi_target","d":"2016-10-27"},{"y":2016,"usd":-434,"ret":-0.24,"mae":-1.66,"sym":"NQ","r":"rsi_target","d":"2016-10-31"},{"y":2016,"usd":2091,"ret":1.21,"mae":-0.4,"sym":"NQ","r":"rsi_target","d":"2016-12-01"},{"y":2016,"usd":334,"ret":0.264,"mae":-0.63,"sym":"ES","r":"rsi_target","d":"2016-12-28"},{"y":2016,"usd":1376,"ret":0.79,"mae":0.14,"sym":"NQ","r":"rsi_target","d":"2016-12-30"},{"y":2017,"usd":358,"ret":0.27,"mae":-0.35,"sym":"ES","r":"rsi_target","d":"2017-03-08"},{"y":2017,"usd":434,"ret":0.324,"mae":-0.86,"sym":"ES","r":"rsi_target","d":"2017-03-21"},{"y":2017,"usd":1321,"ret":0.72,"mae":-0.25,"sym":"NQ","r":"rsi_target","d":"2017-03-21"},{"y":2017,"usd":-94,"ret":-0.043,"mae":-0.58,"sym":"NQ","r":"rsi_target","d":"2017-04-11"},{"y":2017,"usd":246,"ret":0.192,"mae":-0.83,"sym":"ES","r":"rsi_target","d":"2017-04-05"},{"y":2017,"usd":1734,"ret":1.227,"mae":-0.45,"sym":"ES","r":"rsi_target","d":"2017-05-17"},{"y":2017,"usd":1037,"ret":0.543,"mae":-1.1,"sym":"NQ","r":"rsi_target","d":"2017-06-09"},{"y":2017,"usd":336,"ret":0.182,"mae":-1.21,"sym":"NQ","r":"rsi_target","d":"2017-06-27"},{"y":2017,"usd":946,"ret":0.663,"mae":-0.62,"sym":"ES","r":"rsi_target","d":"2017-06-27"},{"y":2017,"usd":551,"ret":0.287,"mae":-0.27,"sym":"NQ","r":"rsi_target","d":"2017-07-31"},{"y":2017,"usd":1271,"ret":0.879,"mae":-0.24,"sym":"ES","r":"rsi_target","d":"2017-08-10"},{"y":2017,"usd":2391,"ret":1.233,"mae":-0.29,"sym":"NQ","r":"rsi_target","d":"2017-08-10"},{"y":2017,"usd":346,"ret":0.248,"mae":-0.16,"sym":"ES","r":"rsi_target","d":"2017-09-25"},{"y":2017,"usd":-99,"ret":-0.043,"mae":-1.04,"sym":"NQ","r":"rsi_target","d":"2017-09-21"},{"y":2017,"usd":971,"ret":0.648,"mae":-0.09,"sym":"ES","r":"rsi_target","d":"2017-11-15"},{"y":2017,"usd":1481,"ret":0.732,"mae":-0.05,"sym":"NQ","r":"rsi_target","d":"2017-11-15"},{"y":2017,"usd":336,"ret":0.171,"mae":-0.72,"sym":"NQ","r":"rsi_target","d":"2017-11-29"},{"y":2017,"usd":821,"ret":0.534,"mae":-0.05,"sym":"ES","r":"rsi_target","d":"2017-12-29"},{"y":2017,"usd":1201,"ret":0.584,"mae":-0.68,"sym":"NQ","r":"rsi_target","d":"2017-12-27"},{"y":2018,"usd":-4779,"ret":-2.909,"mae":-6.97,"sym":"ES","r":"rsi_target","d":"2018-02-02"},{"y":2018,"usd":-3919,"ret":-1.826,"mae":-5.53,"sym":"NQ","r":"rsi_target","d":"2018-02-02"},{"y":2018,"usd":-6000,"ret":-3.696,"mae":-5.59,"sym":"ES","r":"time_stop","d":"2018-03-19"},{"y":2018,"usd":-9647,"ret":-4.438,"mae":-5.75,"sym":"NQ","r":"time_stop","d":"2018-03-19"},{"y":2018,"usd":1934,"ret":1.252,"mae":-0.77,"sym":"ES","r":"rsi_target","d":"2018-04-24"},{"y":2018,"usd":4146,"ret":1.994,"mae":-0.93,"sym":"NQ","r":"rsi_target","d":"2018-04-24"},{"y":2018,"usd":2046,"ret":1.301,"mae":-0.2,"sym":"ES","r":"rsi_target","d":"2018-05-29"},{"y":2018,"usd":-1979,"ret":-1.198,"mae":-2.24,"sym":"ES","r":"rsi_target","d":"2018-06-19"},{"y":2018,"usd":846,"ret":0.393,"mae":-1.07,"sym":"NQ","r":"rsi_target","d":"2018-06-25"},{"y":2018,"usd":3691,"ret":1.672,"mae":-0.1,"sym":"NQ","r":"rsi_target","d":"2018-07-30"},{"y":2018,"usd":1308,"ret":0.807,"mae":-0.68,"sym":"ES","r":"rsi_target","d":"2018-08-13"},{"y":2018,"usd":46,"ret":0.044,"mae":-0.69,"sym":"ES","r":"rsi_target","d":"2018-09-05"},{"y":2018,"usd":-409,"ret":-0.173,"mae":-1.22,"sym":"NQ","r":"rsi_target","d":"2018-09-05"},{"y":2018,"usd":-3842,"ret":-2.26,"mae":-5.39,"sym":"ES","r":"rsi_target","d":"2018-10-05"},{"y":2018,"usd":-3224,"ret":-1.414,"mae":-5.34,"sym":"NQ","r":"rsi_target","d":"2018-10-04"},{"y":2019,"usd":2601,"ret":1.152,"mae":0.0,"sym":"NQ","r":"rsi_target","d":"2019-05-02"},{"y":2019,"usd":258,"ret":0.174,"mae":-2.21,"sym":"ES","r":"rsi_target","d":"2019-05-09"},{"y":2019,"usd":86,"ret":0.045,"mae":-2.72,"sym":"NQ","r":"rsi_target","d":"2019-05-09"},{"y":2019,"usd":1121,"ret":0.674,"mae":-0.45,"sym":"ES","r":"rsi_target","d":"2019-07-17"},{"y":2019,"usd":-2142,"ret":-1.239,"mae":-6.06,"sym":"ES","r":"rsi_target","d":"2019-07-31"},{"y":2019,"usd":-2634,"ret":-1.141,"mae":-5.59,"sym":"NQ","r":"rsi_target","d":"2019-07-31"},{"y":2019,"usd":-3160,"ret":-1.831,"mae":-4.64,"sym":"ES","r":"rsi_target","d":"2019-09-20"},{"y":2019,"usd":-2659,"ret":-1.157,"mae":-3.72,"sym":"NQ","r":"rsi_target","d":"2019-09-20"},{"y":2019,"usd":2721,"ret":1.573,"mae":-0.26,"sym":"ES","r":"rsi_target","d":"2019-12-03"},{"y":2019,"usd":2966,"ret":1.264,"mae":-0.26,"sym":"NQ","r":"rsi_target","d":"2019-12-03"},{"y":2020,"usd":5221,"ret":2.101,"mae":-0.02,"sym":"NQ","r":"rsi_target","d":"2020-01-27"},{"y":2020,"usd":2971,"ret":1.65,"mae":-0.74,"sym":"ES","r":"rsi_target","d":"2020-01-27"},{"y":2020,"usd":-6009,"ret":-2.38,"mae":-7.66,"sym":"NQ","r":"rsi_target","d":"2020-02-24"},{"y":2020,"usd":-5604,"ret":-3.077,"mae":-10.29,"sym":"ES","r":"rsi_target","d":"2020-02-24"},{"y":2020,"usd":5896,"ret":3.334,"mae":-2.12,"sym":"ES","r":"rsi_target","d":"2020-06-11"},{"y":2020,"usd":6686,"ret":2.346,"mae":-0.41,"sym":"NQ","r":"rsi_target","d":"2020-07-24"},{"y":2020,"usd":5921,"ret":2.018,"mae":0.0,"sym":"NQ","r":"rsi_target","d":"2020-08-11"},{"y":2020,"usd":3458,"ret":1.766,"mae":-1.01,"sym":"ES","r":"rsi_target","d":"2020-09-08"},{"y":2020,"usd":-1704,"ret":-0.55,"mae":-3.99,"sym":"NQ","r":"rsi_target","d":"2020-09-04"},{"y":2020,"usd":584,"ret":0.312,"mae":-1.96,"sym":"ES","r":"rsi_target","d":"2020-09-21"},{"y":2020,"usd":2936,"ret":1.009,"mae":-2.25,"sym":"NQ","r":"rsi_target","d":"2020-09-21"},{"y":2020,"usd":1296,"ret":0.65,"mae":-0.5,"sym":"ES","r":"rsi_target","d":"2020-10-19"},{"y":2020,"usd":-11754,"ret":-3.843,"mae":-4.64,"sym":"NQ","r":"time_stop","d":"2020-10-19"},{"y":2020,"usd":-1629,"ret":-0.791,"mae":-4.16,"sym":"ES","r":"rsi_target","d":"2020-10-26"},{"y":2020,"usd":2371,"ret":1.116,"mae":-0.09,"sym":"ES","r":"rsi_target","d":"2020-12-14"},{"y":2021,"usd":3671,"ret":1.672,"mae":-1.98,"sym":"ES","r":"rsi_target","d":"2021-01-27"},{"y":2021,"usd":946,"ret":0.425,"mae":-2.14,"sym":"ES","r":"rsi_target","d":"2021-02-19"},{"y":2021,"usd":-5939,"ret":-1.715,"mae":-5.29,"sym":"NQ","r":"rsi_target","d":"2021-02-19"},{"y":2021,"usd":11851,"ret":3.674,"mae":-1.53,"sym":"NQ","r":"rsi_target","d":"2021-03-04"},{"y":2021,"usd":3461,"ret":1.005,"mae":-0.85,"sym":"NQ","r":"rsi_target","d":"2021-05-04"},{"y":2021,"usd":5484,"ret":2.321,"mae":-0.62,"sym":"ES","r":"rsi_target","d":"2021-05-12"},{"y":2021,"usd":7756,"ret":2.319,"mae":-0.5,"sym":"NQ","r":"rsi_target","d":"2021-05-12"},{"y":2021,"usd":2903,"ret":1.202,"mae":-0.58,"sym":"ES","r":"rsi_target","d":"2021-06-18"},{"y":2021,"usd":1571,"ret":0.635,"mae":-1.87,"sym":"ES","r":"rsi_target","d":"2021-07-16"},{"y":2021,"usd":3131,"ret":0.85,"mae":-1.22,"sym":"NQ","r":"rsi_target","d":"2021-07-16"},{"y":2021,"usd":2096,"ret":0.831,"mae":-0.91,"sym":"ES","r":"rsi_target","d":"2021-08-18"},{"y":2021,"usd":4736,"ret":1.272,"mae":-0.74,"sym":"NQ","r":"rsi_target","d":"2021-08-18"},{"y":2021,"usd":1236,"ret":0.324,"mae":-0.66,"sym":"NQ","r":"rsi_target","d":"2021-09-10"},{"y":2021,"usd":-727,"ret":-0.268,"mae":-3.03,"sym":"ES","r":"rsi_target","d":"2021-09-09"},{"y":2021,"usd":5866,"ret":1.549,"mae":-0.42,"sym":"NQ","r":"rsi_target","d":"2021-09-20"},{"y":2021,"usd":2784,"ret":1.111,"mae":-0.75,"sym":"ES","r":"rsi_target","d":"2021-09-30"},{"y":2021,"usd":-129,"ret":-0.031,"mae":-2.12,"sym":"NQ","r":"rsi_target","d":"2021-09-28"},{"y":2021,"usd":4231,"ret":1.064,"mae":-0.02,"sym":"NQ","r":"rsi_target","d":"2021-11-10"},{"y":2021,"usd":4434,"ret":1.666,"mae":-1.94,"sym":"ES","r":"rsi_target","d":"2021-11-26"},{"y":2021,"usd":5326,"ret":1.333,"mae":-2.56,"sym":"NQ","r":"rsi_target","d":"2021-11-26"},{"y":2022,"usd":596,"ret":0.228,"mae":-2.18,"sym":"ES","r":"rsi_target","d":"2022-01-05"},{"y":2022,"usd":1276,"ret":0.325,"mae":-3.1,"sym":"NQ","r":"rsi_target","d":"2022-01-05"},{"y":2022,"usd":-7429,"ret":-2.762,"mae":-6.69,"sym":"ES","r":"rsi_target","d":"2022-01-18"},{"y":2022,"usd":-12024,"ret":-3.144,"mae":-6.95,"sym":"NQ","r":"rsi_target","d":"2022-01-19"},{"y":2023,"usd":2171,"ret":0.918,"mae":-1.68,"sym":"ES","r":"rsi_target","d":"2023-02-21"},{"y":2023,"usd":4276,"ret":1.386,"mae":-1.71,"sym":"NQ","r":"rsi_target","d":"2023-02-21"},{"y":2023,"usd":5136,"ret":1.584,"mae":-0.16,"sym":"NQ","r":"rsi_target","d":"2023-04-12"},{"y":2023,"usd":2996,"ret":1.25,"mae":-0.51,"sym":"ES","r":"rsi_target","d":"2023-04-25"},{"y":2023,"usd":3126,"ret":0.958,"mae":-1.67,"sym":"NQ","r":"rsi_target","d":"2023-04-20"},{"y":2023,"usd":3696,"ret":1.544,"mae":0.02,"sym":"ES","r":"rsi_target","d":"2023-05-04"},{"y":2023,"usd":4334,"ret":1.79,"mae":0.11,"sym":"ES","r":"rsi_target","d":"2023-05-24"},{"y":2023,"usd":-1592,"ret":-0.596,"mae":-1.49,"sym":"ES","r":"rsi_target","d":"2023-08-02"},{"y":2023,"usd":-10629,"ret":-2.861,"mae":-2.97,"sym":"NQ","r":"time_stop","d":"2023-08-02"},{"y":2023,"usd":4141,"ret":1.164,"mae":-0.95,"sym":"NQ","r":"rsi_target","d":"2023-08-17"},{"y":2023,"usd":1321,"ret":0.527,"mae":-1.37,"sym":"ES","r":"rsi_target","d":"2023-08-16"},{"y":2023,"usd":1671,"ret":0.659,"mae":-0.26,"sym":"ES","r":"rsi_target","d":"2023-09-07"},{"y":2023,"usd":3856,"ret":1.054,"mae":-0.32,"sym":"NQ","r":"rsi_target","d":"2023-09-07"},{"y":2023,"usd":-3359,"ret":-0.929,"mae":-3.14,"sym":"NQ","r":"rsi_target","d":"2023-09-20"},{"y":2023,"usd":-7492,"ret":-2.92,"mae":-4.14,"sym":"ES","r":"time_stop","d":"2023-09-20"},{"y":2023,"usd":-8009,"ret":-2.254,"mae":-4.23,"sym":"NQ","r":"rsi_target","d":"2023-10-19"},{"y":2024,"usd":671,"ret":0.26,"mae":-1.59,"sym":"ES","r":"rsi_target","d":"2024-01-02"},{"y":2024,"usd":1661,"ret":0.435,"mae":-2.0,"sym":"NQ","r":"rsi_target","d":"2024-01-02"},{"y":2024,"usd":4884,"ret":1.833,"mae":-0.14,"sym":"ES","r":"rsi_target","d":"2024-01-17"},{"y":2024,"usd":10201,"ret":2.544,"mae":0.69,"sym":"NQ","r":"rsi_target","d":"2024-02-21"},{"y":2024,"usd":581,"ret":0.144,"mae":-1.35,"sym":"NQ","r":"rsi_target","d":"2024-04-02"},{"y":2024,"usd":-7442,"ret":-2.599,"mae":-2.78,"sym":"ES","r":"time_stop","d":"2024-04-04"},{"y":2024,"usd":2846,"ret":1.035,"mae":-1.54,"sym":"ES","r":"rsi_target","d":"2024-04-18"},{"y":2024,"usd":-1049,"ret":-0.259,"mae":-2.73,"sym":"NQ","r":"rsi_target","d":"2024-04-17"},{"y":2024,"usd":908,"ret":0.324,"mae":-1.38,"sym":"ES","r":"rsi_target","d":"2024-05-23"},{"y":2024,"usd":184,"ret":0.07,"mae":-2.0,"sym":"ES","r":"rsi_target","d":"2024-07-19"},{"y":2024,"usd":-9859,"ret":-2.203,"mae":-5.7,"sym":"NQ","r":"rsi_target","d":"2024-07-17"},{"y":2024,"usd":6508,"ret":2.284,"mae":-0.62,"sym":"ES","r":"rsi_target","d":"2024-08-05"},{"y":2024,"usd":10226,"ret":2.515,"mae":-1.33,"sym":"NQ","r":"rsi_target","d":"2024-08-05"},{"y":2024,"usd":7058,"ret":2.392,"mae":-0.24,"sym":"ES","r":"rsi_target","d":"2024-09-06"},{"y":2024,"usd":16241,"ret":3.907,"mae":-0.35,"sym":"NQ","r":"rsi_target","d":"2024-09-06"},{"y":2024,"usd":1634,"ret":0.529,"mae":-0.24,"sym":"ES","r":"rsi_target","d":"2024-10-23"},{"y":2024,"usd":3658,"ret":1.193,"mae":-0.23,"sym":"ES","r":"rsi_target","d":"2024-10-31"},{"y":2024,"usd":6386,"ret":1.444,"mae":-0.04,"sym":"NQ","r":"rsi_target","d":"2024-10-31"},{"y":2024,"usd":3671,"ret":1.167,"mae":-0.65,"sym":"ES","r":"rsi_target","d":"2024-11-15"},{"y":2024,"usd":6701,"ret":1.484,"mae":-0.49,"sym":"NQ","r":"rsi_target","d":"2024-11-15"},{"y":2024,"usd":3599,"ret":1.149,"mae":-1.13,"sym":"ES","r":"rsi_target","d":"2024-12-18"},{"y":2024,"usd":6407,"ret":1.381,"mae":-1.58,"sym":"NQ","r":"rsi_target","d":"2024-12-19"},{"y":2024,"usd":1508,"ret":0.492,"mae":-1.34,"sym":"ES","r":"rsi_target","d":"2024-12-30"},{"y":2024,"usd":1991,"ret":0.437,"mae":-1.88,"sym":"NQ","r":"rsi_target","d":"2024-12-30"},{"y":2025,"usd":6108,"ret":1.993,"mae":-0.93,"sym":"ES","r":"rsi_target","d":"2025-01-10"},{"y":2025,"usd":7671,"ret":1.704,"mae":-1.43,"sym":"NQ","r":"rsi_target","d":"2025-01-10"},{"y":2025,"usd":8221,"ret":1.806,"mae":-1.38,"sym":"NQ","r":"rsi_target","d":"2025-01-27"},{"y":2025,"usd":-12679,"ret":-4.002,"mae":-5.63,"sym":"ES","r":"time_stop","d":"2025-02-21"},{"y":2025,"usd":-29004,"ret":-6.243,"mae":-8.24,"sym":"NQ","r":"time_stop","d":"2025-02-21"},{"y":2025,"usd":3621,"ret":1.177,"mae":-1.69,"sym":"ES","r":"rsi_target","d":"2025-05-21"},{"y":2025,"usd":6061,"ret":1.321,"mae":-1.87,"sym":"NQ","r":"rsi_target","d":"2025-05-21"},{"y":2025,"usd":10766,"ret":2.203,"mae":-0.25,"sym":"NQ","r":"rsi_target","d":"2025-08-01"},{"y":2025,"usd":1934,"ret":0.588,"mae":-2.02,"sym":"ES","r":"rsi_target","d":"2025-07-31"},{"y":2025,"usd":2508,"ret":0.754,"mae":-1.04,"sym":"ES","r":"rsi_target","d":"2025-08-19"},{"y":2025,"usd":1991,"ret":0.4,"mae":-1.73,"sym":"NQ","r":"rsi_target","d":"2025-08-19"},{"y":2025,"usd":11776,"ret":2.296,"mae":0.05,"sym":"NQ","r":"rsi_target","d":"2025-10-10"},{"y":2025,"usd":8896,"ret":2.613,"mae":-0.35,"sym":"ES","r":"rsi_target","d":"2025-10-10"},{"y":2025,"usd":1434,"ret":0.422,"mae":-2.41,"sym":"ES","r":"rsi_target","d":"2025-11-17"},{"y":2025,"usd":1371,"ret":0.265,"mae":-3.73,"sym":"NQ","r":"rsi_target","d":"2025-11-17"},{"y":2025,"usd":1935,"ret":0.558,"mae":-1.15,"sym":"ES","r":"rsi_target","d":"2025-12-16"},{"y":2025,"usd":663,"ret":0.128,"mae":-2.11,"sym":"NQ","r":"rsi_target","d":"2025-12-12"},{"y":2025,"usd":2534,"ret":0.728,"mae":-0.37,"sym":"ES","r":"rsi_target","d":"2025-12-31"},{"y":2025,"usd":7291,"ret":1.389,"mae":-0.73,"sym":"NQ","r":"rsi_target","d":"2025-12-31"},{"y":2026,"usd":10566,"ret":2.037,"mae":-0.4,"sym":"NQ","r":"rsi_target","d":"2026-01-20"},{"y":2026,"usd":7558,"ret":2.175,"mae":-0.22,"sym":"ES","r":"rsi_target","d":"2026-01-20"},{"y":2026,"usd":8096,"ret":2.332,"mae":-0.99,"sym":"ES","r":"rsi_target","d":"2026-02-05"},{"y":2026,"usd":7081,"ret":1.373,"mae":-2.94,"sym":"NQ","r":"rsi_target","d":"2026-02-04"},{"y":2026,"usd":2134,"ret":0.618,"mae":-0.86,"sym":"ES","r":"rsi_target","d":"2026-02-12"},{"y":2026,"usd":-5179,"ret":-1.478,"mae":-3.45,"sym":"ES","r":"time_stop","d":"2026-03-03"},{"y":2026,"usd":1696,"ret":0.462,"mae":-2.26,"sym":"ES","r":"rsi_target","d":"2026-06-05"},{"y":2026,"usd":12696,"ret":2.156,"mae":-2.71,"sym":"NQ","r":"rsi_target","d":"2026-06-05"},{"y":2026,"usd":4896,"ret":1.331,"mae":-0.05,"sym":"ES","r":"rsi_target","d":"2026-06-26"},{"y":2026,"usd":10841,"ret":1.886,"mae":-0.25,"sym":"NQ","r":"rsi_target","d":"2026-07-17"},{"y":2026,"usd":1721,"ret":0.468,"mae":-2.14,"sym":"ES","r":"rsi_target","d":"2026-07-20"},{"y":2026,"usd":2426,"ret":0.431,"mae":-3.82,"sym":"NQ","r":"rsi_target","d":"2026-07-24"},{"y":2026,"usd":1396,"ret":0.369,"mae":-0.76,"sym":"ES","r":"rsi_target","d":"2026-08-18"},{"y":2026,"usd":2181,"ret":0.371,"mae":-2.16,"sym":"NQ","r":"rsi_target","d":"2026-08-18"}]};
+const INDIA = {"curve_india":[{"d":"2009-06","v":7.75},{"d":"2009-07","v":13.64},{"d":"2009-08","v":19.09},{"d":"2009-09","v":20.88},{"d":"2009-10","v":20.88},{"d":"2009-11","v":14.05},{"d":"2009-12","v":22.4},{"d":"2010-01","v":22.66},{"d":"2010-02","v":19.24},{"d":"2010-03","v":19.24},{"d":"2010-04","v":20.12},{"d":"2010-05","v":26.9},{"d":"2010-06","v":26.9},{"d":"2010-07","v":27.7},{"d":"2010-08","v":27.7},{"d":"2010-09","v":28.96},{"d":"2010-10","v":34.05},{"d":"2010-11","v":24.45},{"d":"2010-12","v":23.35},{"d":"2011-01","v":15.75},{"d":"2011-02","v":15.75},{"d":"2011-03","v":15.75},{"d":"2011-04","v":19.8},{"d":"2011-05","v":10.9},{"d":"2011-06","v":10.9},{"d":"2011-07","v":10.9},{"d":"2011-08","v":10.9},{"d":"2011-09","v":10.9},{"d":"2011-10","v":10.9},{"d":"2011-11","v":10.9},{"d":"2011-12","v":10.9},{"d":"2012-01","v":10.9},{"d":"2012-02","v":10.9},{"d":"2012-03","v":16.45},{"d":"2012-04","v":16.57},{"d":"2012-05","v":11.24},{"d":"2012-06","v":11.24},{"d":"2012-07","v":14.54},{"d":"2012-08","v":14.54},{"d":"2012-09","v":11.8},{"d":"2012-10","v":11.8},{"d":"2012-11","v":15.15},{"d":"2012-12","v":16.99},{"d":"2013-01","v":18.13},{"d":"2013-02","v":15.44},{"d":"2013-03","v":10.44},{"d":"2013-04","v":10.44},{"d":"2013-05","v":14.72},{"d":"2013-06","v":8.22},{"d":"2013-07","v":8.22},{"d":"2013-08","v":3.29},{"d":"2013-09","v":3.29},{"d":"2013-10","v":5.17},{"d":"2013-11","v":5.78},{"d":"2013-12","v":6.33},{"d":"2014-01","v":6.67},{"d":"2014-02","v":5.23},{"d":"2014-03","v":5.23},{"d":"2014-04","v":6.71},{"d":"2014-05","v":6.56},{"d":"2014-06","v":13.2},{"d":"2014-07","v":14.4},{"d":"2014-08","v":18.04},{"d":"2014-09","v":22.1},{"d":"2014-10","v":23.87},{"d":"2014-11","v":23.87},{"d":"2014-12","v":21.09},{"d":"2015-01","v":23.64},{"d":"2015-02","v":23.33},{"d":"2015-03","v":19.75},{"d":"2015-04","v":19.0},{"d":"2015-05","v":20.8},{"d":"2015-06","v":20.8},{"d":"2015-07","v":20.8},{"d":"2015-08","v":21.79},{"d":"2015-09","v":21.79},{"d":"2015-10","v":21.79},{"d":"2015-11","v":21.79},{"d":"2015-12","v":21.79},{"d":"2016-01","v":21.79},{"d":"2016-02","v":21.79},{"d":"2016-03","v":21.79},{"d":"2016-04","v":21.79},{"d":"2016-05","v":24.25},{"d":"2016-06","v":27.06},{"d":"2016-07","v":27.06},{"d":"2016-08","v":31.86},{"d":"2016-09","v":34.19},{"d":"2016-10","v":38.02},{"d":"2016-11","v":35.53},{"d":"2016-12","v":35.11},{"d":"2017-01","v":35.11},{"d":"2017-02","v":36.13},{"d":"2017-03","v":38.76},{"d":"2017-04","v":41.47},{"d":"2017-05","v":45.81},{"d":"2017-06","v":45.81},{"d":"2017-07","v":46.48},{"d":"2017-08","v":46.35},{"d":"2017-09","v":46.35},{"d":"2017-10","v":48.3},{"d":"2017-11","v":47.92},{"d":"2017-12","v":46.95},{"d":"2018-01","v":46.95},{"d":"2018-02","v":40.37},{"d":"2018-03","v":40.52},{"d":"2018-04","v":40.52},{"d":"2018-05","v":40.03},{"d":"2018-06","v":41.99},{"d":"2018-07","v":43.84},{"d":"2018-08","v":43.84},{"d":"2018-09","v":43.12},{"d":"2018-10","v":32.07},{"d":"2018-11","v":32.07},{"d":"2018-12","v":35.05},{"d":"2019-01","v":35.04},{"d":"2019-02","v":34.68},{"d":"2019-03","v":36.47},{"d":"2019-04","v":36.47},{"d":"2019-05","v":35.96},{"d":"2019-06","v":37.63},{"d":"2019-07","v":36.94},{"d":"2019-08","v":33.05},{"d":"2019-09","v":33.05},{"d":"2019-10","v":32.93},{"d":"2019-11","v":32.93},{"d":"2019-12","v":37.54},{"d":"2020-01","v":40.72},{"d":"2020-02","v":45.68},{"d":"2020-03","v":17.18},{"d":"2020-04","v":17.18},{"d":"2020-05","v":17.18},{"d":"2020-06","v":17.18},{"d":"2020-07","v":17.18},{"d":"2020-08","v":21.66},{"d":"2020-09","v":22.76},{"d":"2020-10","v":22.76},{"d":"2020-11","v":22.76},{"d":"2020-12","v":28.9},{"d":"2021-01","v":33.57},{"d":"2021-02","v":43.22},{"d":"2021-03","v":44.37},{"d":"2021-04","v":48.42},{"d":"2021-05","v":52.36},{"d":"2021-06","v":52.36},{"d":"2021-07","v":54.61},{"d":"2021-08","v":57.01},{"d":"2021-09","v":57.01},{"d":"2021-10","v":59.36},{"d":"2021-11","v":58.17},{"d":"2021-12","v":45.6},{"d":"2022-01","v":41.77},{"d":"2022-02","v":39.08},{"d":"2022-03","v":39.08},{"d":"2022-04","v":40.25},{"d":"2022-05","v":40.25},{"d":"2022-06","v":40.25},{"d":"2022-07","v":40.25},{"d":"2022-08","v":44.69},{"d":"2022-09","v":39.49},{"d":"2022-10","v":39.49},{"d":"2022-11","v":41.17},{"d":"2022-12","v":41.1},{"d":"2023-01","v":42.82},{"d":"2023-02","v":42.45},{"d":"2023-03","v":42.45},{"d":"2023-04","v":42.45},{"d":"2023-05","v":43.39},{"d":"2023-06","v":44.74},{"d":"2023-07","v":45.06},{"d":"2023-08","v":45.19},{"d":"2023-09","v":46.15},{"d":"2023-10","v":44.61},{"d":"2023-11","v":42.79},{"d":"2023-12","v":42.79},{"d":"2024-01","v":43.95},{"d":"2024-02","v":45.81},{"d":"2024-03","v":47.72},{"d":"2024-04","v":48.08},{"d":"2024-05","v":46.73},{"d":"2024-06","v":50.1},{"d":"2024-07","v":49.42},{"d":"2024-08","v":51.89},{"d":"2024-09","v":56.18},{"d":"2024-10","v":51.25},{"d":"2024-11","v":53.14},{"d":"2024-12","v":53.14},{"d":"2025-01","v":51.58},{"d":"2025-02","v":51.58},{"d":"2025-03","v":51.58},{"d":"2025-04","v":51.58},{"d":"2025-05","v":53.51},{"d":"2025-06","v":56.9},{"d":"2025-07","v":58.52},{"d":"2025-08","v":56.62},{"d":"2025-09","v":56.57},{"d":"2025-10","v":57.21},{"d":"2025-11","v":57.84},{"d":"2025-12","v":60.61},{"d":"2026-01","v":59.7},{"d":"2026-02","v":60.97},{"d":"2026-03","v":52.43}],"curve_us":[{"d":"2008-01","v":-3.29},{"d":"2008-02","v":-3.29},{"d":"2008-03","v":-3.29},{"d":"2008-04","v":-3.29},{"d":"2008-05","v":-2.8},{"d":"2008-06","v":-2.8},{"d":"2008-07","v":-2.8},{"d":"2008-08","v":-2.8},{"d":"2008-09","v":-2.8},{"d":"2008-10","v":-2.8},{"d":"2008-11","v":-2.8},{"d":"2008-12","v":-2.8},{"d":"2009-01","v":-2.8},{"d":"2009-02","v":-2.8},{"d":"2009-03","v":-2.8},{"d":"2009-04","v":-2.8},{"d":"2009-05","v":-1.94},{"d":"2009-06","v":-1.55},{"d":"2009-07","v":-0.28},{"d":"2009-08","v":0.61},{"d":"2009-09","v":4.43},{"d":"2009-10","v":6.52},{"d":"2009-11","v":8.2},{"d":"2009-12","v":8.2},{"d":"2010-01","v":9.43},{"d":"2010-02","v":11.07},{"d":"2010-03","v":11.07},{"d":"2010-04","v":12.65},{"d":"2010-05","v":15.12},{"d":"2010-06","v":15.12},{"d":"2010-07","v":14.04},{"d":"2010-08","v":14.06},{"d":"2010-09","v":14.06},{"d":"2010-10","v":14.77},{"d":"2010-11","v":14.87},{"d":"2010-12","v":14.87},{"d":"2011-01","v":15.95},{"d":"2011-02","v":17.54},{"d":"2011-03","v":19.34},{"d":"2011-04","v":20.01},{"d":"2011-05","v":22.42},{"d":"2011-06","v":22.04},{"d":"2011-07","v":22.91},{"d":"2011-08","v":7.96},{"d":"2011-09","v":7.96},{"d":"2011-10","v":7.96},{"d":"2011-11","v":7.18},{"d":"2011-12","v":7.18},{"d":"2012-01","v":7.18},{"d":"2012-02","v":7.18},{"d":"2012-03","v":9.3},{"d":"2012-04","v":11.32},{"d":"2012-05","v":8.06},{"d":"2012-06","v":11.99},{"d":"2012-07","v":15.95},{"d":"2012-08","v":15.95},{"d":"2012-09","v":18.7},{"d":"2012-10","v":18.04},{"d":"2012-11","v":18.35},{"d":"2012-12","v":18.35},{"d":"2013-01","v":20.87},{"d":"2013-02","v":20.87},{"d":"2013-03","v":20.93},{"d":"2013-04","v":21.54},{"d":"2013-05","v":21.69},{"d":"2013-06","v":25.36},{"d":"2013-07","v":25.36},{"d":"2013-08","v":26.04},{"d":"2013-09","v":26.04},{"d":"2013-10","v":27.34},{"d":"2013-11","v":28.47},{"d":"2013-12","v":30.26},{"d":"2014-01","v":30.88},{"d":"2014-02","v":27.69},{"d":"2014-03","v":29.68},{"d":"2014-04","v":32.06},{"d":"2014-05","v":33.28},{"d":"2014-06","v":33.72},{"d":"2014-07","v":33.72},{"d":"2014-08","v":33.9},{"d":"2014-09","v":34.78},{"d":"2014-10","v":36.43},{"d":"2014-11","v":36.43},{"d":"2014-12","v":36.58},{"d":"2015-01","v":38.72},{"d":"2015-02","v":41.88},{"d":"2015-03","v":42.96},{"d":"2015-04","v":43.91},{"d":"2015-05","v":45.55},{"d":"2015-06","v":47.73},{"d":"2015-07","v":49.46},{"d":"2015-08","v":47.62},{"d":"2015-09","v":47.62},{"d":"2015-10","v":47.62},{"d":"2015-11","v":47.97},{"d":"2015-12","v":47.97},{"d":"2016-01","v":47.97},{"d":"2016-02","v":47.97},{"d":"2016-03","v":47.97},{"d":"2016-04","v":47.97},{"d":"2016-05","v":47.02},{"d":"2016-06","v":47.18},{"d":"2016-07","v":47.18},{"d":"2016-08","v":48.46},{"d":"2016-09","v":51.96},{"d":"2016-10","v":51.95},{"d":"2016-11","v":51.89},{"d":"2016-12","v":53.09},{"d":"2017-01","v":54.12},{"d":"2017-02","v":54.12},{"d":"2017-03","v":55.38},{"d":"2017-04","v":55.51},{"d":"2017-05","v":56.71},{"d":"2017-06","v":57.25},{"d":"2017-07","v":58.07},{"d":"2017-08","v":60.43},{"d":"2017-09","v":60.61},{"d":"2017-10","v":60.61},{"d":"2017-11","v":61.96},{"d":"2017-12","v":62.13},{"d":"2018-01","v":63.22},{"d":"2018-02","v":58.46},{"d":"2018-03","v":58.46},{"d":"2018-04","v":53.53},{"d":"2018-05","v":53.53},{"d":"2018-06","v":54.81},{"d":"2018-07","v":53.98},{"d":"2018-08","v":56.43},{"d":"2018-09","v":56.28},{"d":"2018-10","v":52.58},{"d":"2018-11","v":52.58},{"d":"2018-12","v":52.58},{"d":"2019-01","v":52.58},{"d":"2019-02","v":52.58},{"d":"2019-03","v":52.58},{"d":"2019-04","v":52.58},{"d":"2019-05","v":53.93},{"d":"2019-06","v":53.93},{"d":"2019-07","v":54.58},{"d":"2019-08","v":52.18},{"d":"2019-09","v":52.18},{"d":"2019-10","v":49.17},{"d":"2019-11","v":49.17},{"d":"2019-12","v":51.98},{"d":"2020-01","v":54.08},{"d":"2020-02","v":55.71},{"d":"2020-03","v":50.23},{"d":"2020-04","v":50.23},{"d":"2020-05","v":50.23},{"d":"2020-06","v":53.55},{"d":"2020-07","v":55.89},{"d":"2020-08","v":57.91},{"d":"2020-09","v":60.4},{"d":"2020-10","v":61.04},{"d":"2020-11","v":56.39},{"d":"2020-12","v":57.49},{"d":"2021-01","v":57.49},{"d":"2021-02","v":59.56},{"d":"2021-03","v":61.51},{"d":"2021-04","v":61.51},{"d":"2021-05","v":67.14},{"d":"2021-06","v":68.33},{"d":"2021-07","v":69.8},{"d":"2021-08","v":71.88},{"d":"2021-09","v":73.47},{"d":"2021-10","v":74.54},{"d":"2021-11","v":75.6},{"d":"2021-12","v":78.58},{"d":"2022-01","v":73.2},{"d":"2022-02","v":73.2},{"d":"2022-03","v":73.2},{"d":"2022-04","v":73.2},{"d":"2022-05","v":73.2},{"d":"2022-06","v":73.2},{"d":"2022-07","v":73.2},{"d":"2022-08","v":73.2},{"d":"2022-09","v":73.2},{"d":"2022-10","v":73.2},{"d":"2022-11","v":73.2},{"d":"2022-12","v":73.2},{"d":"2023-01","v":73.2},{"d":"2023-02","v":73.2},{"d":"2023-03","v":75.49},{"d":"2023-04","v":79.26},{"d":"2023-05","v":82.57},{"d":"2023-06","v":82.57},{"d":"2023-07","v":82.57},{"d":"2023-08","v":80.77},{"d":"2023-09","v":82.47},{"d":"2023-10","v":76.35},{"d":"2023-11","v":76.35},{"d":"2023-12","v":76.35},{"d":"2024-01","v":78.85},{"d":"2024-02","v":81.39},{"d":"2024-03","v":81.39},{"d":"2024-04","v":79.68},{"d":"2024-05","v":79.68},{"d":"2024-06","v":80.0},{"d":"2024-07","v":77.85},{"d":"2024-08","v":82.64},{"d":"2024-09","v":88.92},{"d":"2024-10","v":89.44},{"d":"2024-11","v":94.71},{"d":"2024-12","v":97.22},{"d":"2025-01","v":101.82},{"d":"2025-02","v":103.63},{"d":"2025-03","v":93.37},{"d":"2025-04","v":93.37},{"d":"2025-05","v":95.86},{"d":"2025-06","v":95.86},{"d":"2025-07","v":95.86},{"d":"2025-08","v":99.78},{"d":"2025-09","v":99.78},{"d":"2025-10","v":104.68},{"d":"2025-11","v":105.35},{"d":"2025-12","v":106.03},{"d":"2026-01","v":112.33},{"d":"2026-02","v":116.64},{"d":"2026-03","v":115.15},{"d":"2026-04","v":115.15},{"d":"2026-05","v":115.15},{"d":"2026-06","v":119.08},{"d":"2026-07","v":121.86},{"d":"2026-08","v":122.59}],"year_india":[{"year":2009,"net_pct":22.4,"trades":14,"win_rate":0.786,"net_ccy":60016},{"year":2010,"net_pct":0.96,"trades":18,"win_rate":0.667,"net_ccy":-5464},{"year":2011,"net_pct":-12.45,"trades":6,"win_rate":0.333,"net_ccy":-51168},{"year":2012,"net_pct":6.09,"trades":16,"win_rate":0.688,"net_ccy":26528},{"year":2013,"net_pct":-10.67,"trades":16,"win_rate":0.438,"net_ccy":-40424},{"year":2014,"net_pct":14.76,"trades":19,"win_rate":0.632,"net_ccy":74991},{"year":2015,"net_pct":0.71,"trades":14,"win_rate":0.5,"net_ccy":1483},{"year":2016,"net_pct":13.32,"trades":14,"win_rate":0.786,"net_ccy":76045},{"year":2017,"net_pct":11.84,"trades":17,"win_rate":0.647,"net_ccy":78294},{"year":2018,"net_pct":-11.9,"trades":19,"win_rate":0.579,"net_ccy":-99023},{"year":2019,"net_pct":2.49,"trades":17,"win_rate":0.647,"net_ccy":24735},{"year":2020,"net_pct":-8.64,"trades":15,"win_rate":0.733,"net_ccy":-78516},{"year":2021,"net_pct":16.7,"trades":24,"win_rate":0.708,"net_ccy":151598},{"year":2022,"net_pct":-4.51,"trades":13,"win_rate":0.462,"net_ccy":-56933},{"year":2023,"net_pct":1.69,"trades":18,"win_rate":0.611,"net_ccy":21492},{"year":2024,"net_pct":10.35,"trades":23,"win_rate":0.565,"net_ccy":159735},{"year":2025,"net_pct":7.47,"trades":19,"win_rate":0.684,"net_ccy":135174},{"year":2026,"net_pct":-8.17,"trades":5,"win_rate":0.6,"net_ccy":-150894}],"year_us":[{"year":2008,"net_pct":-2.8,"trades":2,"win_rate":0.5,"net_ccy":-3238},{"year":2009,"net_pct":11.0,"trades":15,"win_rate":0.867,"net_ccy":8553},{"year":2010,"net_pct":6.67,"trades":14,"win_rate":0.643,"net_ccy":5149},{"year":2011,"net_pct":-7.69,"trades":19,"win_rate":0.737,"net_ccy":-6930},{"year":2012,"net_pct":11.17,"trades":22,"win_rate":0.773,"net_ccy":11952},{"year":2013,"net_pct":11.91,"trades":16,"win_rate":1.0,"net_ccy":14069},{"year":2014,"net_pct":6.32,"trades":18,"win_rate":0.722,"net_ccy":8888},{"year":2015,"net_pct":11.39,"trades":23,"win_rate":0.87,"net_ccy":15496},{"year":2016,"net_pct":5.13,"trades":13,"win_rate":0.615,"net_ccy":7167},{"year":2017,"net_pct":9.03,"trades":19,"win_rate":0.895,"net_ccy":15275},{"year":2018,"net_pct":-9.54,"trades":17,"win_rate":0.529,"net_ccy":-17760},{"year":2019,"net_pct":-0.6,"trades":10,"win_rate":0.6,"net_ccy":-840},{"year":2020,"net_pct":5.51,"trades":15,"win_rate":0.667,"net_ccy":10640},{"year":2021,"net_pct":21.09,"trades":20,"win_rate":0.85,"net_ccy":64686},{"year":2022,"net_pct":-5.38,"trades":4,"win_rate":0.5,"net_ccy":-17581},{"year":2023,"net_pct":3.15,"trades":16,"win_rate":0.688,"net_ccy":5644},{"year":2024,"net_pct":20.88,"trades":22,"win_rate":0.864,"net_ccy":75677},{"year":2025,"net_pct":8.8,"trades":19,"win_rate":0.895,"net_ccy":36773},{"year":2026,"net_pct":16.56,"trades":16,"win_rate":0.938,"net_ccy":77934}],"trades_india":[{"ret":5.217,"sym":"BANKNIFTY"},{"ret":2.919,"sym":"NIFTY"},{"ret":1.421,"sym":"BANKNIFTY"},{"ret":2.685,"sym":"NIFTY"},{"ret":2.291,"sym":"BANKNIFTY"},{"ret":3.075,"sym":"BANKNIFTY"},{"ret":2.758,"sym":"NIFTY"},{"ret":1.891,"sym":"NIFTY"},{"ret":-1.858,"sym":"BANKNIFTY"},{"ret":-4.471,"sym":"NIFTY"},{"ret":3.42,"sym":"BANKNIFTY"},{"ret":3.647,"sym":"NIFTY"},{"ret":-0.251,"sym":"BANKNIFTY"},{"ret":2.216,"sym":"NIFTY"},{"ret":0.95,"sym":"NIFTY"},{"ret":1.204,"sym":"BANKNIFTY"},{"ret":-1.38,"sym":"BANKNIFTY"},{"ret":-3.186,"sym":"NIFTY"},{"ret":1.086,"sym":"BANKNIFTY"},{"ret":0.128,"sym":"NIFTY"},{"ret":0.876,"sym":"NIFTY"},{"ret":4.809,"sym":"BANKNIFTY"},{"ret":1.648,"sym":"BANKNIFTY"},{"ret":1.056,"sym":"BANKNIFTY"},{"ret":1.42,"sym":"BANKNIFTY"},{"ret":1.553,"sym":"BANKNIFTY"},{"ret":1.996,"sym":"NIFTY"},{"ret":1.862,"sym":"BANKNIFTY"},{"ret":-5.049,"sym":"BANKNIFTY"},{"ret":-3.98,"sym":"NIFTY"},{"ret":0.684,"sym":"NIFTY"},{"ret":-1.351,"sym":"BANKNIFTY"},{"ret":-1.568,"sym":"BANKNIFTY"},{"ret":-5.566,"sym":"NIFTY"},{"ret":2.084,"sym":"BANKNIFTY"},{"ret":2.174,"sym":"NIFTY"},{"ret":-4.619,"sym":"BANKNIFTY"},{"ret":-3.81,"sym":"NIFTY"},{"ret":-0.011,"sym":"BANKNIFTY"},{"ret":0.991,"sym":"NIFTY"},{"ret":3.294,"sym":"BANKNIFTY"},{"ret":2.052,"sym":"NIFTY"},{"ret":0.329,"sym":"BANKNIFTY"},{"ret":-5.02,"sym":"BANKNIFTY"},{"ret":0.875,"sym":"NIFTY"},{"ret":1.339,"sym":"BANKNIFTY"},{"ret":1.599,"sym":"NIFTY"},{"ret":-2.041,"sym":"BANKNIFTY"},{"ret":-0.152,"sym":"NIFTY"},{"ret":2.298,"sym":"BANKNIFTY"},{"ret":1.783,"sym":"NIFTY"},{"ret":-0.288,"sym":"NIFTY"},{"ret":0.774,"sym":"NIFTY"},{"ret":1.335,"sym":"BANKNIFTY"},{"ret":1.222,"sym":"NIFTY"},{"ret":-1.14,"sym":"BANKNIFTY"},{"ret":-1.099,"sym":"NIFTY"},{"ret":-2.185,"sym":"BANKNIFTY"},{"ret":0.397,"sym":"NIFTY"},{"ret":-1.27,"sym":"BANKNIFTY"},{"ret":-1.103,"sym":"NIFTY"},{"ret":2.572,"sym":"BANKNIFTY"},{"ret":1.946,"sym":"NIFTY"},{"ret":-4.431,"sym":"BANKNIFTY"},{"ret":-1.503,"sym":"NIFTY"},{"ret":-4.652,"sym":"NIFTY"},{"ret":1.964,"sym":"NIFTY"},{"ret":0.786,"sym":"NIFTY"},{"ret":0.79,"sym":"NIFTY"},{"ret":0.102,"sym":"BANKNIFTY"},{"ret":1.313,"sym":"NIFTY"},{"ret":-0.517,"sym":"BANKNIFTY"},{"ret":-1.184,"sym":"NIFTY"},{"ret":1.559,"sym":"NIFTY"},{"ret":0.001,"sym":"NIFTY"},{"ret":3.338,"sym":"BANKNIFTY"},{"ret":1.833,"sym":"NIFTY"},{"ret":1.763,"sym":"BANKNIFTY"},{"ret":-0.704,"sym":"BANKNIFTY"},{"ret":2.209,"sym":"NIFTY"},{"ret":1.893,"sym":"NIFTY"},{"ret":1.97,"sym":"BANKNIFTY"},{"ret":1.974,"sym":"BANKNIFTY"},{"ret":2.292,"sym":"NIFTY"},{"ret":0.006,"sym":"BANKNIFTY"},{"ret":0.616,"sym":"NIFTY"},{"ret":1.693,"sym":"NIFTY"},{"ret":0.197,"sym":"BANKNIFTY"},{"ret":-2.525,"sym":"NIFTY"},{"ret":2.686,"sym":"BANKNIFTY"},{"ret":-2.281,"sym":"BANKNIFTY"},{"ret":-0.139,"sym":"NIFTY"},{"ret":0.852,"sym":"BANKNIFTY"},{"ret":1.851,"sym":"NIFTY"},{"ret":-1.941,"sym":"NIFTY"},{"ret":-0.473,"sym":"BANKNIFTY"},{"ret":-0.593,"sym":"NIFTY"},{"ret":-0.541,"sym":"BANKNIFTY"},{"ret":-1.375,"sym":"NIFTY"},{"ret":2.248,"sym":"BANKNIFTY"},{"ret":1.378,"sym":"NIFTY"},{"ret":0.573,"sym":"BANKNIFTY"},{"ret":0.664,"sym":"NIFTY"},{"ret":2.609,"sym":"BANKNIFTY"},{"ret":1.841,"sym":"BANKNIFTY"},{"ret":1.184,"sym":"NIFTY"},{"ret":1.741,"sym":"BANKNIFTY"},{"ret":1.619,"sym":"NIFTY"},{"ret":1.749,"sym":"BANKNIFTY"},{"ret":1.065,"sym":"NIFTY"},{"ret":1.612,"sym":"BANKNIFTY"},{"ret":2.853,"sym":"BANKNIFTY"},{"ret":1.219,"sym":"NIFTY"},{"ret":0.666,"sym":"BANKNIFTY"},{"ret":-0.832,"sym":"NIFTY"},{"ret":-1.747,"sym":"BANKNIFTY"},{"ret":-0.201,"sym":"BANKNIFTY"},{"ret":1.112,"sym":"NIFTY"},{"ret":1.642,"sym":"BANKNIFTY"},{"ret":1.255,"sym":"NIFTY"},{"ret":1.703,"sym":"BANKNIFTY"},{"ret":1.239,"sym":"NIFTY"},{"ret":2.904,"sym":"BANKNIFTY"},{"ret":1.594,"sym":"NIFTY"},{"ret":0.418,"sym":"NIFTY"},{"ret":0.587,"sym":"BANKNIFTY"},{"ret":0.259,"sym":"BANKNIFTY"},{"ret":-0.108,"sym":"NIFTY"},{"ret":-1.053,"sym":"NIFTY"},{"ret":-0.734,"sym":"BANKNIFTY"},{"ret":4.274,"sym":"BANKNIFTY"},{"ret":-0.19,"sym":"NIFTY"},{"ret":-0.585,"sym":"NIFTY"},{"ret":-0.044,"sym":"BANKNIFTY"},{"ret":-5.265,"sym":"BANKNIFTY"},{"ret":-3.552,"sym":"NIFTY"},{"ret":1.721,"sym":"BANKNIFTY"},{"ret":1.261,"sym":"NIFTY"},{"ret":0.604,"sym":"NIFTY"},{"ret":-0.108,"sym":"NIFTY"},{"ret":0.546,"sym":"BANKNIFTY"},{"ret":-0.726,"sym":"NIFTY"},{"ret":1.112,"sym":"BANKNIFTY"},{"ret":1.04,"sym":"NIFTY"},{"ret":0.415,"sym":"BANKNIFTY"},{"ret":1.707,"sym":"NIFTY"},{"ret":0.058,"sym":"NIFTY"},{"ret":-2.357,"sym":"BANKNIFTY"},{"ret":2.017,"sym":"NIFTY"},{"ret":-3.464,"sym":"BANKNIFTY"},{"ret":-7.135,"sym":"NIFTY"},{"ret":1.701,"sym":"BANKNIFTY"},{"ret":1.537,"sym":"BANKNIFTY"},{"ret":0.164,"sym":"BANKNIFTY"},{"ret":-0.205,"sym":"BANKNIFTY"},{"ret":1.9,"sym":"NIFTY"},{"ret":1.572,"sym":"BANKNIFTY"},{"ret":-1.648,"sym":"NIFTY"},{"ret":0.545,"sym":"BANKNIFTY"},{"ret":1.367,"sym":"NIFTY"},{"ret":0.9,"sym":"NIFTY"},{"ret":0.43,"sym":"BANKNIFTY"},{"ret":-1.495,"sym":"BANKNIFTY"},{"ret":-3.695,"sym":"NIFTY"},{"ret":0.228,"sym":"BANKNIFTY"},{"ret":-0.006,"sym":"NIFTY"},{"ret":1.621,"sym":"BANKNIFTY"},{"ret":0.97,"sym":"NIFTY"},{"ret":1.296,"sym":"BANKNIFTY"},{"ret":1.066,"sym":"NIFTY"},{"ret":2.738,"sym":"BANKNIFTY"},{"ret":1.858,"sym":"NIFTY"},{"ret":-1.104,"sym":"BANKNIFTY"},{"ret":0.194,"sym":"NIFTY"},{"ret":3.256,"sym":"NIFTY"},{"ret":1.112,"sym":"NIFTY"},{"ret":0.854,"sym":"BANKNIFTY"},{"ret":-11.354,"sym":"NIFTY"},{"ret":-16.631,"sym":"BANKNIFTY"},{"ret":2.833,"sym":"NIFTY"},{"ret":1.851,"sym":"NIFTY"},{"ret":1.518,"sym":"NIFTY"},{"ret":-0.204,"sym":"NIFTY"},{"ret":3.211,"sym":"BANKNIFTY"},{"ret":3.158,"sym":"NIFTY"},{"ret":2.301,"sym":"BANKNIFTY"},{"ret":2.545,"sym":"NIFTY"},{"ret":6.166,"sym":"BANKNIFTY"},{"ret":2.246,"sym":"NIFTY"},{"ret":1.704,"sym":"BANKNIFTY"},{"ret":0.002,"sym":"NIFTY"},{"ret":0.635,"sym":"NIFTY"},{"ret":-2.671,"sym":"BANKNIFTY"},{"ret":3.631,"sym":"NIFTY"},{"ret":3.217,"sym":"BANKNIFTY"},{"ret":1.217,"sym":"NIFTY"},{"ret":4.009,"sym":"BANKNIFTY"},{"ret":0.984,"sym":"NIFTY"},{"ret":1.433,"sym":"NIFTY"},{"ret":2.301,"sym":"BANKNIFTY"},{"ret":0.443,"sym":"BANKNIFTY"},{"ret":1.384,"sym":"BANKNIFTY"},{"ret":1.159,"sym":"NIFTY"},{"ret":1.183,"sym":"NIFTY"},{"ret":-1.963,"sym":"BANKNIFTY"},{"ret":-5.07,"sym":"BANKNIFTY"},{"ret":-2.044,"sym":"NIFTY"},{"ret":-0.864,"sym":"NIFTY"},{"ret":-3.734,"sym":"BANKNIFTY"},{"ret":-0.156,"sym":"BANKNIFTY"},{"ret":-3.337,"sym":"NIFTY"},{"ret":-1.905,"sym":"BANKNIFTY"},{"ret":-0.29,"sym":"NIFTY"},{"ret":1.275,"sym":"NIFTY"},{"ret":3.235,"sym":"BANKNIFTY"},{"ret":1.536,"sym":"NIFTY"},{"ret":-2.312,"sym":"BANKNIFTY"},{"ret":-2.49,"sym":"NIFTY"},{"ret":1.785,"sym":"NIFTY"},{"ret":0.256,"sym":"NIFTY"},{"ret":0.567,"sym":"BANKNIFTY"},{"ret":-0.427,"sym":"NIFTY"},{"ret":1.354,"sym":"NIFTY"},{"ret":0.638,"sym":"BANKNIFTY"},{"ret":-0.355,"sym":"BANKNIFTY"},{"ret":1.418,"sym":"NIFTY"},{"ret":-0.969,"sym":"BANKNIFTY"},{"ret":0.228,"sym":"NIFTY"},{"ret":0.084,"sym":"BANKNIFTY"},{"ret":1.017,"sym":"NIFTY"},{"ret":1.56,"sym":"BANKNIFTY"},{"ret":0.403,"sym":"BANKNIFTY"},{"ret":1.113,"sym":"NIFTY"},{"ret":-2.454,"sym":"BANKNIFTY"},{"ret":1.339,"sym":"BANKNIFTY"},{"ret":0.693,"sym":"NIFTY"},{"ret":1.016,"sym":"BANKNIFTY"},{"ret":-0.59,"sym":"BANKNIFTY"},{"ret":-0.45,"sym":"NIFTY"},{"ret":-1.597,"sym":"NIFTY"},{"ret":1.029,"sym":"BANKNIFTY"},{"ret":0.899,"sym":"NIFTY"},{"ret":0.989,"sym":"BANKNIFTY"},{"ret":-1.35,"sym":"BANKNIFTY"},{"ret":1.991,"sym":"BANKNIFTY"},{"ret":2.88,"sym":"BANKNIFTY"},{"ret":-0.631,"sym":"BANKNIFTY"},{"ret":0.065,"sym":"NIFTY"},{"ret":0.317,"sym":"BANKNIFTY"},{"ret":0.287,"sym":"NIFTY"},{"ret":-0.38,"sym":"NIFTY"},{"ret":-0.638,"sym":"BANKNIFTY"},{"ret":3.447,"sym":"NIFTY"},{"ret":-0.539,"sym":"BANKNIFTY"},{"ret":0.783,"sym":"BANKNIFTY"},{"ret":2.018,"sym":"NIFTY"},{"ret":2.364,"sym":"BANKNIFTY"},{"ret":2.16,"sym":"NIFTY"},{"ret":-2.732,"sym":"BANKNIFTY"},{"ret":-0.484,"sym":"NIFTY"},{"ret":-1.143,"sym":"NIFTY"},{"ret":2.09,"sym":"BANKNIFTY"},{"ret":0.1,"sym":"NIFTY"},{"ret":-1.024,"sym":"BANKNIFTY"},{"ret":-0.042,"sym":"NIFTY"},{"ret":2.048,"sym":"BANKNIFTY"},{"ret":0.849,"sym":"NIFTY"},{"ret":1.307,"sym":"BANKNIFTY"},{"ret":1.593,"sym":"NIFTY"},{"ret":1.648,"sym":"BANKNIFTY"},{"ret":0.279,"sym":"NIFTY"},{"ret":-1.024,"sym":"BANKNIFTY"},{"ret":-0.388,"sym":"NIFTY"},{"ret":0.874,"sym":"NIFTY"},{"ret":-0.617,"sym":"BANKNIFTY"},{"ret":1.762,"sym":"BANKNIFTY"},{"ret":-0.88,"sym":"NIFTY"},{"ret":0.726,"sym":"NIFTY"},{"ret":0.771,"sym":"NIFTY"},{"ret":1.122,"sym":"NIFTY"},{"ret":0.405,"sym":"BANKNIFTY"},{"ret":0.735,"sym":"NIFTY"},{"ret":1.424,"sym":"BANKNIFTY"},{"ret":-3.201,"sym":"NIFTY"},{"ret":1.358,"sym":"BANKNIFTY"},{"ret":1.367,"sym":"NIFTY"},{"ret":-8.295,"sym":"BANKNIFTY"}]};
+(function () {
+  "use strict";
+  const NS = "http://www.w3.org/2000/svg";
+  const el = (n, a) => { const e = document.createElementNS(NS, n); for (const k in a || {}) e.setAttribute(k, a[k]); return e; };
+  const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const usd = (v) => (v < 0 ? "−$" : "$") + Math.round(Math.abs(v)).toLocaleString();
+  const usdK = (v) => (v < 0 ? "−$" : "$") + Math.round(Math.abs(v) / 1000) + "K";
+  const pct = (v) => (v < 0 ? "−" : "") + Math.abs(v).toFixed(1) + "%";
+  const ym = (s) => { const [y, m] = s.split("-").map(Number); return y + (m - 1) / 12; };
+
+  function frame(host, h, pad) {
+    host.innerHTML = "";
+    const W = 900;
+    const svg = el("svg", { class: "chart", viewBox: `0 0 ${W} ${h}`, preserveAspectRatio: "none", role: "img" });
+    host.appendChild(svg);
+    const tip = document.createElement("div");
+    tip.className = "tip";
+    host.appendChild(tip);
+    return { svg, W, H: h, p: pad, tip };
+  }
+
+  function showTip(f, host, px, py, html) {
+    f.tip.innerHTML = html;
+    f.tip.style.opacity = "1";
+    const hw = host.clientWidth, r = f.tip.offsetWidth, hh = f.tip.offsetHeight;
+    const sx = hw / f.W, sy = host.clientHeight / f.H;
+    let x = px * sx + 14, y = py * sy - hh - 12;
+    if (x + r > hw - 4) x = px * sx - r - 14;
+    if (x < 4) x = 4;
+    if (y < 4) y = py * sy + 16;
+    f.tip.style.left = x + "px";
+    f.tip.style.top = y + "px";
+  }
+  const hideTip = (f) => { f.tip.style.opacity = "0"; };
+
+  /* Round a raw [lo,hi] out to a domain whose ticks land on 1/2/2.5/5 x 10^n. */
+  function niceScale(lo, hi, target) {
+    const n = target || 5;
+    const span = (hi - lo) || Math.abs(hi) || 1;
+    const raw = span / n;
+    const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => s >= raw - 1e-9) || 10 * mag;
+    const y0 = Math.floor(lo / step) * step;
+    const y1 = Math.ceil(hi / step) * step;
+    const ticks = [];
+    for (let v = y0; v <= y1 + step / 2; v += step) ticks.push(Math.abs(v) < step / 1e6 ? 0 : v);
+    return { y0: y0, y1: y1, ticks: ticks };
+  }
+
+  function yAxis(f, g, sc, fmt) {
+    sc.ticks.forEach((v) => {
+      const y = f.p.t + (f.H - f.p.t - f.p.b) * (1 - (v - sc.y0) / (sc.y1 - sc.y0));
+      g.appendChild(el("line", { class: "gridline", x1: f.p.l, x2: f.W - f.p.r, y1: y, y2: y }));
+      const t = el("text", { class: "tick", x: f.p.l - 9, y: y + 3.5, "text-anchor": "end" });
+      t.textContent = fmt(v);
+      g.appendChild(t);
+    });
+  }
+
+  /* ---------- line chart: strategy vs buy & hold ---------- */
+  function lineChart(hostId, series) {
+    const host = document.getElementById(hostId);
+    const f = frame(host, 330, { l: 58, r: 74, t: 16, b: 30 });
+    const g = el("g"); f.svg.appendChild(g);
+    const all = series.flatMap((s) => s.pts);
+    const x0 = Math.min(...all.map((p) => ym(p.d))), x1 = Math.max(...all.map((p) => ym(p.d)));
+    const sc = niceScale(0, Math.max(...all.map((p) => p.v)), 5);
+    const y0 = sc.y0, y1 = sc.y1;
+    const X = (d) => f.p.l + (f.W - f.p.l - f.p.r) * ((ym(d) - x0) / (x1 - x0));
+    const Y = (v) => f.p.t + (f.H - f.p.t - f.p.b) * (1 - (v - y0) / (y1 - y0));
+
+    yAxis(f, g, sc, (v) => (v === 0 ? "$0" : usdK(v)));
+    for (let yr = 2010; yr <= 2026; yr += 2) {
+      const x = X(yr + "-01");
+      const t = el("text", { class: "tick", x: x, y: f.H - f.p.b + 17, "text-anchor": "middle" });
+      t.textContent = yr;
+      g.appendChild(t);
+    }
+    g.appendChild(el("line", { class: "axisline", x1: f.p.l, x2: f.W - f.p.r, y1: Y(0), y2: Y(0) }));
+
+    series.forEach((s) => {
+      const d = s.pts.map((p, i) => (i ? "L" : "M") + X(p.d).toFixed(1) + " " + Y(p.v).toFixed(1)).join(" ");
+      g.appendChild(el("path", { d: d, fill: "none", stroke: css(s.color), "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }));
+      const last = s.pts[s.pts.length - 1];
+      g.appendChild(el("circle", { cx: X(last.d), cy: Y(last.v), r: 4, fill: css(s.color), stroke: css("--surface"), "stroke-width": 2 }));
+      const lb = el("text", { class: "dlabel", x: X(last.d) + 9, y: Y(last.v) + 4, fill: css(s.color) });
+      lb.textContent = usdK(last.v);
+      g.appendChild(lb);
+    });
+
+    const cross = el("line", { class: "axisline", y1: f.p.t, y2: f.H - f.p.b, opacity: 0, stroke: css("--rule-strong") });
+    g.appendChild(cross);
+    const dots = series.map((s) => { const c = el("circle", { r: 4.5, fill: css(s.color), stroke: css("--surface"), "stroke-width": 2, opacity: 0 }); g.appendChild(c); return c; });
+    const hit = el("rect", { x: f.p.l, y: f.p.t, width: f.W - f.p.l - f.p.r, height: f.H - f.p.t - f.p.b, fill: "transparent" });
+    g.appendChild(hit);
+
+    const move = (ev) => {
+      const r = f.svg.getBoundingClientRect();
+      const cx = ev.touches ? ev.touches[0].clientX : ev.clientX;
+      const sx = ((cx - r.left) / r.width) * f.W;
+      const target = x0 + ((sx - f.p.l) / (f.W - f.p.l - f.p.r)) * (x1 - x0);
+      const base = series[0].pts;
+      let bi = 0, bd = Infinity;
+      base.forEach((p, i) => { const dd = Math.abs(ym(p.d) - target); if (dd < bd) { bd = dd; bi = i; } });
+      const px = X(base[bi].d);
+      cross.setAttribute("x1", px); cross.setAttribute("x2", px); cross.setAttribute("opacity", 0.9);
+      let rows = "", ty = Infinity;
+      series.forEach((s, i) => {
+        const p = s.pts[Math.min(bi, s.pts.length - 1)];
+        dots[i].setAttribute("cx", X(p.d)); dots[i].setAttribute("cy", Y(p.v)); dots[i].setAttribute("opacity", 1);
+        ty = Math.min(ty, Y(p.v));
+        rows += `<div class="row"><span><i style="background:${css(s.color)}"></i> ${s.name}</span><span>${usd(p.v)}</span></div>`;
+      });
+      showTip(f, host, px, ty, `<b>${base[bi].d}</b>${rows}`);
+    };
+    const leave = () => { cross.setAttribute("opacity", 0); dots.forEach((d) => d.setAttribute("opacity", 0)); hideTip(f); };
+    hit.addEventListener("mousemove", move);
+    hit.addEventListener("touchmove", move, { passive: true });
+    hit.addEventListener("mouseleave", leave);
+    hit.addEventListener("touchend", leave);
+  }
+
+  /* ---------- yearly bars ---------- */
+  function barChart(hostId, rows, key, fmt, title, height) {
+    const host = document.getElementById(hostId);
+    const f = frame(host, height, { l: 58, r: 20, t: 30, b: 30 });
+    const g = el("g"); f.svg.appendChild(g);
+    const vals = rows.map((r) => r[key]);
+    const sc = niceScale(Math.min(0, Math.min(...vals)), Math.max(...vals), 4);
+    const y0 = sc.y0, y1 = sc.y1;
+    const Y = (v) => f.p.t + (f.H - f.p.t - f.p.b) * (1 - (v - y0) / (y1 - y0));
+    const iw = (f.W - f.p.l - f.p.r) / rows.length;
+    const bw = Math.min(iw - 8, 34);
+
+    yAxis(f, g, sc, fmt);
+    const ttl = el("text", { class: "dlabel", x: f.p.l, y: 14, fill: css("--ink-2") });
+    ttl.textContent = title;
+    g.appendChild(ttl);
+    g.appendChild(el("line", { class: "axisline", x1: f.p.l, x2: f.W - f.p.r, y1: Y(0), y2: Y(0) }));
+
+    rows.forEach((r, i) => {
+      const v = r[key];
+      const cx = f.p.l + iw * (i + 0.5);
+      const yv = Y(v), yz = Y(0);
+      const top = Math.min(yv, yz), h = Math.max(Math.abs(yv - yz), 1.5);
+      const col = css(v >= 0 ? "--s1" : "--neg");
+      const rect = el("rect", { x: cx - bw / 2, y: top, width: bw, height: h, fill: col, rx: 3, style: "cursor:crosshair" });
+      g.appendChild(rect);
+      if (i % 2 === 0 || rows.length <= 10) {
+        const t = el("text", { class: "tick", x: cx, y: f.H - f.p.b + 17, "text-anchor": "middle" });
+        t.textContent = "'" + String(r.year).slice(2);
+        g.appendChild(t);
+      }
+      const enter = () => showTip(f, host, cx, top, `<b>${r.year}</b>
+        <div class="row"><span>Net P&amp;L</span><span>${usd(r.net_usd)}</span></div>
+        <div class="row"><span>% of notional</span><span>${pct(r.sum_ret_pct)}</span></div>
+        <div class="row"><span>Trades</span><span>${r.trades}</span></div>
+        <div class="row"><span>Win rate</span><span>${(r.win_rate * 100).toFixed(0)}%</span></div>
+        <div class="row"><span>Avg notional</span><span>${usdK(r.mean_notional)}</span></div>`);
+      rect.addEventListener("mouseenter", enter);
+      rect.addEventListener("mousemove", enter);
+      rect.addEventListener("mouseleave", () => hideTip(f));
+    });
+  }
+
+  /* ---------- underwater ---------- */
+  function underwater(hostId, pts) {
+    const host = document.getElementById(hostId);
+    const f = frame(host, 240, { l: 58, r: 20, t: 16, b: 30 });
+    const g = el("g"); f.svg.appendChild(g);
+    const x0 = ym(pts[0].d), x1 = ym(pts[pts.length - 1].d);
+    const sc = niceScale(Math.min(...pts.map((p) => p.v)), 0, 4);
+    const y0 = sc.y0, y1 = sc.y1;
+    const X = (d) => f.p.l + (f.W - f.p.l - f.p.r) * ((ym(d) - x0) / (x1 - x0));
+    const Y = (v) => f.p.t + (f.H - f.p.t - f.p.b) * (1 - (v - y0) / (y1 - y0));
+
+    yAxis(f, g, sc, (v) => (v === 0 ? "$0" : usdK(v)));
+    for (let yr = 2010; yr <= 2026; yr += 2) {
+      const t = el("text", { class: "tick", x: X(yr + "-01"), y: f.H - f.p.b + 17, "text-anchor": "middle" });
+      t.textContent = yr;
+      g.appendChild(t);
+    }
+    const line = pts.map((p, i) => (i ? "L" : "M") + X(p.d).toFixed(1) + " " + Y(p.v).toFixed(1)).join(" ");
+    g.appendChild(el("path", { d: line + ` L ${X(pts[pts.length - 1].d).toFixed(1)} ${Y(0)} L ${X(pts[0].d).toFixed(1)} ${Y(0)} Z`, fill: css("--neg"), opacity: 0.16 }));
+    g.appendChild(el("path", { d: line, fill: "none", stroke: css("--neg"), "stroke-width": 2, "stroke-linejoin": "round" }));
+    g.appendChild(el("line", { class: "axisline", x1: f.p.l, x2: f.W - f.p.r, y1: Y(0), y2: Y(0) }));
+
+    const worst = pts.reduce((a, b) => (b.v < a.v ? b : a));
+    g.appendChild(el("circle", { cx: X(worst.d), cy: Y(worst.v), r: 4, fill: css("--neg"), stroke: css("--surface"), "stroke-width": 2 }));
+    const wx = X(worst.d), mid = (f.p.l + f.W - f.p.r) / 2;
+    const wl = el("text", {
+      class: "dlabel", x: wx + (wx > mid ? -10 : 10), y: Y(worst.v) + 16,
+      fill: css("--neg"), "text-anchor": wx > mid ? "end" : "start"
+    });
+    wl.textContent = usd(worst.v) + " · " + worst.d;
+    g.appendChild(wl);
+
+    const cross = el("line", { class: "axisline", y1: f.p.t, y2: f.H - f.p.b, opacity: 0 });
+    g.appendChild(cross);
+    const dot = el("circle", { r: 4.5, fill: css("--neg"), stroke: css("--surface"), "stroke-width": 2, opacity: 0 });
+    g.appendChild(dot);
+    const hit = el("rect", { x: f.p.l, y: f.p.t, width: f.W - f.p.l - f.p.r, height: f.H - f.p.t - f.p.b, fill: "transparent" });
+    g.appendChild(hit);
+    const move = (ev) => {
+      const r = f.svg.getBoundingClientRect();
+      const cx = ev.touches ? ev.touches[0].clientX : ev.clientX;
+      const sx = ((cx - r.left) / r.width) * f.W;
+      const target = x0 + ((sx - f.p.l) / (f.W - f.p.l - f.p.r)) * (x1 - x0);
+      let bi = 0, bd = Infinity;
+      pts.forEach((p, i) => { const dd = Math.abs(ym(p.d) - target); if (dd < bd) { bd = dd; bi = i; } });
+      const p = pts[bi];
+      cross.setAttribute("x1", X(p.d)); cross.setAttribute("x2", X(p.d)); cross.setAttribute("opacity", 0.9);
+      dot.setAttribute("cx", X(p.d)); dot.setAttribute("cy", Y(p.v)); dot.setAttribute("opacity", 1);
+      showTip(f, host, X(p.d), Y(p.v), `<b>${p.d}</b><div class="row"><span>Below peak</span><span>${usd(p.v)}</span></div>`);
+    };
+    const leave = () => { cross.setAttribute("opacity", 0); dot.setAttribute("opacity", 0); hideTip(f); };
+    hit.addEventListener("mousemove", move);
+    hit.addEventListener("touchmove", move, { passive: true });
+    hit.addEventListener("mouseleave", leave);
+    hit.addEventListener("touchend", leave);
+  }
+
+  /* ---------- trade-return histogram, split by exit reason ---------- */
+  function histogram(hostId, trades) {
+    const host = document.getElementById(hostId);
+    const f = frame(host, 280, { l: 58, r: 20, t: 16, b: 42 });
+    const g = el("g"); f.svg.appendChild(g);
+    const step = 0.5, lo = -7, hi = 4;
+    const bins = [];
+    for (let b = lo; b < hi; b += step) bins.push({ lo: b, hi: b + step, rsi: 0, time: 0 });
+    trades.forEach((t) => {
+      const v = Math.max(lo + 1e-9, Math.min(hi - 1e-9, t.ret));
+      const i = Math.min(bins.length - 1, Math.floor((v - lo) / step));
+      if (t.r === "time_stop") bins[i].time++; else bins[i].rsi++;
+    });
+    const sc = niceScale(0, Math.max(...bins.map((b) => b.rsi + b.time)), 4);
+    const y1 = sc.y1;
+    const Y = (v) => f.p.t + (f.H - f.p.t - f.p.b) * (1 - v / y1);
+    const X = (v) => f.p.l + (f.W - f.p.l - f.p.r) * ((v - lo) / (hi - lo));
+    const bw = (f.W - f.p.l - f.p.r) / bins.length - 2;
+
+    yAxis(f, g, sc, (v) => String(Math.round(v)));
+    for (let v = lo; v <= hi; v += 1) {
+      const t = el("text", { class: "tick", x: X(v + step / 2) - bw / 2 - 1, y: f.H - f.p.b + 17, "text-anchor": "middle" });
+      t.textContent = (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v) + "%";
+      g.appendChild(t);
+    }
+    const xl = el("text", { class: "tick", x: (f.p.l + f.W - f.p.r) / 2, y: f.H - 4, "text-anchor": "middle" });
+    xl.textContent = "trade result, % of notional at entry";
+    g.appendChild(xl);
+
+    bins.forEach((b) => {
+      const x = X(b.lo) + 1;
+      let acc = 0;
+      [["rsi", "--s1"], ["time", "--s2"]].forEach(([k, c]) => {
+        if (!b[k]) return;
+        const h = (Y(0) - Y(b[k]));
+        const yTop = Y(acc + b[k]);
+        const r = el("rect", { x: x, y: yTop, width: bw, height: Math.max(h - 2, 1), fill: css(c), rx: 2, style: "cursor:crosshair" });
+        g.appendChild(r);
+        acc += b[k];
+        const enter = () => showTip(f, host, x + bw / 2, yTop, `<b>${b.lo.toFixed(1)}% to ${b.hi.toFixed(1)}%</b>
+          <div class="row"><span><i style="background:${css("--s1")}"></i> RSI target</span><span>${b.rsi}</span></div>
+          <div class="row"><span><i style="background:${css("--s2")}"></i> Time stop</span><span>${b.time}</span></div>`);
+        r.addEventListener("mouseenter", enter);
+        r.addEventListener("mousemove", enter);
+        r.addEventListener("mouseleave", () => hideTip(f));
+      });
+    });
+    g.appendChild(el("line", { class: "axisline", x1: f.p.l, x2: f.W - f.p.r, y1: Y(0), y2: Y(0) }));
+    g.appendChild(el("line", { x1: X(0), x2: X(0), y1: f.p.t, y2: Y(0), stroke: css("--rule-strong"), "stroke-width": 1, "stroke-dasharray": "3 3" }));
+  }
+
+
+  /* ---------- India: cumulative % return, two markets ---------- */
+  function pctLines(hostId, series) {
+    const host = document.getElementById(hostId);
+    const f = frame(host, 300, { l: 54, r: 74, t: 16, b: 30 });
+    const g = el("g"); f.svg.appendChild(g);
+    const all = series.flatMap((s) => s.pts);
+    const x0 = Math.min(...all.map((p) => ym(p.d))), x1 = Math.max(...all.map((p) => ym(p.d)));
+    const sc = niceScale(0, Math.max(...all.map((p) => p.v)), 5);
+    const y0 = sc.y0, y1 = sc.y1;
+    const X = (d) => f.p.l + (f.W - f.p.l - f.p.r) * ((ym(d) - x0) / (x1 - x0));
+    const Y = (v) => f.p.t + (f.H - f.p.t - f.p.b) * (1 - (v - y0) / (y1 - y0));
+    yAxis(f, g, sc, (v) => Math.round(v) + "%");
+    for (let yr = 2008; yr <= 2026; yr += 3) {
+      const t = el("text", { class: "tick", x: X(yr + "-01"), y: f.H - f.p.b + 17, "text-anchor": "middle" });
+      t.textContent = yr; g.appendChild(t);
+    }
+    g.appendChild(el("line", { class: "axisline", x1: f.p.l, x2: f.W - f.p.r, y1: Y(0), y2: Y(0) }));
+    series.forEach((s) => {
+      const d = s.pts.map((p, i) => (i ? "L" : "M") + X(p.d).toFixed(1) + " " + Y(p.v).toFixed(1)).join(" ");
+      g.appendChild(el("path", { d: d, fill: "none", stroke: css(s.color), "stroke-width": 2, "stroke-linejoin": "round" }));
+      const last = s.pts[s.pts.length - 1];
+      g.appendChild(el("circle", { cx: X(last.d), cy: Y(last.v), r: 4, fill: css(s.color), stroke: css("--surface"), "stroke-width": 2 }));
+      const lb = el("text", { class: "dlabel", x: X(last.d) + 9, y: Y(last.v) + 4, fill: css(s.color) });
+      lb.textContent = "+" + Math.round(last.v) + "%"; g.appendChild(lb);
+    });
+    const cross = el("line", { class: "axisline", y1: f.p.t, y2: f.H - f.p.b, opacity: 0 });
+    g.appendChild(cross);
+    const dots = series.map((s) => { const c = el("circle", { r: 4.5, fill: css(s.color), stroke: css("--surface"), "stroke-width": 2, opacity: 0 }); g.appendChild(c); return c; });
+    const hit = el("rect", { x: f.p.l, y: f.p.t, width: f.W - f.p.l - f.p.r, height: f.H - f.p.t - f.p.b, fill: "transparent" });
+    g.appendChild(hit);
+    const move = (ev) => {
+      const r = f.svg.getBoundingClientRect();
+      const cx = ev.touches ? ev.touches[0].clientX : ev.clientX;
+      const sx = ((cx - r.left) / r.width) * f.W;
+      const target = x0 + ((sx - f.p.l) / (f.W - f.p.l - f.p.r)) * (x1 - x0);
+      let rows = "", ty = Infinity, px = 0;
+      series.forEach((s, i) => {
+        let bi = 0, bd = Infinity;
+        s.pts.forEach((p, j) => { const dd = Math.abs(ym(p.d) - target); if (dd < bd) { bd = dd; bi = j; } });
+        const p = s.pts[bi];
+        dots[i].setAttribute("cx", X(p.d)); dots[i].setAttribute("cy", Y(p.v)); dots[i].setAttribute("opacity", 1);
+        ty = Math.min(ty, Y(p.v)); px = Math.max(px, X(p.d));
+        rows += `<div class="row"><span><i style="background:${css(s.color)}"></i> ${s.name}</span><span>+${p.v.toFixed(1)}%</span></div>`;
+      });
+      cross.setAttribute("x1", px); cross.setAttribute("x2", px); cross.setAttribute("opacity", 0.9);
+      const lbl = series[0].pts.reduce((a, b) => (Math.abs(ym(b.d) - target) < Math.abs(ym(a.d) - target) ? b : a));
+      showTip(f, host, px, ty, `<b>${lbl.d}</b>${rows}`);
+    };
+    const leave = () => { cross.setAttribute("opacity", 0); dots.forEach((d) => d.setAttribute("opacity", 0)); hideTip(f); };
+    hit.addEventListener("mousemove", move);
+    hit.addEventListener("touchmove", move, { passive: true });
+    hit.addEventListener("mouseleave", leave);
+    hit.addEventListener("touchend", leave);
+  }
+
+  /* ---------- cost erosion, per trade ---------- */
+  const COSTS = [
+    { k: "India · gross price move", v: 0.341, c: "--s3", n: "before any cost" },
+    { k: "India · after fees & slippage", v: 0.293, c: "--s3", n: "STT, exchange, stamp, brokerage" },
+    { k: "India · after cost of carry", v: 0.193, c: "--neg", n: "long futures basis convergence" },
+    { k: "US · gross price move", v: 0.423, c: "--s1", n: "before any cost" },
+    { k: "US · after all costs", v: 0.409, c: "--s1", n: "$4 round turn + a tick a side" }
+  ];
+  function costBars(hostId) {
+    const host = document.getElementById(hostId);
+    const f = frame(host, 250, { l: 232, r: 96, t: 10, b: 34 });
+    const g = el("g"); f.svg.appendChild(g);
+    const x1v = 0.45;
+    const X = (v) => f.p.l + (f.W - f.p.l - f.p.r) * (v / x1v);
+    const rowH = (f.H - f.p.t - f.p.b) / COSTS.length;
+    for (let v = 0; v <= x1v; v += 0.1) {
+      g.appendChild(el("line", { class: "gridline", x1: X(v), x2: X(v), y1: f.p.t, y2: f.H - f.p.b }));
+      const t = el("text", { class: "tick", x: X(v), y: f.H - f.p.b + 17, "text-anchor": "middle" });
+      t.textContent = v.toFixed(1) + "%"; g.appendChild(t);
+    }
+    COSTS.forEach((d, i) => {
+      const y = f.p.t + rowH * i + rowH / 2;
+      const h = Math.min(rowH - 10, 20);
+      const r = el("rect", { x: f.p.l, y: y - h / 2, width: Math.max(X(d.v) - f.p.l, 2), height: h, fill: css(d.c), rx: 3, style: "cursor:crosshair" });
+      g.appendChild(r);
+      const lb = el("text", { class: "tick", x: f.p.l - 10, y: y + 3.5, "text-anchor": "end", style: "font-size:11px" });
+      lb.textContent = d.k; g.appendChild(lb);
+      const vl = el("text", { class: "dlabel", x: X(d.v) + 9, y: y + 4, fill: css(d.c) });
+      vl.textContent = "+" + d.v.toFixed(3) + "%"; g.appendChild(vl);
+      const enter = () => showTip(f, host, X(d.v), y - h / 2, `<b>${d.k}</b><div class="row"><span>${d.n}</span><span>+${d.v.toFixed(3)}%</span></div>`);
+      r.addEventListener("mouseenter", enter); r.addEventListener("mousemove", enter);
+      r.addEventListener("mouseleave", () => hideTip(f));
+    });
+    g.appendChild(el("line", { class: "axisline", x1: f.p.l, x2: f.p.l, y1: f.p.t, y2: f.H - f.p.b }));
+    const xl = el("text", { class: "tick", x: (f.p.l + f.W - f.p.r) / 2, y: f.H - 3, "text-anchor": "middle" });
+    xl.textContent = "mean return per trade, % of notional"; g.appendChild(xl);
+  }
+
+  /* ---------- India yearly bars ---------- */
+  function indiaYears(hostId, rows) {
+    const host = document.getElementById(hostId);
+    const f = frame(host, 230, { l: 54, r: 20, t: 16, b: 30 });
+    const g = el("g"); f.svg.appendChild(g);
+    const vals = rows.map((r) => r.net_pct);
+    const sc = niceScale(Math.min(...vals), Math.max(...vals), 4);
+    const y0 = sc.y0, y1 = sc.y1;
+    const Y = (v) => f.p.t + (f.H - f.p.t - f.p.b) * (1 - (v - y0) / (y1 - y0));
+    const iw = (f.W - f.p.l - f.p.r) / rows.length;
+    const bw = Math.min(iw - 8, 34);
+    yAxis(f, g, sc, (v) => v.toFixed(0) + "%");
+    g.appendChild(el("line", { class: "axisline", x1: f.p.l, x2: f.W - f.p.r, y1: Y(0), y2: Y(0) }));
+    rows.forEach((r, i) => {
+      const cx = f.p.l + iw * (i + 0.5);
+      const yv = Y(r.net_pct), yz = Y(0);
+      const top = Math.min(yv, yz), h = Math.max(Math.abs(yv - yz), 1.5);
+      const col = css(r.net_pct >= 0 ? "--s3" : "--neg");
+      const rect = el("rect", { x: cx - bw / 2, y: top, width: bw, height: h, fill: col, rx: 3, style: "cursor:crosshair" });
+      g.appendChild(rect);
+      if (i % 2 === 0) {
+        const t = el("text", { class: "tick", x: cx, y: f.H - f.p.b + 17, "text-anchor": "middle" });
+        t.textContent = "'" + String(r.year).slice(2); g.appendChild(t);
+      }
+      const inr = (v) => (v < 0 ? "−₹" : "₹") + Math.round(Math.abs(v)).toLocaleString("en-IN");
+      const enter = () => showTip(f, host, cx, top, `<b>${r.year}</b>
+        <div class="row"><span>% of notional</span><span>${pct(r.net_pct)}</span></div>
+        <div class="row"><span>Net, 1 lot each</span><span>${inr(r.net_ccy)}</span></div>
+        <div class="row"><span>Trades</span><span>${r.trades}</span></div>
+        <div class="row"><span>Win rate</span><span>${(r.win_rate * 100).toFixed(0)}%</span></div>`);
+      rect.addEventListener("mouseenter", enter); rect.addEventListener("mousemove", enter);
+      rect.addEventListener("mouseleave", () => hideTip(f));
+    });
+  }
+
+  /* ---------- tables ---------- */
+  const ROBUST = [
+    ["As stated", 298, .782, 2.35, 314790, -41683, true],
+    ["Next-open entry", 296, .770, 2.11, 280145, -66003],
+    ["Cutler's RSI, not Wilder's", 764, .724, 1.62, 361352, -59374],
+    ["Entry RSI < 5", 167, .772, 2.30, 209840, -48033],
+    ["Entry RSI < 15", 419, .754, 2.21, 383864, -41683],
+    ["Exit RSI > 60", 303, .706, 2.23, 253070, -25378],
+    ["Exit RSI > 80", 283, .756, 1.93, 305093, -78605],
+    ["Max hold 5 sessions", 313, .693, 1.83, 242875, -47414],
+    ["Max hold 20 sessions", 294, .782, 2.38, 312907, -54430],
+    ["100-day SMA filter", 254, .783, 2.38, 247309, -30033],
+    ["50-day SMA filter", 195, .785, 2.68, 189525, -18763]
+  ];
+
+  function tables(rows) {
+    const rb = document.getElementById("tb-robust");
+    ROBUST.forEach((r) => {
+      const tr = document.createElement("tr");
+      if (r[6]) tr.className = "total";
+      tr.innerHTML = `<td>${r[0]}</td><td>${r[1]}</td><td>${(r[2] * 100).toFixed(1)}%</td>
+        <td>${r[3].toFixed(2)}</td><td>${usd(r[4])}</td><td class="neg">${usd(r[5])}</td>`;
+      rb.appendChild(tr);
+    });
+
+    const yb = document.getElementById("tb-years");
+    let tot = 0, totT = 0;
+    rows.forEach((r) => {
+      tot += r.net_usd; totT += r.trades;
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${r.year}${r.year === 2026 ? " <span style=\"color:var(--muted)\">YTD</span>" : ""}</td>
+        <td>${r.trades}</td><td>${(r.win_rate * 100).toFixed(0)}%</td>
+        <td class="${r.net_usd >= 0 ? "pos" : "neg"}">${usd(r.net_usd)}</td>
+        <td class="${r.sum_ret_pct >= 0 ? "pos" : "neg"}">${pct(r.sum_ret_pct)}</td>
+        <td>${usdK(r.mean_notional)}</td>`;
+      yb.appendChild(tr);
+    });
+    const tr = document.createElement("tr");
+    tr.className = "total";
+    tr.innerHTML = `<td>2009&ndash;2026</td><td>${totT}</td><td>78%</td>
+      <td class="pos">${usd(tot)}</td><td class="pos">+130.4%</td><td>&mdash;</td>`;
+    yb.appendChild(tr);
+  }
+
+  function draw() {
+    lineChart("c-equity", [
+      { name: "Dip Buy strategy", color: "--s1", pts: DATA.equity },
+      { name: "Buy and hold", color: "--s2", pts: DATA.buy_hold }
+    ]);
+    barChart("c-yeardollars", DATA.per_year, "net_usd", (v) => (v === 0 ? "$0" : usdK(v)), "Net P&L, dollars per 1 ES + 1 NQ", 220);
+    barChart("c-yearpct", DATA.per_year, "sum_ret_pct", (v) => v.toFixed(0) + "%", "Same years, as % of notional risked", 220);
+    underwater("c-underwater", DATA.underwater);
+    histogram("c-hist", DATA.trades);
+    pctLines("c-intl", [
+      { name: "US · ES + NQ", color: "--s1", pts: INDIA.curve_us },
+      { name: "India · Nifty + Bank Nifty", color: "--s3", pts: INDIA.curve_india }
+    ]);
+    costBars("c-costs");
+    indiaYears("c-indiayear", INDIA.year_india);
+  }
+
+  document.addEventListener("DOMContentLoaded", () => { tables(DATA.per_year); draw(); });
+  let t;
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  const redraw = () => { clearTimeout(t); t = setTimeout(draw, 60); };
+  mq.addEventListener("change", redraw);
+  new MutationObserver(redraw).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+})();
+</script>

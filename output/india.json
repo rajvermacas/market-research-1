@@ -1,0 +1,316 @@
+{
+  "note": "cash indices used as futures proxies; carry and full statutory costs charged",
+  "nifty": {
+    "label": "Nifty 50",
+    "currency": "INR",
+    "trades": 146,
+    "win_rate": 0.6438356164383562,
+    "profit_factor": 1.340730052118714,
+    "net_ccy": 277372.1703881069,
+    "sum_ret_pct": 51.00861281425253,
+    "mean_ret_pct": 0.3493740603715927,
+    "t_stat": 2.0407394593669936,
+    "p_value": 0.04309093578853189,
+    "avg_win_ccy": 11610.901361878035,
+    "avg_loss_ccy": -15654.856877469778,
+    "worst_ccy": -102712.77006667363,
+    "worst_mae_pct": -12.743370816278388,
+    "avg_bars": 4.732876712328767,
+    "max_dd_ccy": -124730.28548208936,
+    "first": "2009-06-18",
+    "last": "2026-02-18",
+    "cost_share_of_gross_pct": 10.487220343969291
+  },
+  "banknifty": {
+    "label": "Nifty Bank",
+    "currency": "INR",
+    "trades": 141,
+    "win_rate": 0.6099290780141844,
+    "profit_factor": 1.0481738099872293,
+    "net_ccy": 50297.82077147649,
+    "sum_ret_pct": 46.946176085510885,
+    "mean_ret_pct": 0.3329516034433396,
+    "t_stat": 1.4985320600463856,
+    "p_value": 0.1362465257693561,
+    "avg_win_ccy": 12725.446414659571,
+    "avg_loss_ccy": -18983.464925259035,
+    "worst_ccy": -153302.17600344121,
+    "worst_mae_pct": -29.268561901646407,
+    "avg_bars": 4.9361702127659575,
+    "max_dd_ccy": -176204.62161202752,
+    "first": "2009-06-08",
+    "last": "2026-03-17",
+    "cost_share_of_gross_pct": 8.657925287888697
+  },
+  "portfolio": {
+    "trades": 287,
+    "win_rate": 0.627177700348432,
+    "net_inr": 327669.9911595833,
+    "profit_factor": 1.1763427080135538,
+    "max_dd_inr": -267255.74188513926,
+    "sum_ret_pct": 97.95478889976341
+  },
+  "cost_drag": {
+    "gross_price_move": {
+      "mean_net_ret_pct_per_trade": 0.3413058846681652,
+      "sum_net_ret_pct": 97.95478889976341,
+      "net_inr": 713589.8217773438,
+      "win_rate": 0.6655052264808362,
+      "profit_factor": 1.4273276835760969
+    },
+    "after_fees_and_slippage": {
+      "mean_net_ret_pct_per_trade": 0.29250305337023946,
+      "sum_net_ret_pct": 83.94837631725873,
+      "net_inr": 604511.1588443165,
+      "win_rate": 0.6550522648083623,
+      "profit_factor": 1.3540507469313054
+    },
+    "after_fees_and_carry": {
+      "mean_net_ret_pct_per_trade": 0.1927795867478182,
+      "sum_net_ret_pct": 55.32774139662382,
+      "net_inr": 344589.9911595833,
+      "win_rate": 0.6341463414634146,
+      "profit_factor": 1.1861046398976112
+    },
+    "carry_cost_pct_per_trade": 0.0997234666224213,
+    "total_cost_pct_per_trade": 0.1586119601600604
+  },
+  "random_entry": {
+    "nifty": {
+      "actual_sum_ret_pct": 51.00861281425253,
+      "random_mean_sum_ret_pct": 29.251780922585464,
+      "percentile_of_actual": 80.35
+    },
+    "banknifty": {
+      "actual_sum_ret_pct": 46.946176085510885,
+      "random_mean_sum_ret_pct": 38.06685040993231,
+      "percentile_of_actual": 59.699999999999996
+    }
+  },
+  "vs_buy_hold": {
+    "NIFTY": {
+      "buy_hold_pct": 293.46147283903554,
+      "buy_hold_inr": 1352347.5219726562,
+      "strategy_inr": 277372.1703881069,
+      "strategy_sum_ret_pct": 51.00861281425253,
+      "exposure_pct": 15.528089887640451
+    },
+    "BANKNIFTY": {
+      "buy_hold_pct": 480.46289373059744,
+      "buy_hold_inr": 1427731.5234375,
+      "strategy_inr": 50297.82077147649,
+      "strategy_sum_ret_pct": 46.946176085510885,
+      "exposure_pct": 15.587905935050392
+    }
+  },
+  "per_year": {
+    "2009": {
+      "trades": 14.0,
+      "net_inr": 60016.36207078288,
+      "sum_ret_pct": 24.96,
+      "win_rate": 0.786
+    },
+    "2010": {
+      "trades": 18.0,
+      "net_inr": -5464.221405834147,
+      "sum_ret_pct": 4.33,
+      "win_rate": 0.667
+    },
+    "2011": {
+      "trades": 6.0,
+      "net_inr": -51168.211774622396,
+      "sum_ret_pct": -11.3,
+      "win_rate": 0.333
+    },
+    "2012": {
+      "trades": 16.0,
+      "net_inr": 26528.36155557024,
+      "sum_ret_pct": 9.16,
+      "win_rate": 0.688
+    },
+    "2013": {
+      "trades": 16.0,
+      "net_inr": -40423.990222212386,
+      "sum_ret_pct": -7.6,
+      "win_rate": 0.438
+    },
+    "2014": {
+      "trades": 19.0,
+      "net_inr": 74991.25298808582,
+      "sum_ret_pct": 17.73,
+      "win_rate": 0.632
+    },
+    "2015": {
+      "trades": 14.0,
+      "net_inr": 1482.5826687488352,
+      "sum_ret_pct": 2.91,
+      "win_rate": 0.5
+    },
+    "2016": {
+      "trades": 14.0,
+      "net_inr": 76045.44142749035,
+      "sum_ret_pct": 15.38,
+      "win_rate": 0.786
+    },
+    "2017": {
+      "trades": 17.0,
+      "net_inr": 78294.12155294504,
+      "sum_ret_pct": 14.27,
+      "win_rate": 0.647
+    },
+    "2018": {
+      "trades": 19.0,
+      "net_inr": -99022.63633612538,
+      "sum_ret_pct": -8.89,
+      "win_rate": 0.579
+    },
+    "2019": {
+      "trades": 17.0,
+      "net_inr": 24735.38784883417,
+      "sum_ret_pct": 5.01,
+      "win_rate": 0.647
+    },
+    "2020": {
+      "trades": 15.0,
+      "net_inr": -78516.35447500861,
+      "sum_ret_pct": -6.71,
+      "win_rate": 0.733
+    },
+    "2021": {
+      "trades": 24.0,
+      "net_inr": 151598.02741306106,
+      "sum_ret_pct": 20.21,
+      "win_rate": 0.708
+    },
+    "2022": {
+      "trades": 13.0,
+      "net_inr": -56933.16990671549,
+      "sum_ret_pct": -2.26,
+      "win_rate": 0.462
+    },
+    "2023": {
+      "trades": 18.0,
+      "net_inr": 21491.514193565392,
+      "sum_ret_pct": 4.45,
+      "win_rate": 0.611
+    },
+    "2024": {
+      "trades": 23.0,
+      "net_inr": 159735.3739925344,
+      "sum_ret_pct": 13.52,
+      "win_rate": 0.565
+    },
+    "2025": {
+      "trades": 19.0,
+      "net_inr": 135174.02479513254,
+      "sum_ret_pct": 10.14,
+      "win_rate": 0.684
+    },
+    "2026": {
+      "trades": 5.0,
+      "net_inr": -150893.875226649,
+      "sum_ret_pct": -7.35,
+      "win_rate": 0.6
+    }
+  },
+  "green_years": "11/18",
+  "head_to_head": {
+    "US_ES_NQ": {
+      "window": "2008-2026",
+      "trades": 300,
+      "win_rate": 0.78,
+      "mean_ret_pct": 0.42250957227810215,
+      "sum_ret_pct": 126.75287168343064,
+      "t_stat": 4.846881275608935,
+      "profit_factor": 2.3144360768532604,
+      "avg_bars": 4.483333333333333
+    },
+    "India_NIFTY_BANKNIFTY": {
+      "window": "2008-2026",
+      "trades": 287,
+      "win_rate": 0.627177700348432,
+      "mean_ret_pct": 0.3413058846681652,
+      "sum_ret_pct": 97.95478889976341,
+      "t_stat": 2.4484374904526884,
+      "profit_factor": 1.1763427080135538,
+      "avg_bars": 4.832752613240418
+    }
+  },
+  "breadth_gross": {
+    "NIFTY": {
+      "trades": 146,
+      "win_rate": 0.684931506849315,
+      "mean_gross_ret_pct": 0.3493740603715927,
+      "t_stat": 2.0407394593669936,
+      "p_value": 0.04309093578853189
+    },
+    "BANKNIFTY": {
+      "trades": 141,
+      "win_rate": 0.6453900709219859,
+      "mean_gross_ret_pct": 0.3329516034433396,
+      "t_stat": 1.4985320600463856,
+      "p_value": 0.1362465257693561
+    },
+    "NIFTYIT": {
+      "trades": 108,
+      "win_rate": 0.7407407407407407,
+      "mean_gross_ret_pct": 0.29713974015879224,
+      "t_stat": 1.1129323229395816,
+      "p_value": 0.2682315460254939
+    },
+    "SENSEX": {
+      "trades": 144,
+      "win_rate": 0.6805555555555556,
+      "mean_gross_ret_pct": 0.24203405578001747,
+      "t_stat": 1.3519374605416032,
+      "p_value": 0.17852974188266513
+    }
+  },
+  "worst_trades": [
+    {
+      "entry_date": "2026-03-02 00:00:00",
+      "exit_date": "2026-03-17 00:00:00",
+      "symbol": "BANKNIFTY",
+      "net_usd": -153302.17600344121,
+      "ret_pct": -0.08294915774253457,
+      "mae_pct": -0.10998560606307874,
+      "exit_reason": "time_stop"
+    },
+    {
+      "entry_date": "2020-02-27 00:00:00",
+      "exit_date": "2020-03-13 00:00:00",
+      "symbol": "BANKNIFTY",
+      "net_usd": -152944.98425511905,
+      "ret_pct": -0.1663149959005532,
+      "mae_pct": -0.29268561901646406,
+      "exit_reason": "time_stop"
+    },
+    {
+      "entry_date": "2020-02-25 00:00:00",
+      "exit_date": "2020-03-11 00:00:00",
+      "symbol": "NIFTY",
+      "net_usd": -102712.77006667363,
+      "ret_pct": -0.11353715115821886,
+      "mae_pct": -0.12743370816278388,
+      "exit_reason": "time_stop"
+    },
+    {
+      "entry_date": "2026-01-08 00:00:00",
+      "exit_date": "2026-01-23 00:00:00",
+      "symbol": "NIFTY",
+      "net_usd": -66815.46821725494,
+      "ret_pct": -0.03200541144892496,
+      "mae_pct": -0.036984750561686146,
+      "exit_reason": "time_stop"
+    },
+    {
+      "entry_date": "2018-09-21 00:00:00",
+      "exit_date": "2018-10-08 00:00:00",
+      "symbol": "NIFTY",
+      "net_usd": -61765.04591703171,
+      "ret_pct": -0.07134907095496144,
+      "mae_pct": -0.08477885434634347,
+      "exit_reason": "time_stop"
+    }
+  ]
+}
