@@ -12,7 +12,10 @@ Credentials come from the environment ONLY — never a CLI argument (those land 
 history and in `ps` output) and never a file inside the repo:
 
     export KITE_API_KEY=...
-    export KITE_ACCESS_TOKEN=...      # from the daily login flow
+    export KITE_API_SECRET=...
+
+    python scripts/kite_download.py --login              # open the URL it prints
+    echo "<request_token>" | python scripts/kite_download.py --exchange
 
 The access token expires every day and refreshing it needs an interactive login, so this
 is a run-when-you-mean-to script rather than something to put on a schedule.
@@ -31,6 +34,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import hashlib
 import io
 import os
 import sys
@@ -57,12 +61,57 @@ WINDOW_DAYS = {"minute": 60, "3minute": 100, "5minute": 100, "10minute": 100,
 REQUESTS_PER_SECOND = 3.0
 
 
+# The access token lives outside the repository, mode 0600. It expires daily, so this is
+# a cache rather than a stored secret — but it is still never written inside a git tree.
+TOKEN_FILE = Path.home() / ".kite" / "access_token"
+
+
+def login_url() -> str:
+    key = os.environ.get("KITE_API_KEY")
+    if not key:
+        sys.exit("Set KITE_API_KEY in the environment.")
+    return f"https://kite.zerodha.com/connect/login?v=3&api_key={key}"
+
+
+def exchange_request_token() -> None:
+    """Trade a one-time request_token for a daily access_token.
+
+    The request token is read from stdin, never from argv: an argument would be visible
+    in `ps` and recorded in shell history. checksum = SHA-256(api_key + request_token +
+    api_secret), per Kite's login flow.
+    """
+    key, secret = os.environ.get("KITE_API_KEY"), os.environ.get("KITE_API_SECRET")
+    if not key or not secret:
+        sys.exit("Set KITE_API_KEY and KITE_API_SECRET in the environment.")
+    request_token = sys.stdin.read().strip()
+    if not request_token:
+        sys.exit("No request_token on stdin.")
+    checksum = hashlib.sha256(f"{key}{request_token}{secret}".encode()).hexdigest()
+    response = requests.post(f"{API}/session/token", headers={"X-Kite-Version": "3"},
+                             data={"api_key": key, "request_token": request_token,
+                                   "checksum": checksum}, timeout=60)
+    if response.status_code != 200:
+        sys.exit(f"Exchange failed ({response.status_code}): {response.text[:300]}\n"
+                 f"A request_token is single-use and expires within minutes — if it was "
+                 f"already spent, log in again for a fresh one.")
+    data = response.json()["data"]
+    TOKEN_FILE.parent.mkdir(parents=True, exist_ok=True)
+    TOKEN_FILE.write_text(data["access_token"])
+    TOKEN_FILE.chmod(0o600)
+    print(f"access token stored in {TOKEN_FILE} (mode 0600), valid until tomorrow's "
+          f"pre-open")
+    print(f"  logged in as {data.get('user_name', '?')} ({data.get('user_id', '?')})")
+
+
 def credentials() -> tuple[str, str]:
-    key, token = os.environ.get("KITE_API_KEY"), os.environ.get("KITE_ACCESS_TOKEN")
+    key = os.environ.get("KITE_API_KEY")
+    token = os.environ.get("KITE_ACCESS_TOKEN")
+    if not token and TOKEN_FILE.exists():
+        token = TOKEN_FILE.read_text().strip()
     if not key or not token:
-        sys.exit("Set KITE_API_KEY and KITE_ACCESS_TOKEN in the environment.\n"
-                 "Do not pass them as arguments — they would be visible in `ps` and "
-                 "in your shell history.")
+        sys.exit("Set KITE_API_KEY, then run --login and --exchange to mint an access "
+                 "token.\nNever pass credentials as arguments — they would be visible "
+                 "in `ps` and in your shell history.")
     return key, token
 
 
@@ -162,7 +211,18 @@ def main() -> int:
                         help="fetch 5 liquid symbols only and compare against the Yahoo "
                              "panel — run this before committing hours to a full pull")
     parser.add_argument("--fresh", action="store_true", help="ignore .cache checkpoints")
+    parser.add_argument("--login", action="store_true",
+                        help="print the Kite login URL and exit")
+    parser.add_argument("--exchange", action="store_true",
+                        help="read a request_token from STDIN and store the access token")
     args = parser.parse_args()
+
+    if args.login:
+        print(login_url())
+        return 0
+    if args.exchange:
+        exchange_request_token()
+        return 0
 
     start = dt.date.fromisoformat(args.start)
     end = dt.date.fromisoformat(args.end) if args.end else dt.datetime.now(IST).date()
