@@ -405,8 +405,17 @@ def simulate_shared_stop(trades: pl.DataFrame, panels: dict, slots: int, cost: f
     return equity, taken, skipped, blocked, max_stacked, frame, unrealised
 
 
-def performance(equity: np.ndarray, bars: int) -> tuple[float, float]:
-    years = bars / BARS_PER_YEAR
+def elapsed_years(grid: np.ndarray) -> float:
+    """Calendar years between the first and last bar, from the timestamps themselves.
+
+    A bars-per-year constant cannot be right for two panels with different session
+    coverage, and it silently miscounts whenever the grid drops timestamps (the strategy
+    grid holds only signal symbols, so it is 17 bars shorter than the full union).
+    """
+    return float(grid[-1] - grid[0]) / (365.25 * 86400 * 1_000_000)
+
+
+def performance(equity: np.ndarray, years: float) -> tuple[float, float]:
     cagr = equity[-1] ** (1 / years) - 1
     drawdown = equity / np.maximum.accumulate(equity) - 1
     return cagr, drawdown.min()
@@ -493,6 +502,12 @@ def main() -> int:
         ema("rsi_h", args.ema_span).over("symbol").alias("rsi_ema"),
         pl.col("rsi_h").shift(1).over("symbol").alias("rsi_prev"),
     )
+    # The same guard the higher timeframes get. The screener has always required
+    # period*3 + ema_span hourly bars before reading these; the backtest had not, and 21
+    # signals fired on an RSI still converging from its zero seed.
+    settle = args.rsi_period * 3 + args.ema_span
+    frame = (frame.with_columns(pl.int_range(pl.len()).over("symbol").alias("_seen"))
+             .filter(pl.col("_seen") >= settle).drop("_seen"))
     frame = attach_htf(frame, daily, args.rsi_period)
     if args.min_close_pos > 0:
         rng = pl.col("high") - pl.col("low")
@@ -543,6 +558,7 @@ def main() -> int:
         [pl.col(c).forward_fill().backward_fill() for c in prices.columns if c != "datetime"]
     )
     bars = prices.height
+    years = elapsed_years(prices["datetime"].dt.epoch("us").to_numpy())
 
     panels = None
     if args.shared_stop:
@@ -568,7 +584,8 @@ def main() -> int:
     wide = wide.with_columns(
         [pl.col(c).forward_fill() for c in wide.columns if c != "datetime"]
     )
-    matrix = wide.select([c for c in wide.columns if c != "datetime"]).to_numpy()
+    cols = [c for c in wide.columns if c != "datetime"]
+    matrix = wide.select(cols).to_numpy()
     listed = ~np.isnan(matrix[0])
     normalised = matrix[:, listed] / matrix[0, listed]
     # The *median* constituent, not the mean. A handful of micro caps in this panel show
@@ -577,24 +594,32 @@ def main() -> int:
     # returns. They are reported by validate_data.py and left in the data, but an
     # equal-weight mean of ratios lets two such names dictate the whole benchmark.
     # Equal-weight buy-and-hold is the MEAN of normalised prices: a rupee into each name
-    # at t0, held. The median is the path of the median stock — a different object, not
-    # tradeable, and always lower because cross-sectional returns are right-skewed.
-    # Reporting the median as "buy-and-hold" understated the benchmark by ~7 points of
-    # CAGR and manufactured most of the strategy's apparent edge. Outliers are handled by
-    # winsorising the terminal ratio, which costs a quarter of a point, not seven.
-    terminal = normalised[-1]
-    lo, hi = np.nanpercentile(terminal, [1, 99])
-    keep = np.isnan(terminal) | ((terminal >= lo) & (terminal <= hi))
-    bench = np.nanmean(normalised[:, keep], axis=1)
-    bench_cagr, bench_dd = performance(bench, len(bench))
+    # at t0, held. Reported raw. An earlier version trimmed the 1st/99th percentile of the
+    # TERMINAL value, which is outcome-based lookahead — you cannot know at t0 which names
+    # will end in the tail — and it deleted five genuine 2023-26 multibaggers (MCX 9.4x,
+    # WOCKPHARMA 8.0x, BSE 7.9x) to remove two data errors. It cost 1.44 points of control
+    # CAGR, not the quarter-point claimed for it, and every point came out of the
+    # benchmark, flattering the strategy.
+    #
+    # The two data errors are real and are removed by name instead: an unadjusted split or
+    # demerger shows up as a single hourly bar moving more than 50%, which no traded price
+    # does. That is a detectable defect, not an outcome.
+    step = normalised[1:] / np.where(normalised[:-1] == 0, np.nan, normalised[:-1])
+    with np.errstate(invalid="ignore"):
+        artefact = np.nanmax(np.abs(step - 1.0), axis=0) > 0.50
+    bench = np.nanmean(normalised[:, ~artefact], axis=1)
+    bench_cagr, bench_dd = performance(bench, years)
     raw = np.nanmean(normalised, axis=1)
-    raw_cagr, raw_dd = performance(raw, len(raw))
-    med = np.nanmedian(normalised, axis=1)
-    med_cagr, med_dd = performance(med, len(med))
+    raw_cagr, raw_dd = performance(raw, years)
+    med_cagr, med_dd = performance(np.nanmedian(normalised, axis=1), years)
+    names = [c for c, bad in zip(np.array(cols)[listed], artefact) if bad]
     print(f"control basket: {int(listed.sum()):,} symbols trading at the window start")
-    print(f"  equal-weight, winsorised 1/99 : {bench_cagr * 100:+.2f}% / {bench_dd * 100:.2f}%"
-          f"   (unwinsorised {raw_cagr * 100:+.2f}% / {raw_dd * 100:.2f}%)")
-    print(f"  median constituent, for reference: {med_cagr * 100:+.2f}% / {med_dd * 100:.2f}%")
+    print(f"  equal-weight buy-and-hold      : {raw_cagr * 100:+.2f}% / {raw_dd * 100:.2f}%")
+    print(f"  ... excluding {len(names)} corporate-action artefacts: "
+          f"{bench_cagr * 100:+.2f}% / {bench_dd * 100:.2f}%"
+          + (f"  ({', '.join(names[:5])})" if names else ""))
+    print(f"  median constituent (NOT buy-and-hold, for reference only): "
+          f"{med_cagr * 100:+.2f}% / {med_dd * 100:.2f}%")
 
     print(f"\nwindow {prices['datetime'][0]} -> {prices['datetime'][-1]}"
           f"  ({bars:,} hourly bars, {bars / BARS_PER_YEAR:.2f} years)")
@@ -617,7 +642,7 @@ def main() -> int:
         else:
             equity, taken, skipped, blocked, max_stacked, unrealised = simulate(
                 trades, prices, args.slots, cost, args.per_symbol)
-        cagr, maxdd = performance(equity, bars)
+        cagr, maxdd = performance(equity, years)
         closed = trades.filter(pl.col("outcome") != "open")
         wins = closed.filter(pl.col("ret") > 0).height
         hit = {o: trades.filter(pl.col("outcome") == o).height for o in ("target", "stop", "open")}
