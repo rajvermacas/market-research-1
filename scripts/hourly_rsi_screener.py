@@ -201,7 +201,8 @@ def main() -> int:
     daily = (
         pl.scan_parquet(DAILY_GLOB, hive_partitioning=True)
         .filter(pl.col("symbol").is_in(symbols))
-        .select("symbol", "date", "close", "volume")
+        # resample() aggregates full OHLCV, so the weekly/monthly bars need every column
+        .select("symbol", "date", "open", "high", "low", "close", "volume")
         .collect()
     )
     hourly = (

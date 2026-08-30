@@ -9,12 +9,14 @@ and backtesting.
 | Path | Contents |
 | --- | --- |
 | `data/ohlcv/daily/year=*/data.parquet` | The price panel — `symbol, date, open, high, low, close, adj_close, volume` (+ `year` from the partition path) |
-| `data/ohlcv/_coverage_daily.csv` | Per-symbol bar count and first/last date |
+| `data/ohlcv/hourly/year=*/data.parquet` | Hourly bars — `symbol, datetime` (Asia/Kolkata)`, open, high, low, close, volume`; no `adj_close` |
+| `data/ohlcv/_coverage_*.csv` | Per-symbol bar count and first/last timestamp, per interval |
 | `data/ohlcv/_manifest.json` | Snapshot provenance, stats and caveats — the source of truth |
 | `data/universe/nse_universe.parquet` | Every NSE main-board symbol: company, series, ISIN, listing date, face value, industry + Nifty index membership flags |
 | `data/universe/nse_universe.csv` | Same, as CSV for quick eyeballing |
 | `scripts/download_market_data.py` | Rebuilds everything above from NSE + Yahoo Finance |
 | `scripts/validate_data.py` | Structural and data-quality checks |
+| `scripts/hourly_rsi_screener.py` | Hourly RSI re-ignition screen under a daily/weekly/monthly trend filter |
 
 ### The data present
 
@@ -30,6 +32,24 @@ refresh and always reflects what is actually on disk.
 | Trading sessions | 6,657 |
 | On disk | 131 MB across 27 yearly Parquet files (largest 9.6 MB) |
 | Compression | zstd |
+
+And the hourly panel, which reaches back only as far as Yahoo serves intraday bars:
+
+| | |
+| --- | --- |
+| Interval | Hourly (`1h`) |
+| Rows | 9,901,435 |
+| Symbols with data | 2,559 of 2,559 |
+| Range | 2023-09-18 09:15 → 2026-08-28 15:15 IST (5,068 hourly bars) |
+| Bars per symbol | median 5,003 |
+| On disk | 132 MB across 4 yearly Parquet files (largest 47 MB) |
+| Columns | `symbol, datetime, open, high, low, close, volume` — **no `adj_close`** |
+
+Two differences from the daily panel matter when you use it. There is no `adj_close`, because
+Yahoo does not dividend-adjust intraday bars — the value it returns is a verbatim copy of `close`,
+so shipping it would invite silently wrong total-return math. And 13.4% of hourly bars have zero
+volume (against 4.0% daily), which is what a thinly traded name looks like inside the session
+rather than a data fault.
 
 History per symbol is very uneven — this is a full-market panel, not an index panel:
 

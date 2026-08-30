@@ -33,6 +33,8 @@ scripts/validate_data.py                  structural, quality and cross-interval
 scripts/screener.py                       pullback-in-uptrend screen over the daily panel
 scripts/ema_support.py                    how reliably each name holds its daily 20/50 EMA
 scripts/n_pattern.py                      impulse/pullback/resumption "N" on a rising 10 EMA
+scripts/hourly_rsi_screener.py            hourly RSI cross above 60 under a daily/weekly/monthly
+                                          RSI > 60 regime filter
 ```
 
 ## Conventions
