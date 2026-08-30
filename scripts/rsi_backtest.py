@@ -415,6 +415,15 @@ def main() -> int:
                         help="target as a multiple of risk; several sweeps them (default 1..5)")
     parser.add_argument("--slots", type=int, default=10,
                         help="max concurrent positions (default 10)")
+    parser.add_argument("--min-close-pos", type=float, default=0.0,
+                        help="marubozu floor on the signal candle, (close-low)/(high-low); "
+                             "0 disables. The screener defaults to 0.70")
+    parser.add_argument("--hourly-dir", default="hourly",
+                        help="which panel under data/ohlcv/ to trade (e.g. 60minute_kite)")
+    parser.add_argument("--daily-from-hourly", action="store_true",
+                        help="derive daily bars by resampling the hourly panel instead of "
+                             "reading the Yahoo daily panel — keeps one adjustment "
+                             "convention throughout when trading a Kite panel")
     parser.add_argument("--skip-daily-rsi", action="store_true",
                         help="drop the daily RSI > htf-min condition, keeping only the "
                              "weekly and monthly regime filters")
@@ -443,12 +452,24 @@ def main() -> int:
              .filter(pl.col("symbol").is_in(symbols))
              .select("symbol", "date", "open", "high", "low", "close", "volume")
              .collect())
-    hourly = (pl.scan_parquet(HOURLY_GLOB, hive_partitioning=True)
+    hourly_glob = str(REPO_ROOT / "data" / "ohlcv" / args.hourly_dir / "**" / "*.parquet")
+    hourly = (pl.scan_parquet(hourly_glob, hive_partitioning=True)
               .filter(pl.col("symbol").is_in(symbols))
               .select("symbol", "datetime", "open", "high", "low", "close")
               .collect())
+    if args.daily_from_hourly:
+        # One adjustment convention throughout. Kite back-adjusts corporate actions and the
+        # Yahoo daily panel does not, so mixing them would put a demerger into one timeframe
+        # and not the other, and the higher-timeframe RSI filters would read a stock the
+        # hourly bars never saw.
+        daily = (hourly.with_columns(pl.col("datetime").dt.date().alias("date"))
+                 .group_by("symbol", "date")
+                 .agg(pl.col("open").first(), pl.col("high").max(), pl.col("low").min(),
+                      pl.col("close").last())
+                 .with_columns(pl.lit(0, dtype=pl.Int64).alias("volume"))
+                 .sort("symbol", "date"))
     print(f"universe {universe.height} | daily {daily.height:,} rows | "
-          f"hourly {hourly.height:,} rows")
+          f"hourly {hourly.height:,} rows from {args.hourly_dir}")
 
     print("\nbuilding point-in-time filters")
     frame = hourly.sort("symbol", "datetime").with_columns(
@@ -459,6 +480,11 @@ def main() -> int:
         pl.col("rsi_h").shift(1).over("symbol").alias("rsi_prev"),
     )
     frame = attach_htf(frame, daily, args.rsi_period)
+    if args.min_close_pos > 0:
+        rng = pl.col("high") - pl.col("low")
+        frame = frame.with_columns(
+            ((pl.col("close") - pl.col("low"))
+             / pl.when(rng > 0).then(rng).otherwise(None)).alias("close_pos"))
 
     if args.skip_market_cap:
         frame = frame.with_columns(pl.lit(1e9).alias("cap_cr"))
@@ -486,7 +512,9 @@ def main() -> int:
             else (pl.col("rsi_daily") > args.htf_min))
          & (pl.col("rsi_weekly") > args.htf_min)
          & (pl.col("rsi_monthly") > args.htf_min)
-         & (pl.col("cap_cr") > args.market_cap_min)).alias("signal")
+         & (pl.col("cap_cr") > args.market_cap_min)
+         & (pl.lit(True) if args.min_close_pos <= 0
+            else (pl.col("close_pos") >= args.min_close_pos))).alias("signal")
     ).sort("symbol", "datetime")
     print(f"  {frame['signal'].sum():,} entry signals")
 
