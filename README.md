@@ -75,14 +75,15 @@ universe as it was on each date. See `AGENTS.md` for the approach.
 Every Nifty index constituent is present: Nifty 50 50/50, Next 50 50/50, Nifty 100 100/100,
 Nifty 200 200/200, Nifty 500 500/500, Midcap 150 150/150, Smallcap 250 250/250.
 
-### Only daily is committed
+### Daily and hourly are committed; weekly and monthly are not
 
-Hourly, weekly and monthly panels are deliberately **not** in git — they would take the repository
-from ~131 MB to ~330 MB. The downloader still produces them on request:
+Hourly is in git despite its size, because it is the one panel that cannot be reconstructed later:
+Yahoo serves only a rolling window of intraday bars, so history that scrolls off the end is simply
+gone unless a snapshot was taken. Weekly and monthly stay out — they are a one-line resample of
+daily, so committing them would buy nothing but repository size:
 
 ```bash
-python scripts/download_market_data.py --interval hourly     # ~140 MB, ~730 trading days only
-python scripts/download_market_data.py --interval weekly monthly
+python scripts/download_market_data.py --interval weekly monthly   # if you really want the files
 ```
 
 Weekly and monthly do not need a download at all — resample the daily panel:
@@ -98,8 +99,8 @@ weekly = (
 )
 ```
 
-Hourly is the one panel that cannot be derived from daily, and Yahoo serves only the last ~730
-trading days of it.
+Hourly cannot be derived from daily at all — an hourly bar is not recoverable from a daily one —
+which is exactly why it is committed rather than left to be re-downloaded.
 
 ## Universe
 

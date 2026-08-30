@@ -10,9 +10,10 @@ Whenever I point out or you catch yourself repeating same mistakes again, before
 
 Market research and systematic trading work on the Indian equity market (NSE).
 
-- **Data**: daily OHLCV for every NSE main-board listing, 2000 to date, stored as year-partitioned
-  Parquet under `data/`. Only the daily panel is committed — hourly/weekly/monthly would triple the
-  repository size, and weekly/monthly are derivable from daily by resampling.
+- **Data**: daily OHLCV for every NSE main-board listing, 2000 to date, plus hourly bars for the
+  ~730 trading days Yahoo serves, stored as year-partitioned Parquet under `data/`. Daily and
+  hourly are both committed; weekly and monthly are not, because they are a one-line resample of
+  daily and committing them would only cost repository size.
 - **Engine**: [Polars](https://pola.rs) is the dataframe library of choice. Prefer `pl.scan_parquet`
   + lazy expressions over eager pandas-style code.
 - **Purpose**: data analysis, trade strategy research, and backtesting.
@@ -23,7 +24,9 @@ Market research and systematic trading work on the Indian equity market (NSE).
 data/universe/nse_universe.parquet        every NSE symbol -> company, series, ISIN, listing date,
                                           industry, and Nifty index membership flags
 data/ohlcv/daily/year=*/data.parquet      symbol, date, open, high, low, close, adj_close, volume
-data/ohlcv/_coverage_daily.csv            per-symbol bar counts and date ranges
+data/ohlcv/hourly/year=*/data.parquet     symbol, datetime (Asia/Kolkata), open, high, low, close,
+                                          volume — no adj_close, Yahoo does not adjust intraday
+data/ohlcv/_coverage_<interval>.csv       per-symbol bar counts and date ranges
 data/ohlcv/_manifest.json                 provenance of the current snapshot + known caveats
 scripts/download_market_data.py           (re)builds the universe and every price panel
 scripts/validate_data.py                  structural, quality and cross-interval checks
@@ -44,7 +47,10 @@ scripts/n_pattern.py                      impulse/pullback/resumption "N" on a r
 - Refreshing data is `python scripts/download_market_data.py --interval daily`; it rewrites the
   interval directory from scratch. Batches are checkpointed under `.cache/` so an interrupted run
   resumes; `--fresh` ignores them.
-- Do not commit hourly/weekly/monthly panels. The downloader can still produce them on request.
+- Commit the daily and hourly panels. Do not commit weekly/monthly — resample them from daily
+  instead. Hourly is the one intraday panel worth carrying: it cannot be derived from daily, and
+  Yahoo only serves a rolling ~730 trading days of it, so a snapshot is the only way to keep
+  history that has already scrolled off.
 - After changing anything that touches the data files, run `python scripts/validate_data.py`.
 - `_manifest.json` is the source of truth for snapshot stats. Do not hard-code row counts in prose
   that will silently go stale — point at the manifest.
@@ -128,9 +134,19 @@ mistake recurs.
   is a verbatim copy of `close`; shipping it would invite silently wrong total-return math.
 - Never read an empty `yfinance` response as "this symbol has no data". Yahoo throttles past
   ~1500 consecutive symbol requests and yfinance swallows the 429 into an empty frame, which
-  looks identical to a genuine miss. Check `yfinance.shared._ERRORS` for rate-limit text before
-  recording a symbol as unavailable — and never derive coverage statistics from a run that was
-  throttled part-way through.
+  looks identical to a genuine miss. Classify the failure before recording a symbol as
+  unavailable — and never derive coverage statistics from a run that was throttled part-way
+  through.
+- Read yfinance's *logger* for per-ticker failures, not `yfinance.shared._ERRORS`. Up to 1.6 that
+  global held them; since 1.7 they live on a context object local to each `download()` call and
+  the global is never written, so every read returns "no errors". Both the rate-limit guard and
+  the "Yahoo does not carry this ticker" check were built on it and had silently become no-ops —
+  a throttled hourly run recorded 25 batches of large caps (RELIANCE, RBLBANK, RALLIS...) as
+  having no data. The logger emits `['A.NS', 'B.NS']: <reason>`, which is the channel to parse.
+- A guard that reads a dependency's internals needs a test that makes it *fire*. Both guards above
+  failed open — they returned "nothing wrong" when their data source went away, so nothing looked
+  broken until the data was already corrupt. After any dependency upgrade, assert the guard still
+  trips on a synthetic failure, and prefer failing closed when the signal is missing entirely.
 - Only record a symbol as "not carried by the provider" when the provider explicitly says so
   (Yahoo: "no timezone found" / "possibly delisted"). A transient batch failure otherwise gets
   written into the manifest as permanent absence — a whole alphabetical block of real large caps
