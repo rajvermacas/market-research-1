@@ -415,6 +415,9 @@ def main() -> int:
                         help="target as a multiple of risk; several sweeps them (default 1..5)")
     parser.add_argument("--slots", type=int, default=10,
                         help="max concurrent positions (default 10)")
+    parser.add_argument("--skip-daily-rsi", action="store_true",
+                        help="drop the daily RSI > htf-min condition, keeping only the "
+                             "weekly and monthly regime filters")
     parser.add_argument("--shared-stop", action="store_true",
                         help="one stop hit closes EVERY open position in that symbol, "
                              "instead of only the leg whose own stop was hit")
@@ -479,7 +482,8 @@ def main() -> int:
         ((pl.col("rsi_prev") <= args.cross_level)
          & (pl.col("rsi_h") > args.cross_level)
          & (pl.col("rsi_ema") < args.ema_max)
-         & (pl.col("rsi_daily") > args.htf_min)
+         & (pl.lit(True) if args.skip_daily_rsi
+            else (pl.col("rsi_daily") > args.htf_min))
          & (pl.col("rsi_weekly") > args.htf_min)
          & (pl.col("rsi_monthly") > args.htf_min)
          & (pl.col("cap_cr") > args.market_cap_min)).alias("signal")
