@@ -471,7 +471,6 @@ CIFL,CIFL.NS,Capital India Finance Limited,EQ,INE345H01024,2025-04-17,2.0,,false
 CINELINE,CINELINE.NS,Cineline India Limited,EQ,INE704H01022,2012-06-13,5.0,,false,false,false,false,false,false,false
 CINEVISTA,CINEVISTA.NS,Cinevista Limited,EQ,INE039B01026,2000-05-02,2.0,,false,false,false,false,false,false,false
 CIPLA,CIPLA.NS,Cipla Limited,EQ,INE059A01026,1995-02-08,2.0,Healthcare,true,false,true,true,true,false,false
-CLCIND,CLCIND.NS,CLC Industries Limited,BE,INE376C01038,2006-12-20,10.0,,false,false,false,false,false,false,false
 CLEAN,CLEAN.NS,Clean Science and Technology Limited,EQ,INE227W01023,2021-07-19,1.0,Chemicals,false,false,false,false,true,false,true
 CLEANMAX,CLEANMAX.NS,Clean Max Enviro Energy Solutions Limited,EQ,INE647U01026,2026-03-02,1.0,,false,false,false,false,false,false,false
 CLEDUCATE,CLEDUCATE.NS,CL Educate Limited,BE,INE201M01029,2017-03-31,5.0,,false,false,false,false,false,false,false
@@ -2067,7 +2066,7 @@ SIEMENS,SIEMENS.NS,Siemens Limited,EQ,INE003A01024,1995-09-06,2.0,Capital Goods,
 SIGACHI,SIGACHI.NS,Sigachi Industries Limited,EQ,INE0D0K01022,2021-11-15,1.0,,false,false,false,false,false,false,false
 SIGIND,SIGIND.NS,Signet Industries Limited,BE,INE529F01035,2018-08-29,10.0,,false,false,false,false,false,false,false
 SIGMA,SIGMA.NS,Sigma Solve Limited,EQ,INE0A0S01028,2023-06-09,1.0,,false,false,false,false,false,false,false
-SIGMAADV,SIGMAADV.NS,SIGMA ADVANCED SYSTEMS LIMITED,EQ,INE933B01012,2007-07-19,10.0,,false,false,false,false,false,false,false
+SIGMAADV,SIGMAADV.NS,SIGMA ADVANCED SYSTEMS LIMITED,BE,INE933B01012,2007-07-19,10.0,,false,false,false,false,false,false,false
 SIGNATURE,SIGNATURE.NS,Signatureglobal (India) Limited,EQ,INE903U01023,2023-09-27,1.0,Realty,false,false,false,false,true,false,true
 SIGNPOST,SIGNPOST.NS,Signpost India Limited,EQ,INE0KGZ01021,2024-02-14,2.0,,false,false,false,false,false,false,false
 SIKA,SIKA.NS,Sika Interplant Systems Limited,EQ,INE438E01032,2026-04-20,2.0,,false,false,false,false,false,false,false
@@ -2273,6 +2272,7 @@ TECILCHEM,TECILCHEM.NS,TECIL Chemicals and Hydro Power Limited,EQ,INE014B01011,1
 TEGA,TEGA.NS,Tega Industries Limited,EQ,INE011K01018,2021-12-13,10.0,Capital Goods,false,false,false,false,true,false,true
 TEJASNET,TEJASNET.NS,Tejas Networks Limited,EQ,INE010J01012,2017-06-27,10.0,Telecommunication,false,false,false,false,true,false,true
 TEMBO,TEMBO.NS,Tembo Global Industries Limited,EQ,INE869Y01028,2021-04-23,1.0,,false,false,false,false,false,false,false
+TEMPSENS,TEMPSENS.NS,Tempsens Instruments (India) Limited,EQ,INE1KZI01025,2026-08-28,4.0,,false,false,false,false,false,false,false
 TENNIND,TENNIND.NS,Tenneco Clean Air India Limited,EQ,INE19RI01016,2025-11-19,10.0,Automobile and Auto Components,false,false,false,false,true,false,true
 TERAI,TERAI.NS,Terai Tea Company Limited,EQ,INE390D01011,2026-08-17,10.0,,false,false,false,false,false,false,false
 TERASOFT,TERASOFT.NS,Tera Software Limited,EQ,INE482B01010,2016-12-29,10.0,,false,false,false,false,false,false,false
@@ -2409,7 +2409,7 @@ VADILENT,VADILENT.NS,Vadilal Enterprises Limited,EQ,INE693D01018,2026-08-17,10.0
 VAIBHAVGBL,VAIBHAVGBL.NS,Vaibhav Global Limited,EQ,INE884A01027,2004-04-05,2.0,,false,false,false,false,false,false,false
 VAISHALI,VAISHALI.NS,Vaishali Pharma Limited,EQ,INE972X01022,2020-01-15,2.0,,false,false,false,false,false,false,false
 VAKRANGEE,VAKRANGEE.NS,Vakrangee Limited,EQ,INE051B01021,2006-04-03,1.0,,false,false,false,false,false,false,false
-VALIANTLAB,VALIANTLAB.NS,Valiant Laboratories Limited,EQ,INE0JWS01017,2023-10-06,10.0,,false,false,false,false,false,false,false
+VALIANTLAB,VALIANTLAB.NS,Valiant Laboratories Limited,BE,INE0JWS01017,2023-10-06,10.0,,false,false,false,false,false,false,false
 VALIANTORG,VALIANTORG.NS,Valiant Organics Limited,BE,INE565V01010,2021-07-23,10.0,,false,false,false,false,false,false,false
 VAML,VAML.NS,Vedanta Aluminium Metal Limited,EQ,INE1CDF01017,2026-06-15,1.0,,false,false,false,false,false,false,false
 VARDHACRLC,VARDHACRLC.NS,Vardhman Acrylics Limited,BE,INE116G01013,2003-09-30,10.0,,false,false,false,false,false,false,false

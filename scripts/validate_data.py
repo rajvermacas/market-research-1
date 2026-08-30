@@ -7,8 +7,9 @@ monthly panels against a resample of the daily panel, which catches misaligned o
 bars that a single-panel check cannot see.
 
 Exits non-zero only on structural problems (missing files, duplicate keys, null values,
-symbols absent from the universe). Upstream oddities — Yahoo dropping a session for some
-tickers, a handful of bad ticks — are reported, not treated as failures.
+an oversized partition, a panel whose symbols largely miss the universe). Upstream oddities
+— Yahoo dropping a session for some tickers, a handful of bad ticks, a name delisted since
+the panel was built — are reported, not treated as failures.
 """
 
 from __future__ import annotations
@@ -70,10 +71,19 @@ def check_interval(name: str, prices: pl.DataFrame, universe: pl.DataFrame) -> l
     if dupes:
         failures.append(f"{name}: duplicate (symbol, {column}) keys")
 
-    orphans = set(prices["symbol"].unique()) - set(universe["symbol"])
-    print(f"  symbols outside universe    {len(orphans)}")
-    if orphans:
-        failures.append(f"{name}: symbols not in universe file: {sorted(orphans)[:5]}")
+    # A price panel outlives the listing file: a symbol suspended or delisted since the
+    # panel was built keeps its history but loses its universe row. That churn is a handful
+    # of names. A large share instead means a parsing bug or the wrong exchange, so fail on
+    # the share rather than on the first stale ticker.
+    orphans = sorted(set(prices["symbol"].unique()) - set(universe["symbol"]))
+    share = len(orphans) / prices["symbol"].n_unique()
+    detail = f" (no longer listed: {', '.join(orphans[:5])})" if orphans else ""
+    print(f"  symbols outside universe    {len(orphans)} ({share:.2%}){detail}")
+    if share > 0.01:
+        failures.append(
+            f"{name}: {len(orphans)} symbols ({share:.1%}) are not in the universe file — "
+            f"too many to be delisting churn: {orphans[:5]}"
+        )
 
     if "adj_close" in prices.columns:
         identical = prices.filter(pl.col("adj_close") == pl.col("close")).height
