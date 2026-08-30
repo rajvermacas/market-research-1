@@ -26,6 +26,10 @@ data/universe/nse_universe.parquet        every NSE symbol -> company, series, I
 data/ohlcv/daily/year=*/data.parquet      symbol, date, open, high, low, close, adj_close, volume
 data/ohlcv/hourly/year=*/data.parquet     symbol, datetime (Asia/Kolkata), open, high, low, close,
                                           volume — no adj_close, Yahoo does not adjust intraday
+data/ohlcv/60minute_kite/year=*/          the same shape from Kite Connect: Nifty 500, back to
+                                          2015-02, and corporate-action ADJUSTED (Yahoo's
+                                          intraday panel is not). Use this for anything
+                                          spanning 2018 or 2020.
 data/ohlcv/_coverage_<interval>.csv       per-symbol bar counts and date ranges
 data/ohlcv/_manifest.json                 provenance of the current snapshot + known caveats
 scripts/download_market_data.py           (re)builds the universe and every price panel
@@ -106,6 +110,26 @@ wrong manufactures fake gaps on every split. Key on ISIN where available, since 
 and occasionally reused.
 
 ## LESSONS
+- A buy-and-hold benchmark is the **mean** of normalised prices, never the median. The median
+  is the path of the median stock: not tradeable, and always lower because cross-sectional
+  returns are right-skewed. Reporting it as "equal-weight buy-and-hold" understated the
+  benchmark by seven points of CAGR and manufactured the entire apparent edge of a strategy.
+  When outliers threaten a mean, winsorise and say so — do not substitute a different
+  estimator and keep the old label.
+- A fix belongs on every path that needs it, not just the one being edited. `screener.py`
+  guarded its RSI warm-up from the beginning; the backtest, written later against the same
+  indicator, did not. The two disagreed for weeks and the unguarded one produced the numbers.
+- A recursive EWM indicator returns a plausible number from the very first bar. Wilder's RSI
+  seeded at zero reads exactly 100.0 on bar 1, which satisfies any "RSI > 60" regime filter
+  for free — and those under-warmed signals scored three times the mean trade. Any indicator
+  built on `ewm_mean` needs an explicit bar-count guard; nulls will not save you.
+- Never hard-code a bars-per-year constant to annualise. `252 * 7` looked obviously right for
+  NSE hourly and was 2.8% too high, overstating every CAGR in the repository. Derive elapsed
+  time from the first and last timestamps.
+- Get the arithmetic audited by something that did not write it. Four errors survived repeated
+  self-review here — three of them pointing the same way, toward a better-looking result —
+  and an independent pass found all four in fifteen minutes.
+
 
 Rules accumulated from mistakes made in this repo. Add to this list — never remove — whenever a
 mistake recurs.
