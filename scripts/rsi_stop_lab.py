@@ -136,7 +136,7 @@ def main() -> int:
         trades = find_trades(tagged, cost, args.reward_risk, stop_column)
         if trades.is_empty():
             continue
-        equity, taken, _ = simulate(trades, prices, args.slots, cost)
+        equity, taken, *_ = simulate(trades, prices, args.slots, cost)
         cagr, maxdd = performance(equity, prices.height)
         closed = trades.filter(pl.col("outcome") != "open")
         h1 = trades.filter(pl.col("entry_time") < mid).filter(pl.col("outcome") != "open")

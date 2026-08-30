@@ -106,12 +106,18 @@ def attach_market_cap(bars: pl.DataFrame, daily: pl.DataFrame, caps: pl.DataFram
 
 
 def find_trades(frame: pl.DataFrame, cost: float, reward_risk: float,
-                stop_column: str | None = None) -> pl.DataFrame:
+                stop_column: str | None = None, stack: bool = True) -> pl.DataFrame:
     """Walk each signal forward to whichever of the stop or the target it reaches first.
 
     The stop defaults to the entry candle's low. `stop_column` names a column holding a
     stop *price* instead, so a noise-aware stop (an ATR multiple, say) can be tested
     against the structural one without touching the rest of the machinery.
+
+    With `stack` (the default) every signal becomes a candidate trade and how many may be
+    live in one symbol is the portfolio's decision, made in simulate(). Suppressing the
+    re-entry here instead would be wrong whenever the earlier trade never opened for want
+    of a slot: the walk would block a name on the strength of a position that does not
+    exist. `stack=False` restores the old one-at-a-time walk for comparison.
     """
     rows = []
     for (symbol,), part in frame.group_by("symbol", maintain_order=True):
@@ -129,7 +135,7 @@ def find_trades(frame: pl.DataFrame, cost: float, reward_risk: float,
 
         last_exit = -1
         for i in idx:
-            if i <= last_exit:      # one position per symbol at a time
+            if not stack and i <= last_exit:   # legacy: one position per symbol at a time
                 continue
             stop, entry = stops[i], close[i]
             if not np.isfinite(entry) or entry <= 0 or not np.isfinite(stop) or stop >= entry:
@@ -169,9 +175,11 @@ def find_trades(frame: pl.DataFrame, cost: float, reward_risk: float,
         return pl.DataFrame()
     trades = pl.DataFrame(rows).sort("entry_time")
 
-    # Invariant: never two live positions in one symbol. The forward walk enforces it via
-    # last_exit, but a backtest that quietly doubles up on a name inflates both the trade
-    # count and the return, so it is checked rather than assumed.
+    # Invariant, only meaningful for the one-at-a-time walk: a backtest that doubles up on
+    # a name unintentionally inflates trade count and return together. Under stacking the
+    # overlap is deliberate and the cap lives in simulate().
+    if stack:
+        return trades
     overlap = (
         trades.sort("symbol", "entry_time")
         .with_columns(pl.col("exit_time").shift(1).over("symbol").alias("prev_exit"))
@@ -188,8 +196,14 @@ def find_trades(frame: pl.DataFrame, cost: float, reward_risk: float,
 # ---------------------------------------------------------------------------- portfolio
 
 
-def simulate(trades: pl.DataFrame, prices: pl.DataFrame, slots: int, cost: float):
-    """Equal-weight portfolio, at most `slots` concurrent positions, marked hourly."""
+def simulate(trades: pl.DataFrame, prices: pl.DataFrame, slots: int, cost: float,
+             per_symbol: int | None = None):
+    """Equal-weight portfolio, at most `slots` concurrent positions, marked hourly.
+
+    `per_symbol` caps how many of those may be in one name at once; None is unlimited,
+    which lets a trending stock stack several entries — and, at the extreme, occupy every
+    slot. `max_stacked` in the return says how far that actually went.
+    """
     grid = prices["datetime"].dt.epoch("us").to_numpy()
     symbols = [c for c in prices.columns if c != "datetime"]
     column = {s: i for i, s in enumerate(symbols)}
@@ -201,7 +215,7 @@ def simulate(trades: pl.DataFrame, prices: pl.DataFrame, slots: int, cost: float
 
     cash, open_pos = 1.0, []          # open_pos: [col, shares, exit_index, exit_price]
     equity = np.empty(len(grid))
-    taken = skipped = 0
+    taken = skipped = blocked = max_stacked = 0
 
     for t in range(len(grid)):
         for position in [p for p in open_pos if p[2] == t]:
@@ -212,6 +226,11 @@ def simulate(trades: pl.DataFrame, prices: pl.DataFrame, slots: int, cost: float
             if len(open_pos) >= slots:
                 skipped += 1
                 continue
+            if per_symbol is not None and sum(
+                1 for p in open_pos if p[0] == column[row["symbol"]]
+            ) >= per_symbol:
+                blocked += 1
+                continue
             held = sum(p[1] * matrix[t, p[0]] for p in open_pos)
             allocation = (cash + held) / slots
             if allocation > cash:
@@ -219,8 +238,6 @@ def simulate(trades: pl.DataFrame, prices: pl.DataFrame, slots: int, cost: float
             if allocation <= 0:
                 skipped += 1
                 continue
-            if any(p[0] == column[row["symbol"]] for p in open_pos):
-                raise AssertionError(f"{row['symbol']} opened while already held")
             shares = allocation * (1 - cost) / row["entry"]
             cash -= allocation
             open_pos.append([
@@ -228,9 +245,11 @@ def simulate(trades: pl.DataFrame, prices: pl.DataFrame, slots: int, cost: float
                 int(np.searchsorted(grid, row["exit_time"])), row["exit"],
             ])
             taken += 1
+            same = sum(1 for p in open_pos if p[0] == column[row["symbol"]])
+            max_stacked = max(max_stacked, same)
 
         equity[t] = cash + sum(p[1] * matrix[t, p[0]] for p in open_pos)
-    return equity, taken, skipped
+    return equity, taken, skipped, blocked, max_stacked
 
 
 def performance(equity: np.ndarray, bars: int) -> tuple[float, float]:
@@ -257,6 +276,9 @@ def main() -> int:
                         help="target as a multiple of risk; several sweeps them (default 1..5)")
     parser.add_argument("--slots", type=int, default=10,
                         help="max concurrent positions (default 10)")
+    parser.add_argument("--per-symbol", type=int, default=None,
+                        help="max concurrent positions in ONE symbol; omit for unlimited, "
+                             "so a signal re-enters a name whose earlier trade is still open")
     parser.add_argument("--cost-bps", type=float, default=10.0,
                         help="one-way cost in basis points (default 10 = 0.20%% round trip)")
     parser.add_argument("--skip-market-cap", action="store_true")
@@ -365,13 +387,17 @@ def main() -> int:
         trades = find_trades(frame, cost, reward_risk)
         if trades.is_empty():
             print("  no trades"); continue
-        equity, taken, skipped = simulate(trades, prices, args.slots, cost)
+        equity, taken, skipped, blocked, max_stacked = simulate(
+            trades, prices, args.slots, cost, args.per_symbol)
         cagr, maxdd = performance(equity, bars)
         closed = trades.filter(pl.col("outcome") != "open")
         wins = closed.filter(pl.col("ret") > 0).height
         hit = {o: trades.filter(pl.col("outcome") == o).height for o in ("target", "stop", "open")}
         print(f"  {trades.height:,} signals, {taken:,} taken, {skipped:,} skipped "
-              f"(no free slot at {args.slots})")
+              f"(no free slot at {args.slots})"
+              + (f", {blocked:,} blocked by the {args.per_symbol}/symbol cap"
+                 if args.per_symbol else "")
+              + f" | deepest stack in one name: {max_stacked + 1}")
         print(f"  target {hit['target']:,} | stop {hit['stop']:,} | still open {hit['open']:,}")
         print(f"  win rate {wins / max(closed.height, 1):.1%}  "
               f"mean trade {closed['ret'].mean() * 100:+.2f}%  "

@@ -88,7 +88,7 @@ def evaluate(frame: pl.DataFrame, prices: pl.DataFrame, condition, label: str,
     trades = find_trades(tagged, cost, reward_risk)
     if trades.is_empty():
         return {"filter": label, "signals": n, "cagr_pct": None, "max_dd_pct": None}
-    equity, taken, _ = simulate(trades, prices, slots, cost)
+    equity, taken, *_ = simulate(trades, prices, slots, cost)
     cagr, maxdd = performance(equity, prices.height)
     closed = trades.filter(pl.col("outcome") != "open")
     row = {
