@@ -41,6 +41,8 @@ scripts/hourly_rsi_screener.py            hourly RSI cross above 60 under a dail
                                           RSI > 60 regime filter
 scripts/kite_download.py                  deep intraday history from Kite Connect (back to
                                           ~2015, vs Yahoo's ~730 trading days)
+scripts/rsi_slots_sweep.py                portfolio slot count vs return, drawdown and how
+                                          much capital is actually deployed
 ```
 
 ## Conventions
@@ -110,6 +112,16 @@ wrong manufactures fake gaps on every split. Key on ISIN where available, since 
 and occasionally reused.
 
 ## LESSONS
+
+- Report how much capital a strategy actually deploys before comparing it to a benchmark.
+  This one runs 17-50% invested and sits in cash the rest of the time, so every "lower
+  drawdown than the market" claim was partly just lower exposure. A part-time book measured
+  against a fully-invested index flatters itself on risk and understates what the capital
+  had to be reserved for.
+- A parameter that dominates the result on a short window may do nothing over a full cycle.
+  Slot count swung CAGR from +47.9% to +8.5% across 2.9 years of bull market and moved it
+  by under two points across 11.6 years. Sweep every free parameter on the longest data you
+  have before concluding it means anything.
 - A buy-and-hold benchmark is the **mean** of normalised prices, never the median. The median
   is the path of the median stock: not tradeable, and always lower because cross-sectional
   returns are right-skewed. Reporting it as "equal-weight buy-and-hold" understated the
