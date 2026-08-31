@@ -123,10 +123,20 @@ def make_session(key: str, token: str) -> requests.Session:
 
 
 def get(session: requests.Session, path: str, params: dict | None = None,
-        retries: int = 4) -> requests.Response:
+        retries: int = 6) -> requests.Response:
     """One paced request, with a real back-off on 429 and 5xx."""
     for attempt in range(retries):
-        response = session.get(f"{API}{path}", params=params, timeout=60)
+        try:
+            response = session.get(f"{API}{path}", params=params, timeout=60)
+        except requests.RequestException as exc:
+            # A dropped connection or proxy hiccup is transient, and over a run of 25,000
+            # requests it is a certainty rather than a risk. Retrying it is the difference
+            # between resuming and losing hours.
+            wait = 2 ** attempt
+            print(f"    network error ({type(exc).__name__}) — retrying in {wait}s",
+                  flush=True)
+            time.sleep(wait)
+            continue
         if response.status_code == 200:
             return response
         if response.status_code in (401, 403):
@@ -138,7 +148,7 @@ def get(session: requests.Session, path: str, params: dict | None = None,
             time.sleep(wait)
             continue
         response.raise_for_status()
-    raise RuntimeError(f"{path} failed after {retries} attempts: {response.text[:200]}")
+    raise RuntimeError(f"{path} failed after {retries} attempts")
 
 
 def instrument_tokens(session: requests.Session) -> dict[str, int]:
