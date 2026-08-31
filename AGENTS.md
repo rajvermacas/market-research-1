@@ -113,6 +113,15 @@ and occasionally reused.
 
 ## LESSONS
 
+- Warm-up truncation is a silent window filter, and it flattered this strategy by 9 points
+  of CAGR. Seeding the monthly RSI from the intraday panel itself needs 42 monthly bars,
+  which quietly moved the backtest start from 2015-02 to 2018-08 and deleted the worst
+  regime the data contained. Seeding the higher timeframes from the deep daily panel
+  instead recovers those 3.5 years, and the best configuration falls from +27.1% to
+  +18.1% CAGR while return-per-drawdown collapses from 1.20 to 0.64. Always seed
+  indicators from the longest history available, and check what a warm-up rule is
+  removing before accepting a result computed after it.
+
 - Do not scale out of a strategy whose edge lives in the tail. Taking half the position at
   1:2 or 1:3 and running the rest cut this setup from +27.1% CAGR to +14.8%, because the
   86% stop-out rate is paid for entirely by the far-distance winners that a partial exit
