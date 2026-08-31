@@ -117,6 +117,67 @@ def attach_market_cap(bars: pl.DataFrame, daily: pl.DataFrame, caps: pl.DataFram
 # ------------------------------------------------------------------------- trade search
 
 
+def find_trades_scaled(frame: pl.DataFrame, cost: float, first_rr: float, runner_rr: float,
+                       first_frac: float = 0.5, breakeven: bool = True) -> pl.DataFrame:
+    """Two-stage exit: bank `first_frac` at `first_rr`, run the rest to `runner_rr`.
+
+    86% of trades in the single-target version stop out, so the whole result rests on a
+    thin tail of full-distance winners. Taking part of the position at a nearer target
+    converts some of those stop-outs into partial wins; moving the remainder's stop to
+    breakeven afterwards means the runner cannot turn a banked gain into a loss.
+
+    Returned as one blended trade per signal so the portfolio pass is unchanged: `ret` is
+    the position-weighted return, and `outcome` records how the runner finished.
+    """
+    rows: list[dict] = []
+    for (symbol,), part in frame.group_by("symbol", maintain_order=True):
+        part = part.sort("datetime")
+        idx = np.flatnonzero(part["signal"].to_numpy())
+        if not idx.size:
+            continue
+        times = part["datetime"].dt.epoch("us").to_numpy()
+        high, low = part["high"].to_numpy(), part["low"].to_numpy()
+        open_, close = part["open"].to_numpy(), part["close"].to_numpy()
+        for i in idx:
+            if i >= len(close) - 1:
+                continue
+            stop, entry = low[i], close[i]
+            if not np.isfinite(entry) or entry <= 0 or stop >= entry:
+                continue
+            risk = entry - stop
+            t1, t2 = entry + first_rr * risk, entry + runner_rr * risk
+            banked, exit_time, outcome = 0.0, times[-1], "open"
+            stop_now, j_end = stop, len(close) - 1
+            hit_first = False
+            for j in range(i + 1, len(close)):
+                if not hit_first and high[j] >= t1:          # bank the first tranche
+                    banked = first_frac * (t1 / entry)
+                    hit_first = True
+                    if breakeven:
+                        stop_now = max(stop_now, entry)
+                if low[j] <= stop_now:
+                    fill = open_[j] if open_[j] <= stop_now else stop_now
+                    rest = (1 - first_frac) if hit_first else 1.0
+                    banked += rest * (fill / entry)
+                    exit_time, outcome, j_end = times[j], ("target" if hit_first else "stop"), j
+                    break
+                if hit_first and high[j] >= t2:              # runner reaches the far target
+                    fill = open_[j] if open_[j] >= t2 else t2
+                    banked += (1 - first_frac) * (fill / entry)
+                    exit_time, outcome, j_end = times[j], "target", j
+                    break
+            else:
+                rest = (1 - first_frac) if hit_first else 1.0
+                banked += rest * (close[-1] / entry)
+            rows.append({"symbol": symbol, "entry_time": int(times[i]), "entry": float(entry),
+                         "stop": float(stop), "target": float(t2),
+                         "exit_time": int(exit_time), "exit": float(entry * banked),
+                         "outcome": outcome, "bars_held": int(j_end - i),
+                         "ret": float(banked * (1 - cost) ** 2 - 1),
+                         "risk_pct": float(risk / entry)})
+    return pl.DataFrame(rows).sort("entry_time") if rows else pl.DataFrame()
+
+
 def find_trades(frame: pl.DataFrame, cost: float, reward_risk: float,
                 stop_column: str | None = None, stack: bool = True) -> pl.DataFrame:
     """Walk each signal forward to whichever of the stop or the target it reaches first.

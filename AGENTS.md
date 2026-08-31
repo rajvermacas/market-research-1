@@ -113,6 +113,17 @@ and occasionally reused.
 
 ## LESSONS
 
+- Do not scale out of a strategy whose edge lives in the tail. Taking half the position at
+  1:2 or 1:3 and running the rest cut this setup from +27.1% CAGR to +14.8%, because the
+  86% stop-out rate is paid for entirely by the far-distance winners that a partial exit
+  gives away. Scaling out helps a high-win-rate mean-reverting system; it is a tax on a
+  low-win-rate trend one.
+- A regime filter tuned on one universe is not a regime filter. Market breadth above 0.65
+  lifted Nifty 500 from +17.7% to +27.1% CAGR and cut its drawdown by half, then on the
+  full NSE board over an overlapping window it took the same configuration from +44.2% to
+  +3.8%. A real regime effect cannot do that. Test any regime rule on a universe it was
+  not fitted to before believing it.
+
 - Report how much capital a strategy actually deploys before comparing it to a benchmark.
   This one runs 17-50% invested and sits in cash the rest of the time, so every "lower
   drawdown than the market" claim was partly just lower exposure. A part-time book measured
