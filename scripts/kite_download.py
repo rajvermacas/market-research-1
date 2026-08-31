@@ -282,11 +282,16 @@ def main() -> int:
           f"~{len(symbols) * chunks / REQUESTS_PER_SECOND / 3600:.1f} hours at "
           f"{REQUESTS_PER_SECOND:g}/sec")
 
-    frames, unavailable = [], []
+    # Checkpoints are the only store. An earlier version also accumulated every symbol in
+    # memory, which reaches about 4 GB across 2,300 names and got the process OOM-killed
+    # twice with no traceback. The panel is assembled by re-reading the checkpoints at the
+    # end, which costs seconds and bounds memory to one symbol at a time.
+    unavailable: list[str] = []
+    done = 0
     for i, symbol in enumerate(symbols, 1):
         checkpoint = cache / f"{symbol}.parquet"
         if checkpoint.exists():
-            frames.append(pl.read_parquet(checkpoint))
+            done += 1
             continue
         try:
             frame = fetch_symbol(session, tokens[symbol], args.interval, start, end)
@@ -301,13 +306,15 @@ def main() -> int:
             continue
         frame = frame.with_columns(pl.lit(symbol).alias("symbol"))
         frame.write_parquet(checkpoint, compression="zstd")
-        frames.append(frame)
+        done += 1
         if i % 25 == 0 or i == len(symbols):
-            print(f"  [{i:>5}/{len(symbols)}] {len(frames)} symbols with data", flush=True)
+            print(f"  [{i:>5}/{len(symbols)}] {done} symbols with data", flush=True)
 
-    if not frames:
+    have = [cache / f"{s}.parquet" for s in symbols if (cache / f"{s}.parquet").exists()]
+    if not have:
         return 1
-    panel = (pl.concat(frames, how="vertical_relaxed")
+    print(f"  assembling {len(have)} checkpoints")
+    panel = (pl.concat([pl.read_parquet(f) for f in have], how="vertical_relaxed")
              .select("symbol", "datetime", "open", "high", "low", "close", "volume")
              .unique(subset=["symbol", "datetime"], keep="last")
              .sort(["symbol", "datetime"]))
