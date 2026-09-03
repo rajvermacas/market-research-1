@@ -18,6 +18,8 @@ and backtesting.
 | `scripts/validate_data.py` | Structural and data-quality checks |
 | `scripts/hourly_rsi_screener.py` | Hourly RSI re-ignition screen under a daily/weekly/monthly trend filter |
 | `scripts/supertrend_rsi_w.py` | RSI double-bottom ("W") + SuperTrend confluence, ablated against the naive oversold buy and against random entries |
+| `scripts/rsi2_mean_reversion.py` | Connors' RSI(2) rule on the real Nifty index series and on constituents, against buy-and-hold and random entries |
+| `scripts/bollinger_rsi_ablation.py` | RSI oversold, Bollinger band-touch, squeeze breakout and divergence, measured separately and combined |
 
 ### The data present
 
@@ -382,6 +384,157 @@ free. And `--charts` was used before any of the above was believed: the matched 
 are Ws, with the deep first trough, the higher second trough, the price double bottom and the
 SuperTrend flip all where they should be. The setup is real and it was found correctly. It just
 does not predict anything.
+
+## RSI(2) mean reversion — the Connors rule on Nifty
+
+`scripts/rsi2_mean_reversion.py` tests the strategy QuantifiedStrategies publishes as a
+proven 56%-a-year mean-reversion edge. Unlike a video setup, this one states its rules, so
+it is tested exactly as written rather than inferred:
+
+| | |
+| --- | --- |
+| Entry | RSI(2) closes below 10 — bought at that close |
+| Exit | the first close above the **previous** bar's high — sold at that close |
+| Filter | optionally, only enter while the close is above its 200-day SMA |
+
+Published on QQQ it returns 12.75% CAGR against 6.4% buy-and-hold, 75% winners, profit
+factor 3.15, from 196 trades and 14% time in the market.
+
+Two translations, because they answer different questions. `--mode index` trades the real
+cap-weighted Nifty series pulled from Yahoo (`^NSEI` 2007-, `^CNX100` and `^CRSLDX`
+2005-), which is the faithful analogue of the QQQ test and the only version here free of
+this repository's survivorship bias — an index series is not a basket of today's
+survivors. `--mode stocks` runs the same rule on individual constituents out of the
+committed daily panel, portfolio-simulated with a slot cap.
+
+Both are measured against buy-and-hold **and** against random entries using the identical
+exit. That control is not optional here: "sell on the first close above yesterday's high"
+is itself a mean-reversion bet that closes most trades within days whatever opened them,
+and without the control its work is credited to RSI(2).
+
+```bash
+python scripts/rsi2_mean_reversion.py --mode index --universe nifty50 --trend-filter
+python scripts/rsi2_mean_reversion.py --mode index --cost-sweep
+python scripts/rsi2_mean_reversion.py --mode stocks --universe nifty500 --start 2015-01-01
+```
+
+### On the index, there is no edge
+
+Nifty 50, 2007-09 to 2026-09 (18.96 years), RSI(2) < 10 with the 200-day filter. Buy-and-hold
+returns **+9.25% CAGR at -59.86%**:
+
+| Cost (one-way) | Mean trade | Profit factor | CAGR | Max DD | CAGR / exposure |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 0 bps | +0.154% | 1.22 | +0.90% | -31.63% | +5.5% |
+| 0 bps — random | +0.141% | 1.25 | +0.86% | -22.74% | +6.7% |
+| 10 bps | -0.047% | 0.94 | -0.70% | -35.16% | -4.3% |
+| 20 bps | -0.247% | 0.70 | -2.29% | -45.18% | -14.0% |
+
+152 trades, 16.4% of the time in the market. **Even at zero cost the rule is worth +0.90%
+a year against random entries' +0.86%**, and against +9.25% for simply holding. By 10 bps
+one-way — 0.20% round trip, which is optimistic for a retail participant — it is negative.
+Nifty 100 and Nifty 500 are the same or worse; on Nifty 100 the random control beats
+RSI(2) at every cost level tested.
+
+The event study says the same thing without the exit confusing matters. Forward returns
+after the signal against every other day the filter would have allowed:
+
+| Days held | After RSI(2)<10 | Baseline | Edge | t |
+| ---: | ---: | ---: | ---: | ---: |
+| 1 | +0.045% | +0.042% | +0.003% | 0.05 |
+| 3 | +0.221% | +0.126% | +0.094% | 0.87 |
+| 5 | +0.410% | +0.212% | +0.198% | 1.50 |
+| 10 | +0.762% | +0.423% | +0.339% | 1.75 |
+
+Right sign, right rough magnitude, and not significant at any horizon over 19 years.
+
+**Where the 56% comes from.** The strategy is in the market 14-16% of the time, so
+dividing its return by its exposure multiplies it by six or seven. That column is reported
+above as `CAGR / exposure` — on Nifty it is +5.5% at zero cost and negative at any real
+one. It is arithmetic, not a return anyone receives: the capital has to sit somewhere for
+the other 84% of the time, and if it sits in the index it is just holding the index.
+
+### On single stocks, the effect is real but smaller than the spread
+
+The same rule on Nifty 500 constituents, 2015 onward (the period the panel is solid for):
+
+| Days held | After signal | Baseline | Edge (winsorised) | t pooled | t by date |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | +0.145% | +0.108% | +0.051% | 3.23 | 5.04 |
+| 3 | +0.446% | +0.322% | +0.151% | 6.68 | 6.42 |
+| 5 | +0.653% | +0.539% | +0.155% | 4.80 | 4.29 |
+| 10 | +1.211% | +1.085% | +0.176% | 3.63 | 2.96 |
+
+Two t-statistics because only the second is worth anything. RSI(2) < 10 fires on hundreds
+of names at once in a market-wide selloff, so pooling symbol-days counts the same market
+move over and over; the clustered column collapses each date to one observation. Here it
+survives — this is a **real** short-horizon reversal effect, worth about +0.15% over three
+to five days. On Nifty 50 alone it is not there at all (clustered t of 0.12 to 0.69),
+which fits: short-term reversal is a liquidity effect and the largest names have it
+arbitraged out.
+
+It is still not a strategy. **The edge is +0.15% and the round trip is 0.20%** — more in a
+mid-cap, where much of the measured reversal is bid-ask bounce you cannot capture. Traded
+with 10 slots the rule returns **+9.67% CAGR at -41.97%** against **+19.96%** for
+equal-weight buy-and-hold, and against **+12.32%** for random entries with the same exit.
+The entry does beat random on mean trade by 5.8 sigma; it loses on CAGR anyway, because it
+is in the market far less of the time.
+
+## RSI + Bollinger components, ablated
+
+`scripts/bollinger_rsi_ablation.py`. The source here is a five-minute video whose only
+machine-readable content is its chapter list — "RSI Signals / Bollinger Bands / Breakout
+Strategy / Divergence / Trading Strategies" — so **nothing in this section reproduces its
+rules**, which are not recoverable. What is testable is the canonical reading of those four
+components, which are standard individually, measured separately and together so each
+one's contribution is visible whatever recipe combines them.
+
+| Arm | Entry |
+| --- | --- |
+| `rsi_os` | RSI(14) crosses back up through 30 |
+| `bb_lower` | close returns above the lower Bollinger Band (20, 2) after closing below it |
+| `squeeze` | bandwidth in its own trailing bottom quintile, then a close above the upper band |
+| `divergence` | price makes a lower low while RSI makes a higher low, both pivots confirmed |
+| `combo` | `rsi_os` today with `bb_lower` and `divergence` inside the last 5 bars |
+
+Nifty 500 daily, 2015-01 to 2026-08 (11.65 years, 457 symbols), 10 bps one-way, held
+exactly 10 bars with no stop and no target. Equal-weight buy-and-hold returns **+19.48%
+CAGR at -41.52%**:
+
+| Arm | Signals | Mean trade | sigma vs random | CAGR | Max DD | Deployed |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `squeeze` | 12,582 | +1.164% | **+4.97** | +23.92% | -38.47% | 81.4% |
+| `divergence` | 12,367 | +0.984% | +2.73 | +10.52% | -55.99% | 83.4% |
+| `combo` | 168 | +1.767% | +1.36 | +0.87% | -17.75% | 5.1% |
+| `rsi_os` | 11,787 | +0.778% | +0.22 | +10.59% | -46.17% | 72.7% |
+| `bb_lower` | 26,044 | +0.309% | **-6.84** | +14.61% | -45.44% | 85.7% |
+| `random` | 50,000 | +0.757% | — | +14.53% | -49.82% | 91.3% |
+
+Repeating it with a completely different exit — sell on the first close above the previous
+high — keeps the ordering, which is what makes it worth reporting: `squeeze` +2.88 sigma,
+`rsi_os` +0.66, `divergence` -0.15, `bb_lower` **-6.13**.
+
+Three things survive both exits:
+
+**The squeeze breakout is the only component that works.** +4.97 and +2.88 sigma, stable
+across both halves of the window (+0.98% then +1.26% mean trade, against the control's
++0.40% and +1.01%), and the only arm to beat buy-and-hold on CAGR while running a smaller
+drawdown. It is also the only component of the four that is not a mean-reversion idea.
+
+**Buying the lower band is significantly worse than random** — -6.84 and -6.13 sigma, the
+largest effect in the table and pointing the wrong way. The textbook "price is at the lower
+band, it is oversold, buy" is a losing entry on Nifty equity, and it was worst in the first
+half (-0.649% mean trade against the control's +0.395%).
+
+**The oversold buy adds nothing** (+0.22 sigma), and the divergence is not robust — +2.73
+sigma on one exit, -0.15 on the other. The full confluence fires 168 times in 11.65 years
+across 457 names, roughly once a month for the whole market, which is too rare to be a
+strategy whatever its mean.
+
+Read alongside the RSI(2) result above, the two studies agree: on Indian equity the
+mean-reversion entries — RSI(2) < 10, RSI(14) < 30, the lower Bollinger Band — range from
+worthless to actively harmful, and the one thing in either study with a robust edge is a
+volatility-contraction breakout, which is a momentum idea.
 
 ## Refreshing the data
 

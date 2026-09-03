@@ -50,6 +50,10 @@ scripts/clean_kite_panel.py               repairs the raw Kite panel (token reus
 scripts/supertrend_rsi_w.py               RSI double-bottom ("W") + SuperTrend confluence,
                                           ablated against the naive oversold buy and against
                                           random entries, under three different exit rules
+scripts/rsi2_mean_reversion.py            Connors' RSI(2) rule on the real Nifty index series
+                                          (pulled from Yahoo, cached) and on constituents
+scripts/bollinger_rsi_ablation.py         RSI oversold / Bollinger band touch / squeeze
+                                          breakout / divergence, separately and combined
 ```
 
 ## Conventions
@@ -126,6 +130,20 @@ wrong manufactures fake gaps on every split. Key on ISIN where available, since 
 and occasionally reused.
 
 ## LESSONS
+
+- Pooled t-statistics over a stacked symbol panel are inflated, often several-fold, and the
+  fix is one line. An oversold rule fires on hundreds of names at once inside a market-wide
+  selloff, so treating symbol-days as independent counts the same market move over and over:
+  RSI(2) on the Nifty 500 read t = 6.68 pooled and t = 6.42 once each calendar date was
+  collapsed to a single observation, but on the Nifty 50 the same test fell from t = 2.04 to
+  t = 0.12 — the entire apparent effect there was one market repeated 49 times. Always
+  cluster by date before believing a cross-sectional edge.
+
+- An "annual return" that is six times the strategy's CAGR is usually the CAGR divided by
+  exposure. A rule in the market 14-16% of the time can have its return multiplied by seven
+  and called "risk-adjusted", and the multiplication is real arithmetic — but the capital has
+  to sit somewhere for the other 85%, and if it sits in the index it is just holding the
+  index. Report time-in-market next to any headline return, own or quoted.
 
 - A backtest whose stop is derived from the entry bar compares stop geometry as much as entry
   quality, and an ablation built on one can invent an edge outright. Under the usual "stop at the
