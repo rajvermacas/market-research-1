@@ -17,6 +17,7 @@ and backtesting.
 | `scripts/download_market_data.py` | Rebuilds everything above from NSE + Yahoo Finance |
 | `scripts/validate_data.py` | Structural and data-quality checks |
 | `scripts/hourly_rsi_screener.py` | Hourly RSI re-ignition screen under a daily/weekly/monthly trend filter |
+| `scripts/supertrend_rsi_w.py` | RSI double-bottom ("W") + SuperTrend confluence, ablated against the naive oversold buy and against random entries |
 
 ### The data present
 
@@ -273,6 +274,114 @@ constraints are what keep the pattern local and shaped like an N.
 `--charts N` renders the top hits as candlesticks with the EMA and the A/B/C levels marked. Use it
 — geometric conditions are easy to satisfy in ways that look nothing like the intended shape, and
 the picture is the only quick way to catch that.
+
+## RSI "W" + SuperTrend confluence
+
+`scripts/supertrend_rsi_w.py` tests a widely taught intraday setup, and — more usefully — the
+claim it rests on. The recipe: wait for RSI to fall into the oversold zone, let it carve a **"W"**
+(a first trough at the 30 line, a bounce, then a second trough at or above the first), check that
+price made its own higher low, check that SuperTrend is pointing up, and enter when all of it
+agrees at once. It is explicitly sold *against* the textbook oversold buy — "RSI under 30, buy" —
+which the same lesson calls dangerous because it buys into falling knives.
+
+Both halves of that are testable, so this runs an ablation rather than a backtest. Five entry
+rules trade the same bars, the same universe and the same exits:
+
+| Arm | Entry |
+| --- | --- |
+| `naive` | RSI crosses back up through 30 — the textbook oversold buy, and the charitable version of it: it at least waits for the turn |
+| `st_flip` | SuperTrend flips up. Trend alone, no RSI |
+| `w` | the RSI W completes and turns up. Oscillator alone, no trend filter |
+| `w_price` | the W, plus price confirming with its own higher low |
+| `full` | all of it, including SuperTrend up — the setup as drawn |
+
+Two controls, because a return without one measures the market rather than the setup: an
+equal-weight buy-and-hold of the universe, and **random entries** drawn from the same bars and
+walked to an exit by identical code. The random control is deliberately oversampled to 50,000
+draws — matched to an arm's trade count its own standard error is as wide as the arm's and it
+stops being a yardstick.
+
+```bash
+python scripts/supertrend_rsi_w.py                          # 1:2 target, all five arms
+python scripts/supertrend_rsi_w.py --exit trail             # ride the SuperTrend line
+python scripts/supertrend_rsi_w.py --exit horizon --horizon 24
+python scripts/supertrend_rsi_w.py --arms full --charts 8   # look at what it matched
+```
+
+### Three exits, because the answer depends on which one you use
+
+`rr` stops at the entry candle's low and targets a multiple of that risk. `trail` rides the
+SuperTrend line and leaves on the flip down — the strategy's own exit, since the sell conditions
+in the lesson are the mirror of the buy ones. `horizon` holds a fixed number of bars with no stop
+and no target, and it is the arbiter.
+
+The first two both stop at a price derived from the entry bar, and **the arms do not agree about
+what that price is.** An arm entering in a SuperTrend uptrend stops at the line, typically far
+below; an arm with no trend filter enters mid-downtrend and stops just under its own candle. That
+difference alone produced a median hold of 23 bars against 4. Any gap in mean trade between them
+is then partly a gap in how much room the trade was given, not in what the entry predicted.
+
+### What it found
+
+Traded on the adjusted Kite 60-minute Nifty 500 panel, 2015-02-02 to 2026-08-28 — 19,993 bars,
+11.57 years — at 10 bps one-way and 10 portfolio slots. Equal-weight buy-and-hold of the 307
+symbols trading at the window start returns **+20.80% CAGR at -50.03% max drawdown**.
+
+Under the trailing SuperTrend stop the ablation looks like a clean result. `sigma` is the gap
+from the random control in combined standard errors:
+
+| Arm | Signals | Win % | Mean trade | sigma vs random | Median hold | CAGR | Deployed |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `naive` | 119,999 | 19.7 | -0.065% | **-3.3** | 5 | -21.88% | 97.5% |
+| `st_flip` | 101,992 | 36.1 | +0.145% | **+3.7** | 24 | -16.59% | 97.1% |
+| `w` | 45,900 | 19.4 | +0.005% | -0.7 | 4 | -16.38% | 85.8% |
+| `w_price` | 36,216 | 18.7 | -0.042% | **-2.1** | 4 | -21.47% | 82.3% |
+| `full` | 9,300 | 35.0 | +0.143% | +1.8 | 23 | -6.05% | 67.6% |
+| `random` | 50,000 | 21.2 | +0.028% | — | 8 | -13.74% | 95.6% |
+
+Read on its own that says the lesson is half right: the naive oversold buy really is worse than
+random, SuperTrend really does carry an edge — and the RSI W adds nothing, since `full` earns the
+same mean trade as `st_flip` from a ninth as many signals. The same ordering holds at every
+reward:risk target from 1:1 to 1:5, which makes it look robust.
+
+It is not. Hold the exit genuinely constant and it vanishes:
+
+| Arm | 6 bars | sigma | 24 bars | sigma | 48 bars | sigma |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `naive` | -0.120% | +0.1 | +0.124% | -0.2 | +0.430% | -1.6 |
+| `st_flip` | -0.129% | -0.6 | +0.134% | +0.2 | +0.397% | **-2.3** |
+| `w` | -0.048% | **+4.1** | +0.192% | +2.0 | +0.428% | -1.4 |
+| `w_price` | -0.096% | +1.4 | +0.094% | -1.1 | +0.370% | **-2.4** |
+| `full` | -0.158% | -1.2 | +0.135% | +0.1 | +0.464% | -0.5 |
+| `random` | -0.121% | — | +0.129% | — | +0.504% | — |
+
+**The setup as drawn (`full`) is indistinguishable from a randomly chosen bar at every horizon
+tested** — +0.1, -1.2 and -0.5 sigma. So is SuperTrend on its own, except at 48 bars where it is
+significantly *worse* than random. The naive oversold buy is not specially dangerous as an entry
+either: it is dangerous in combination with a tight stop, which is a different claim. Buying into
+a decline puts the stop exactly where the volatility is, and that — not the entry — is what the
+trailing-stop table was measuring.
+
+The one detectable effect anywhere is the RSI W **alone**: +4.1 sigma at a 6-bar horizon. It is
+worth almost nothing. Both figures are negative (-0.048% against the control's -0.121%), so it
+is a matter of losing less over six hourly bars; the gap of 0.073% is a third of the 0.20%
+round-trip cost; it has decayed to +2.0 sigma by 24 bars and reversed by 48. It is a short-horizon
+bounce after a decline, which is what an oversold oscillator is supposed to find. And every step
+the lesson adds on top of it makes it worse, not better — price confirmation takes it to +1.4
+sigma, the SuperTrend filter to -1.2.
+
+Nothing here is tradeable in any case. Every arm loses heavily against the +20.80% benchmark
+under any portfolio simulation: hourly churn at 0.20% round trip bleeds out regardless of what
+the entry rule is, and the arms with lower drawdowns have them because they sit in cash, which is
+what the `deployed` column is for.
+
+Two caveats on top of the repository's usual survivorship warning. The setup was drawn on an
+intraday index chart and is tested here on NSE single-stock hourly bars, because that is the data
+this repository has — the mechanism is timeframe-agnostic as taught, but the translation is not
+free. And `--charts` was used before any of the above was believed: the matched signals really
+are Ws, with the deep first trough, the higher second trough, the price double bottom and the
+SuperTrend flip all where they should be. The setup is real and it was found correctly. It just
+does not predict anything.
 
 ## Refreshing the data
 

@@ -30,6 +30,8 @@ data/ohlcv/60minute_kite/year=*/          the same shape from Kite Connect: Nift
                                           2015-02, and corporate-action ADJUSTED (Yahoo's
                                           intraday panel is not). Use this for anything
                                           spanning 2018 or 2020.
+data/ohlcv/60minute_kite_clean/year=*/    the above after clean_kite_panel.py. Prefer it —
+                                          but see caveat 6 below, it is not fully clean.
 data/ohlcv/_coverage_<interval>.csv       per-symbol bar counts and date ranges
 data/ohlcv/_manifest.json                 provenance of the current snapshot + known caveats
 scripts/download_market_data.py           (re)builds the universe and every price panel
@@ -43,6 +45,11 @@ scripts/kite_download.py                  deep intraday history from Kite Connec
                                           ~2015, vs Yahoo's ~730 trading days)
 scripts/rsi_slots_sweep.py                portfolio slot count vs return, drawdown and how
                                           much capital is actually deployed
+scripts/clean_kite_panel.py               repairs the raw Kite panel (token reuse, zero
+                                          prints, adjustment breaks) into 60minute_kite_clean
+scripts/supertrend_rsi_w.py               RSI double-bottom ("W") + SuperTrend confluence,
+                                          ablated against the naive oversold buy and against
+                                          random entries, under three different exit rules
 ```
 
 ## Conventions
@@ -90,6 +97,13 @@ Read these before drawing conclusions from a backtest:
 4. **Upstream gaps and bad ticks.** Yahoo drops the odd session for individual symbols, and a small
    number of bars violate OHLC ordering. Reported by `validate_data.py`, not silently patched.
 5. **Out of scope.** NSE Emerge (SME) symbols and BSE-exclusive listings are not served by Yahoo.
+6. **The "clean" Kite panel still has broken bars.** `clean_kite_panel.py` nulls non-positive
+   *closes* only, so 1,540 bars (0.02%) across 169 symbols reach `60minute_kite_clean` with a
+   zero `open`/`low` (1,439), a violated OHLC ordering (38), or one bar carrying both adjusted
+   and unadjusted prices (63 — PIIND prints `open 815.4` against a `low` of 81.8). Harmless to
+   a close-only study and ruinous to anything reading lows: a zero low is the lowest possible
+   low, so it fills every stop in that symbol at a price that never traded. `supertrend_rsi_w.py`
+   carries its own load-time guard for all three classes; copy it until the cleaner is fixed.
 
 ## Curing survivorship bias
 
@@ -112,6 +126,36 @@ wrong manufactures fake gaps on every split. Key on ISIN where available, since 
 and occasionally reused.
 
 ## LESSONS
+
+- A backtest whose stop is derived from the entry bar compares stop geometry as much as entry
+  quality, and an ablation built on one can invent an edge outright. Under the usual "stop at the
+  entry candle's low", arms carrying a trend filter got a median hold of 23 bars and arms without
+  one got 4 — a SuperTrend entry stops at the line far below price, an unfiltered entry stops just
+  under its own candle. That produced a clean, stable-looking ordering: the trend arms +3.7 sigma
+  against a random-entry control, the naive oversold buy -3.3, and the same ranking at every
+  reward:risk target from 1:1 to 1:5. Holding every arm a fixed number of bars instead — no stop,
+  no target — erased it: at 6, 24 and 48 bars not one arm was distinguishable from random, and at
+  48 the control beat all of them. The whole result had been the stops. Before reading an ablation
+  as a statement about entries, hold the exit genuinely constant; a fixed horizon does that, a
+  price-based stop does not.
+
+- Guard the bars an indicator *reads*, not only the bar it signals on. The RSI warm-up guard here
+  covered the signal bar and stopped there, so a "W" whose first trough sat at bar 40 of the
+  series passed at bar 49 — and bar 40's RSI was the zero-seeded recursion still converging, not
+  a price event. Every chart the first run produced was dated within nine sessions of the panel
+  start, and removing those signals cut the mean trade in half. A pattern rule reads several
+  bars; the guard has to cover the earliest of them.
+
+- `np.maximum.accumulate` propagates NaN, so a ratchet built on it silently disables itself. One
+  nulled bar mid-trade turned the rest of the trailing-stop array to NaN, every `low <= stop`
+  comparison against it went False, and every open position in that symbol ran to the last bar
+  of the panel instead of exiting — inflating exactly the tail a trend strategy's return depends
+  on, with nothing in the output to show it. Map missing to `-inf` before an accumulate.
+
+- Nulling a defective close is not nulling a defective bar. `clean_kite_panel.py` guards `close`
+  and leaves `open`, `high` and `low` as they came, so 1,540 bars still carry a zero low or a
+  mid-bar split break. That is invisible to a study that reads closes and fatal to one that reads
+  lows. When a guard is written for one column, check what else reads the others.
 
 - Warm-up truncation is a silent window filter, and it flattered this strategy by 9 points
   of CAGR. Seeding the monthly RSI from the intraday panel itself needs 42 monthly bars,
