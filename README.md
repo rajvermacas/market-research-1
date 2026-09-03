@@ -19,6 +19,7 @@ and backtesting.
 | `scripts/hourly_rsi_screener.py` | Hourly RSI re-ignition screen under a daily/weekly/monthly trend filter |
 | `scripts/supertrend_rsi_w.py` | RSI double-bottom ("W") + SuperTrend confluence, ablated against the naive oversold buy and against random entries |
 | `scripts/rsi2_mean_reversion.py` | Connors' RSI(2), R3 and IBS on the real Nifty index series and on constituents, against buy-and-hold and random entries |
+| `scripts/opening_range_breakout.py` | Opening range breakout on the hourly panel, both directions, against random same-day entries |
 | `docs/strategy-ledger.md` | Every published strategy tested here, with its verdict and the method they all follow |
 | `scripts/bollinger_rsi_ablation.py` | RSI oversold, Bollinger band-touch, squeeze breakout and divergence, measured separately and combined |
 
@@ -596,6 +597,70 @@ Read alongside the RSI(2) result above, the two studies agree: on Indian equity 
 mean-reversion entries — RSI(2) < 10, RSI(14) < 30, the lower Bollinger Band — range from
 worthless to actively harmful, and the one thing in either study with a robust edge is a
 volatility-contraction breakout, which is a momentum idea.
+
+## Opening range breakout
+
+`scripts/opening_range_breakout.py`. The source states both its rules and its conclusion,
+which makes it unusually testable: buy when price breaks above the high of the session's
+first *N* hours, sell at that day's close, never hold overnight; the flip buys the break
+*below* the range low. Its finding on the S&P 500 was that the best average gain per trade
+was **0.04%**, the win rate was low, the downside flip was worse, and opening range
+breakouts "don't work very well anymore".
+
+Traded on the adjusted Kite 60-minute Nifty 500 panel, 2015-02 to 2026-08 (2,867 sessions,
+11.57 years). The hourly granularity is a real limit and is stated rather than hidden: the
+range can only be drawn in whole hours, and a breakout is detected by a later bar's high
+clearing the level rather than tick by tick. Fills are taken at the level, or at the bar's
+open when it gapped through — the worse of the two.
+
+### Gross of costs, the upside breakout is one of the strongest signals tested here
+
+Against random entries drawn from the same day and held to the same close:
+
+| Range | Trades | Win % | Mean trade | sigma vs random | Quiet days | Heavy days | h1 / h2 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 hour | 511,627 | 45.4 | +0.0457% | +26.8 | -0.315% | +0.428% | +0.015 / +0.072 |
+| 2 hours | 400,912 | 46.5 | +0.0867% | +36.5 | -0.235% | +0.408% | +0.071 / +0.100 |
+| 3 hours | 325,020 | 47.0 | +0.1082% | +39.6 | -0.177% | +0.342% | +0.100 / +0.115 |
+| 4 hours | 259,376 | 47.3 | **+0.1190%** | **+40.1** | -0.126% | +0.304% | +0.124 / +0.115 |
+
+The edge rises monotonically with the length of the range, is stable across both halves of
+the window, and the `quiet`/`heavy` columns say where it comes from: **the breakout pays on
+days when many names break out together and bleeds on days when few do.** That is the
+honest shape of a breakout — it is paid for participating in the few broad trend days and
+charged for the rest.
+
+**And it still does not survive costs.** At 10 bps one way the same arm averages -0.081%
+and the book returns -34.55% CAGR. The source's conclusion holds on Nifty: the effect is
+real, roughly three times the size they measured on the S&P, and still smaller than the
+round trip needed to capture it.
+
+The downside flip is worse than random at every range length — **-13.9 to -17.4 sigma** —
+which also matches what they found.
+
+### The trap in the drawdown column
+
+Gross, the `down 4h` arm reports **+15.01% CAGR at -6.61% max drawdown**, a return/drawdown
+of **2.27** — far the best ratio in this repository. It is not real, and the mechanism is
+worth naming because any day-trading backtest can produce it.
+
+A book that equal-weights each day's signals gives every session one vote no matter how
+many opportunities it held. Its compounded curve is therefore a **day-weighted** mean,
+while the average trade is a **trade-weighted** one. For `down 4h` those are +0.057% and
+**-0.046%** respectively, and the split shows why:
+
+| Day type | Days | Signals that day | Mean signal return |
+| --- | ---: | ---: | ---: |
+| Quiet | 1,442 | 82 | **+0.197%** |
+| Normal | 1,147 | 161 | -0.018% |
+| Heavy | 291 | 276 | **-0.343%** |
+
+Buying breakdowns makes money on the 1,442 quiet days and loses it on the 291 days when
+the whole market is breaking down — it works except when it matters. Equal-weighting by
+day lets the quiet days outvote the heavy ones five to one, and a 2.27 return/drawdown
+falls out. The trade-weighted mean, which weights each session by the opportunity it
+actually offered, is negative. Both numbers are printed side by side for exactly this
+reason.
 
 ## Refreshing the data
 

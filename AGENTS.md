@@ -54,6 +54,8 @@ scripts/rsi2_mean_reversion.py            Connors' RSI(2) rule on the real Nifty
                                           (pulled from Yahoo, cached) and on constituents
 scripts/bollinger_rsi_ablation.py         RSI oversold / Bollinger band touch / squeeze
                                           breakout / divergence, separately and combined
+scripts/opening_range_breakout.py         opening range breakout on the hourly panel, both
+                                          directions, against random same-day entries
 docs/strategy-ledger.md                   every published strategy tested here, its verdict,
                                           and the method every one of them follows. Read it
                                           before testing a new one — several are settled.
@@ -133,6 +135,16 @@ wrong manufactures fake gaps on every split. Key on ISIN where available, since 
 and occasionally reused.
 
 ## LESSONS
+
+- A day-trading book that equal-weights each session's signals reports a DAY-weighted mean,
+  while its average trade is TRADE-weighted, and the two can have opposite signs. Every
+  session gets one vote regardless of how many opportunities it held, so a rule that pays on
+  the many quiet days and loses on the few crowded ones looks excellent: the opening-range
+  downside arm posted +15.01% CAGR at -6.61% drawdown, a return/drawdown of 2.27 — the best
+  ratio in this repository — on an average trade of MINUS 0.046%. Split by how many names
+  signalled that day it earned +0.197% across 1,442 quiet sessions and lost -0.343% across
+  the 291 heaviest. Print both weightings, and split the return by daily signal count before
+  believing any intraday result.
 
 - Pooled t-statistics over a stacked symbol panel are inflated, often several-fold, and the
   fix is one line. An oversold rule fires on hundreds of names at once inside a market-wide
