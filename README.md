@@ -18,7 +18,8 @@ and backtesting.
 | `scripts/validate_data.py` | Structural and data-quality checks |
 | `scripts/hourly_rsi_screener.py` | Hourly RSI re-ignition screen under a daily/weekly/monthly trend filter |
 | `scripts/supertrend_rsi_w.py` | RSI double-bottom ("W") + SuperTrend confluence, ablated against the naive oversold buy and against random entries |
-| `scripts/rsi2_mean_reversion.py` | Connors' RSI(2) rule on the real Nifty index series and on constituents, against buy-and-hold and random entries |
+| `scripts/rsi2_mean_reversion.py` | Connors' RSI(2), R3 and IBS on the real Nifty index series and on constituents, against buy-and-hold and random entries |
+| `docs/strategy-ledger.md` | Every published strategy tested here, with its verdict and the method they all follow |
 | `scripts/bollinger_rsi_ablation.py` | RSI oversold, Bollinger band-touch, squeeze breakout and divergence, measured separately and combined |
 
 ### The data present
@@ -479,6 +480,66 @@ with 10 slots the rule returns **+9.67% CAGR at -41.97%** against **+19.96%** fo
 equal-weight buy-and-hold, and against **+12.32%** for random entries with the same exit.
 The entry does beat random on mean trade by 5.8 sigma; it loses on CAGR anyway, because it
 is in the market far less of the time.
+
+### Larry Connors' R3, and IBS
+
+`scripts/rsi2_mean_reversion.py --rules rsi2 r3 ibs` runs three entry rules through the
+same machinery, so the marginal value of each extra condition is priced rather than
+assumed.
+
+| Rule | Entry |
+| --- | --- |
+| `rsi2` | RSI(2) < 10 — the plain Connors rule, above |
+| `r3` | Connors' **R3**: RSI(2) must have fallen three days running, the first fall starting from a reading below 60, and today's reading under 10 |
+| `ibs` | **Internal Bar Strength**, `(close - low) / (high - low)`, below 0.2 |
+
+R3 differs from `rsi2` *only* in a path condition — the same destination reached in a
+specified way — which makes the pair a clean measurement of what the path is worth. IBS is
+carried as a family control: it is the strongest documented daily mean-reversion signal in
+the literature, so if nothing in this family works on Nifty it should fail too.
+
+Both of Connors' exits are offered (`--exit-rule up-close` for RSI(2), `rsi70` for R3)
+plus `horizon`, which is the arbiter for the reason established above.
+
+**On the index, R3 does not work.** Mean trade against its own random control, all three
+Nifty indices, both exits, 10 bps:
+
+| | Nifty 50 | Nifty 100 | Nifty 500 |
+| --- | ---: | ---: | ---: |
+| R3, exit on up-close | +0.143% *vs* +0.117% | +0.134% *vs* **+0.213%** | -0.372% *vs* **+0.092%** |
+| R3, 5-bar horizon | +0.167% *vs* **+0.303%** | +0.451% *vs* **+0.704%** | +0.102% *vs* **+0.240%** |
+
+**R3 loses to randomly chosen entries in five of the six cells.** Its CAGR across every
+index and exit runs -1.69% to +1.73% against buy-and-hold's +9.25% to +11.84%. The one
+encouraging number anywhere — a forward-return edge of +0.559% at five days on the Nifty
+50, t = 3.17 — is a single cell out of the fifteen the event study prints, and the trades
+behind it split +0.480% in the first half of the window against -0.124% in the second.
+
+IBS fails harder: negative on every index under the Connors exit (-0.142%, -0.137%,
+-0.177% mean trade) and behind its control in most cells.
+
+**On constituents the story reverses, exactly as it did for `rsi2`.** Nifty 500 names,
+2015 onward, forward returns clustered by calendar date:
+
+| Rule | Edge at 3 days | t (by date) | Mean trade | sigma vs random | CAGR | Max DD |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `r3` | +0.219% | 6.39 | +0.523% | **+5.92** | +10.55% | -44.10% |
+| `rsi2` | +0.151% | 6.42 | +0.445% | **+5.80** | +9.67% | -41.97% |
+| `ibs` | -0.031% | 1.97 | +0.274% | +3.29 | +11.27% | -34.40% |
+
+R3's path condition is worth something after all — +0.219% against `rsi2`'s +0.151% at the
+same horizon, from half as many signals. It is the first edge in this series to sit
+*above* a 0.20% round trip rather than under it, which makes it the only candidate here
+worth a second look.
+
+It is still not a strategy as it stands. Against **+19.96%** equal-weight buy-and-hold,
+R3 returns **+10.55%** — the edge per trade is real and the book still trails the market,
+because the rule is in cash most of the time. And the constituent panel is today's index
+membership walked backwards, so the figure is optimistic by an unmeasured amount while
+the index test, which has no such bias, says there is nothing there. When those two
+disagree the index is the one to believe about the market and the constituent test is the
+one to believe about single stocks; they are different claims, and only the second is
+positive.
 
 ## RSI + Bollinger components, ablated
 

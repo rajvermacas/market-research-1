@@ -107,40 +107,94 @@ def fetch_index(name: str) -> pl.DataFrame:
 
 
 def attach_signal(frame: pl.DataFrame, period: int, level: float,
-                  trend_filter: bool, sma: int, group: str | None = None) -> pl.DataFrame:
-    """RSI(period) < level, optionally above the SMA. Warm-up guarded.
+                  trend_filter: bool, sma: int, group: str | None = None,
+                  rule: str = "rsi2", r3_from: float = 60.0,
+                  ibs_level: float = 0.2) -> pl.DataFrame:
+    """The entry condition for one rule, optionally above the SMA. Warm-up guarded.
 
-    The guard is not decoration even at period 2. Wilder's RSI is a recursive EWM seeded
-    at zero and reads 100.0 on the first bar and 0.0 shortly after, and a 0.0 satisfies
-    "RSI < 10" for free. At period 2 it settles in a handful of bars, but the SMA filter
-    needs its full window regardless, so the binding guard is that one.
+    Three rules, so the marginal value of each extra condition is visible rather than
+    assumed:
+
+        rsi2  RSI(period) < level. The plain Connors rule.
+        r3    Connors' R3, from "High Probability ETF Trading": RSI(2) must have fallen on
+              three consecutive days, the first of those falls starting from a reading
+              below `r3_from`, and today's reading must be under `level`. The difference
+              from rsi2 is entirely a *path* condition — the same destination, reached in
+              a specified way — so running the two side by side prices what the path is
+              worth on its own.
+        ibs   Internal Bar Strength, (close - low) / (high - low), below `ibs_level`. A
+              different indicator entirely, and included because it is the strongest
+              documented daily mean-reversion signal in the literature: if nothing in this
+              family works on Nifty, it should fail too, and if the family works at all it
+              is the one that should show it.
+
+    The warm-up guard is not decoration even at period 2. Wilder's RSI is a recursive EWM
+    seeded at zero and reads 100.0 on the first bar and 0.0 shortly after, and a 0.0
+    satisfies "RSI < 10" for free. At period 2 it settles in a handful of bars, but the SMA
+    filter needs its full window regardless, so the binding guard is that one.
     """
     def maybe(expr):
         return expr.over(group) if group else expr
 
     out = frame.with_columns(maybe(rsi("close", period)).alias("rsi"))
+    span = pl.col("high") - pl.col("low")
     out = out.with_columns(
         maybe(pl.col("close").rolling_mean(sma)).alias("sma"),
         maybe(pl.col("high").shift(1)).alias("prev_high"),
         maybe(pl.int_range(pl.len())).alias("_seen"),
+        # A doji prints high == low and would divide by zero; those bars are simply not
+        # eligible for an IBS rule rather than being assigned an arbitrary 0 or 0.5.
+        ((pl.col("close") - pl.col("low"))
+         / pl.when(span > 0).then(span).otherwise(None)).alias("ibs"),
     )
+    for lag in (1, 2, 3):
+        out = out.with_columns(maybe(pl.col("rsi").shift(lag)).alias(f"rsi_{lag}"))
+
     warm = pl.col("_seen") >= (max(sma, period * 10) if trend_filter else period * 10)
-    condition = (pl.col("rsi") < level) & warm
+    if rule == "rsi2":
+        condition = pl.col("rsi") < level
+    elif rule == "r3":
+        condition = (
+            (pl.col("rsi_3") < r3_from)                 # the run starts from below 60
+            & (pl.col("rsi_2") < pl.col("rsi_3"))       # three consecutive falls
+            & (pl.col("rsi_1") < pl.col("rsi_2"))
+            & (pl.col("rsi") < pl.col("rsi_1"))
+            & (pl.col("rsi") < level)                   # and finishes oversold
+        )
+    elif rule == "ibs":
+        condition = pl.col("ibs") < ibs_level
+    else:
+        raise SystemExit(f"unknown rule {rule!r}")
+    condition = condition & warm
     if trend_filter:
         condition = condition & (pl.col("close") > pl.col("sma"))
     return out.with_columns(condition.fill_null(False).alias("signal"))
 
 
-def walk(frame: pl.DataFrame, cost: float, max_hold: int | None = None) -> pl.DataFrame:
-    """Buy on a signal close, sell on the first close above the previous bar's high.
+def walk(frame: pl.DataFrame, cost: float, max_hold: int | None = None,
+         exit_rule: str = "up-close", exit_level: float = 70.0,
+         horizon: int = 5) -> pl.DataFrame:
+    """Buy on a signal close, sell when the exit rule fires. One position at a time.
 
-    One position at a time — the published strategy is a single instrument long-or-flat
-    rule, and stacking entries would be testing something else. A signal that fires while
+    Three exits, held identical across every rule being compared:
+
+        up-close  the first close above the previous bar's high. Connors' RSI(2) exit.
+        rsi70     the first close with RSI(period) above `exit_level`. R3's own exit.
+        horizon   exactly `horizon` bars later, unconditionally.
+
+    The third is the arbiter and it is not a stylistic preference. Both of the others are
+    themselves mean-reversion bets that resolve within days whatever opened the trade, so
+    comparing two entry rules through them measures the exit as much as the entry. Only a
+    fixed horizon holds the exit genuinely constant.
+
+    One position at a time — the published strategies are single-instrument long-or-flat
+    rules, and stacking entries would be testing something else. A signal that fires while
     already in the trade is ignored rather than added to.
     """
     close = frame["close"].to_numpy()
     high = frame["high"].to_numpy()
     signal = frame["signal"].to_numpy()
+    rsi_a = frame["rsi"].to_numpy()
     dates = frame["date"].to_list()      # date objects, not numpy: a numpy datetime64
     n = len(close)                       # round-trips into an Object column downstream
 
@@ -149,16 +203,21 @@ def walk(frame: pl.DataFrame, cost: float, max_hold: int | None = None) -> pl.Da
         if not signal[i]:
             i += 1
             continue
-        entry, j = close[i], None
-        for k in range(i + 1, n):
-            if close[k] > high[k - 1] or (max_hold is not None and k - i >= max_hold):
-                j = k
-                break
-        if j is None:                       # still open at the end of the data
-            j = n - 1
-            outcome = "open"
+        entry, j, outcome = close[i], None, "exit"
+        if exit_rule == "horizon":
+            if i + horizon <= n - 1:
+                j = i + horizon
+            else:
+                j, outcome = n - 1, "open"   # the window ran out before the horizon did
         else:
-            outcome = "exit"
+            for k in range(i + 1, n):
+                done = (close[k] > high[k - 1] if exit_rule == "up-close"
+                        else rsi_a[k] > exit_level)
+                if done or (max_hold is not None and k - i >= max_hold):
+                    j = k
+                    break
+            if j is None:                    # never triggered before the data ended
+                j, outcome = n - 1, "open"
         rows.append({
             "entry_date": dates[i], "exit_date": dates[j],
             "entry": float(entry), "exit": float(close[j]),
@@ -202,7 +261,7 @@ def equity_curve(frame: pl.DataFrame, trades: pl.DataFrame, cost: float) -> np.n
 
 
 def random_control(frame: pl.DataFrame, count: int, cost: float, seed: int,
-                   warm: int) -> pl.DataFrame:
+                   warm: int, **walk_kwargs) -> pl.DataFrame:
     """The same exit rule from entries chosen at random, matched in number.
 
     The exit — "first close above yesterday's high" — is itself a mean-reversion bet and
@@ -215,7 +274,7 @@ def random_control(frame: pl.DataFrame, count: int, cost: float, seed: int,
         return pl.DataFrame()
     picks = np.zeros(n, dtype=bool)
     picks[rng.choice(eligible, size=min(count, eligible.size), replace=False)] = True
-    return walk(frame.with_columns(pl.Series("signal", picks)), cost)
+    return walk(frame.with_columns(pl.Series("signal", picks)), cost, **walk_kwargs)
 
 
 # ---------------------------------------------------------------------- verification
@@ -385,12 +444,13 @@ def stock_event_study(panel: pl.DataFrame, trend_filter: bool) -> None:
               f"{t_cluster:>12.2f} {len(d):>7,}")
 
 
-def stock_trades(panel: pl.DataFrame, cost: float, max_hold: int | None) -> pl.DataFrame:
+def stock_trades(panel: pl.DataFrame, cost: float, max_hold: int | None,
+                 **walk_kwargs) -> pl.DataFrame:
     """The same walk, per symbol, emitted in the shape rsi_backtest.simulate() expects."""
     rows = []
     for (symbol,), part in panel.group_by("symbol", maintain_order=True):
         part = part.sort("date")
-        found = walk(part, cost, max_hold)
+        found = walk(part, cost, max_hold, **walk_kwargs)
         if found.is_empty():
             continue
         rows.append(found.with_columns(pl.lit(symbol).alias("symbol")))
@@ -407,6 +467,19 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--mode", choices=("index", "stocks"), default="index")
+    parser.add_argument("--rules", nargs="+", default=["rsi2", "r3", "ibs"],
+                        choices=("rsi2", "r3", "ibs"),
+                        help="entry rules to compare on the same bars (default all three)")
+    parser.add_argument("--exit-rule", choices=("up-close", "rsi70", "horizon"),
+                        default="up-close",
+                        help="up-close is Connors' RSI(2) exit, rsi70 is R3's own, "
+                             "horizon holds a fixed number of bars and is the only one "
+                             "that cannot flatter one entry rule over another")
+    parser.add_argument("--exit-level", type=float, default=70.0)
+    parser.add_argument("--horizon", type=int, default=5)
+    parser.add_argument("--r3-from", type=float, default=60.0,
+                        help="R3: the reading the three-day decline must start below")
+    parser.add_argument("--ibs-level", type=float, default=0.2)
     parser.add_argument("--universe", default="nifty50", choices=sorted(INDICES))
     parser.add_argument("--rsi-period", type=int, default=2)
     parser.add_argument("--level", type=float, default=10.0,
@@ -437,62 +510,70 @@ def main() -> int:
     cost = args.cost_bps / 10_000
     warm = max(args.sma if args.trend_filter else 0, args.rsi_period * 10)
 
-    if args.mode == "index":
-        frame = fetch_index(args.universe)
-        frame = attach_signal(frame, args.rsi_period, args.level,
-                              args.trend_filter, args.sma)
-        years = (frame["date"][-1] - frame["date"][0]).days / 365.25
-        print(f"{INDICES[args.universe]} ({args.universe}): {frame.height:,} sessions, "
-              f"{frame['date'][0]} -> {frame['date'][-1]}  ({years:.2f} years)")
-        print(f"rule: RSI({args.rsi_period}) < {args.level:g}"
-              + (f", close > SMA({args.sma})" if args.trend_filter else "")
-              + ", exit on the first close above the previous high")
-        print(f"  {int(frame['signal'].sum()):,} days meet the entry condition")
-        verify_rsi(frame, args.rsi_period)
-        event_study(frame, args.level, args.trend_filter)
+    def walk_args(c):
+        return dict(max_hold=args.max_hold, exit_rule=args.exit_rule,
+                    exit_level=args.exit_level, horizon=args.horizon)
 
-        close = frame["close"].to_numpy()
-        bench = close / close[0]
-        bench_cagr, bench_dd = performance(bench, years)
+    if args.mode == "index":
+        raw = fetch_index(args.universe)
+        years = (raw["date"][-1] - raw["date"][0]).days / 365.25
+        print(f"{INDICES[args.universe]} ({args.universe}): {raw.height:,} sessions, "
+              f"{raw['date'][0]} -> {raw['date'][-1]}  ({years:.2f} years)")
+        exit_text = {"up-close": "exit on the first close above the previous high",
+                     "rsi70": f"exit when RSI rises above {args.exit_level:g}",
+                     "horizon": f"exit exactly {args.horizon} bars later"}[args.exit_rule]
+        print(f"{exit_text}"
+              + (f", entries filtered to close > SMA({args.sma})" if args.trend_filter else ""))
+        verify_rsi(raw, args.rsi_period)
+
+        close = raw["close"].to_numpy()
+        bench_cagr, bench_dd = performance(close / close[0], years)
         print(f"\nCONTROL buy-and-hold {args.universe}, fully invested: "
               f"{bench_cagr * 100:+.2f}% CAGR / {bench_dd * 100:.2f}% max drawdown")
 
-        costs = ([0, 5, 10, 20, 30, 50] if args.cost_sweep
-                 else [args.cost_bps])
+        costs = [0, 5, 10, 20, 30, 50] if args.cost_sweep else [args.cost_bps]
         summary = []
-        for bps in costs:
-            c = bps / 10_000
-            trades = walk(frame, c, args.max_hold)
-            if trades.is_empty():
-                print(f"  {bps} bps: no trades"); continue
-            equity = equity_curve(frame, trades, c)
-            row = summarise(f"RSI({args.rsi_period}) @ {bps:g}bps", trades, equity,
-                            years, frame.height)
-            summary.append(row)
-            # Same exit, entries from a hat, matched in count.
-            control = random_control(frame, trades.height, c, args.random_seed, warm)
-            if not control.is_empty():
-                ctrl_equity = equity_curve(frame, control, c)
-                summary.append(summarise(f"random @ {bps:g}bps", control, ctrl_equity,
-                                         years, frame.height))
+        for rule in args.rules:
+            frame = attach_signal(raw, args.rsi_period, args.level, args.trend_filter,
+                                  args.sma, rule=rule, r3_from=args.r3_from,
+                                  ibs_level=args.ibs_level)
+            print(f"\n--- {rule} --- {int(frame['signal'].sum()):,} days meet the entry "
+                  f"condition")
+            event_study(frame, args.level, args.trend_filter)
+            for bps in costs:
+                c = bps / 10_000
+                trades = walk(frame, c, **walk_args(c))
+                if trades.is_empty():
+                    print(f"  {bps} bps: no trades")
+                    continue
+                summary.append(summarise(f"{rule} @ {bps:g}bps", trades,
+                                         equity_curve(frame, trades, c), years,
+                                         frame.height))
+            # Same exit, entries from a hat, matched in count to this rule's.
+            trades = walk(frame, cost, **walk_args(cost))
+            if not trades.is_empty():
+                control = random_control(frame, trades.height, cost, args.random_seed,
+                                         warm, **walk_args(cost))
+                if not control.is_empty():
+                    summary.append(summarise(f"random({rule}) @ {args.cost_bps:g}bps",
+                                             control,
+                                             equity_curve(frame, control, cost), years,
+                                             frame.height))
+                mid = frame["date"][frame.height // 2]
+                for label, part in (("first half ",
+                                     trades.filter(pl.col("entry_date") < mid)),
+                                    ("second half",
+                                     trades.filter(pl.col("entry_date") >= mid))):
+                    if part.height:
+                        c2 = part.filter(pl.col("outcome") != "open")
+                        if c2.height:
+                            print(f"  {label}: {part.height:>4} trades, "
+                                  f"mean {float(c2['ret'].mean()) * 100:+.3f}%, win "
+                                  f"{c2.filter(pl.col('ret') > 0).height / c2.height * 100:.1f}%")
         table = pl.DataFrame(summary)
         print()
-        with pl.Config(tbl_rows=40, tbl_cols=14, tbl_width_chars=190):
+        with pl.Config(tbl_rows=60, tbl_cols=14, tbl_width_chars=190):
             print(table)
-
-        # Has it decayed? A mean-reversion edge this well known is the kind that gets
-        # arbitraged, so the halves are reported rather than the average alone.
-        trades = walk(frame, cost, args.max_hold)
-        if not trades.is_empty():
-            mid = frame["date"][frame.height // 2]
-            h1 = trades.filter(pl.col("entry_date") < mid)
-            h2 = trades.filter(pl.col("entry_date") >= mid)
-            for label, part in (("first half ", h1), ("second half", h2)):
-                if part.height:
-                    closed = part.filter(pl.col("outcome") != "open")
-                    print(f"  {label}: {part.height:>4} trades, "
-                          f"mean {float(closed['ret'].mean()) * 100:+.3f}%, "
-                          f"win {closed.filter(pl.col('ret') > 0).height / max(closed.height, 1) * 100:.1f}%")
         if args.out:
             table.write_csv(args.out)
         return 0
@@ -514,10 +595,7 @@ def main() -> int:
           f"{panel['symbol'].n_unique()} symbols with >= {args.min_bars} bars, "
           f"{panel['date'].min()} -> {panel['date'].max()}")
 
-    panel = attach_signal(panel, args.rsi_period, args.level, args.trend_filter,
-                          args.sma, group="symbol")
-    print(f"  {int(panel['signal'].sum()):,} entry days")
-
+    # One price grid and one benchmark for every rule, so the curves are comparable.
     prices = (panel.select("symbol", "date", "close")
               .with_columns(pl.col("date").cast(pl.Datetime("us")).alias("datetime"))
               .pivot(on="symbol", index="datetime", values="close")
@@ -536,53 +614,68 @@ def main() -> int:
     print(f"CONTROL equal-weight buy-and-hold ({int(listed.sum())} symbols, fully "
           f"invested): {bench_cagr * 100:+.2f}% CAGR / {bench_dd * 100:.2f}% max DD")
 
-    stock_event_study(panel, args.trend_filter)
+    base, rows = panel, []
+    for rule in args.rules:
+        marked = attach_signal(base, args.rsi_period, args.level, args.trend_filter,
+                               args.sma, group="symbol", rule=rule,
+                               r3_from=args.r3_from, ibs_level=args.ibs_level)
+        print(f"\n--- {rule} --- {int(marked['signal'].sum()):,} entry days")
+        stock_event_study(marked, args.trend_filter)
 
-    # The strategy, and the same exit fired from random days. The exit is a mean-reversion
-    # rule in its own right and closes most trades within days whatever opened them, so
-    # without the control its work is credited to RSI(2).
-    rng = np.random.default_rng(args.random_seed)
-    # Exactly as many random signal days as the rule produced, drawn only from days the
-    # rule could itself have fired on. Drawing at a matched *rate* instead is not the same
-    # thing: real RSI(2) signals cluster inside market-wide selloffs, so many land while
-    # the symbol is already in a trade and are skipped, and the control ends up with half
-    # again as many actual trades and a deployment advantage that flatters it.
-    warm_days = (panel["_seen"].to_numpy()
-                 >= (args.sma if args.trend_filter else args.rsi_period * 10))
-    eligible = np.flatnonzero(warm_days & np.isfinite(panel["rsi"].to_numpy()))
-    wanted = int(panel["signal"].sum())
-    picks = np.zeros(panel.height, dtype=bool)
-    picks[rng.choice(eligible, size=min(wanted, eligible.size), replace=False)] = True
-    shuffled = panel.with_columns(pl.Series("signal", picks))
+        # Exactly as many random signal days as this rule produced, drawn only from days
+        # it could itself have fired on. Drawing at a matched *rate* instead is not the
+        # same thing: real signals cluster inside market-wide selloffs, so many land while
+        # the symbol is already in a trade and are skipped, and the control ends up with
+        # half again as many actual trades and a deployment advantage that flatters it.
+        rng = np.random.default_rng(args.random_seed)
+        warm_days = (marked["_seen"].to_numpy()
+                     >= (args.sma if args.trend_filter else args.rsi_period * 10))
+        eligible = np.flatnonzero(warm_days & np.isfinite(marked["rsi"].to_numpy()))
+        wanted = int(marked["signal"].sum())
+        if not eligible.size or not wanted:
+            continue
+        picks = np.zeros(marked.height, dtype=bool)
+        picks[rng.choice(eligible, size=min(wanted, eligible.size), replace=False)] = True
+        shuffled = marked.with_columns(pl.Series("signal", picks))
 
-    rows = []
-    for label, source in (("RSI(2)", panel), ("random", shuffled)):
-        trades = stock_trades(source, cost, args.max_hold)
-        if trades.is_empty():
-            print(f"{label}: no trades"); continue
-        equity, taken, skipped, _, _, _ = simulate(trades, prices, args.slots, cost)
-        cagr, maxdd = performance(equity, years)
-        closed = trades.filter(pl.col("outcome") != "open")
-        wins = closed.filter(pl.col("ret") > 0)
-        mean = float(closed["ret"].mean())
-        se = float(closed["ret"].std()) / np.sqrt(closed.height)
-        rows.append({"run": label, "signals": trades.height, "taken": taken,
-                     "win_rate_pct": round(wins.height / max(closed.height, 1) * 100, 1),
-                     "mean_trade_pct": round(mean * 100, 3),
-                     "se_pct": round(se * 100, 3),
-                     "median_hold": int(trades["bars_held"].median()),
-                     "cagr_pct": round(cagr * 100, 2),
-                     "max_drawdown_pct": round(maxdd * 100, 2),
-                     "final_equity": round(float(equity[-1]), 3),
-                     "_mean": mean, "_se": se})
-    if len(rows) == 2:
-        spread = np.sqrt(rows[0]["_se"] ** 2 + rows[1]["_se"] ** 2)
-        rows[0]["vs_random_sigma"] = round((rows[0]["_mean"] - rows[1]["_mean"]) / spread, 2)
-        rows[1]["vs_random_sigma"] = None
+        pair = []
+        for label, source in ((rule, marked), (f"random({rule})", shuffled)):
+            trades = stock_trades(source, cost, args.max_hold, exit_rule=args.exit_rule,
+                                  exit_level=args.exit_level, horizon=args.horizon)
+            if trades.is_empty():
+                print(f"  {label}: no trades")
+                continue
+            equity, taken, skipped, _, _, _ = simulate(trades, prices, args.slots, cost)
+            cagr, maxdd = performance(equity, years)
+            closed = trades.filter(pl.col("outcome") != "open")
+            if not closed.height:
+                continue
+            wins = closed.filter(pl.col("ret") > 0)
+            mean = float(closed["ret"].mean())
+            se = float(closed["ret"].std()) / np.sqrt(closed.height)
+            pair.append({
+                "run": label, "signals": trades.height, "taken": taken,
+                "win_rate_pct": round(wins.height / closed.height * 100, 1),
+                "mean_trade_pct": round(mean * 100, 3), "se_pct": round(se * 100, 3),
+                "median_hold": int(trades["bars_held"].median()),
+                "cagr_pct": round(cagr * 100, 2),
+                "max_drawdown_pct": round(maxdd * 100, 2),
+                "final_equity": round(float(equity[-1]), 3),
+                "vs_random_sigma": None, "_mean": mean, "_se": se})
+        if len(pair) == 2:
+            spread = np.sqrt(pair[0]["_se"] ** 2 + pair[1]["_se"] ** 2)
+            if np.isfinite(spread) and spread > 0:
+                pair[0]["vs_random_sigma"] = round(
+                    (pair[0]["_mean"] - pair[1]["_mean"]) / spread, 2)
+        rows.extend(pair)
+
+    if not rows:
+        print("no trades on any rule")
+        return 1
     table = pl.DataFrame([{k: v for k, v in r.items() if not k.startswith("_")}
                           for r in rows])
     print()
-    with pl.Config(tbl_rows=10, tbl_cols=12, tbl_width_chars=170):
+    with pl.Config(tbl_rows=20, tbl_cols=12, tbl_width_chars=175):
         print(table)
     print(f"\nbuy-and-hold control: {bench_cagr * 100:+.2f}% CAGR / "
           f"{bench_dd * 100:.2f}% max DD, fully invested throughout.")

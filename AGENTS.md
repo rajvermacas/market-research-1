@@ -54,6 +54,9 @@ scripts/rsi2_mean_reversion.py            Connors' RSI(2) rule on the real Nifty
                                           (pulled from Yahoo, cached) and on constituents
 scripts/bollinger_rsi_ablation.py         RSI oversold / Bollinger band touch / squeeze
                                           breakout / divergence, separately and combined
+docs/strategy-ledger.md                   every published strategy tested here, its verdict,
+                                          and the method every one of them follows. Read it
+                                          before testing a new one — several are settled.
 ```
 
 ## Conventions
