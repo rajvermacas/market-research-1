@@ -56,6 +56,8 @@ scripts/bollinger_rsi_ablation.py         RSI oversold / Bollinger band touch / 
                                           breakout / divergence, separately and combined
 scripts/opening_range_breakout.py         opening range breakout on the hourly panel, both
                                           directions, against random same-day entries
+scripts/turn_of_month.py                  the turn-of-the-month calendar effect on the real
+                                          Nifty index series, plus a full window sweep
 docs/strategy-ledger.md                   every published strategy tested here, its verdict,
                                           and the method every one of them follows. Read it
                                           before testing a new one — several are settled.
@@ -135,6 +137,15 @@ wrong manufactures fake gaps on every split. Key on ISIN where available, since 
 and occasionally reused.
 
 ## LESSONS
+
+- Sweep the free parameter before believing a published window, and read the SHAPE of the
+  sweep rather than its peak. The turn-of-the-month rule is quoted at (-5 sessions, +3), and
+  the reason to trust it here is not that the published pair scored well but that all 35
+  entry/exit pairs from -7 to +5 posted a positive mean trade, 24 of 35 beat buy-and-hold on
+  return-per-drawdown, and the published pair sits mid-plateau rather than on a spike — the
+  best was a different one. A real effect is a plateau; a fitted one is a peak with nothing
+  around it. Every other strategy tested in this repository failed a control that this one
+  passed, so the difference is worth naming precisely.
 
 - A day-trading book that equal-weights each session's signals reports a DAY-weighted mean,
   while its average trade is TRADE-weighted, and the two can have opposite signs. Every

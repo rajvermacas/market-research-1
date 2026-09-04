@@ -20,6 +20,7 @@ and backtesting.
 | `scripts/supertrend_rsi_w.py` | RSI double-bottom ("W") + SuperTrend confluence, ablated against the naive oversold buy and against random entries |
 | `scripts/rsi2_mean_reversion.py` | Connors' RSI(2), R3 and IBS on the real Nifty index series and on constituents, against buy-and-hold and random entries |
 | `scripts/opening_range_breakout.py` | Opening range breakout on the hourly panel, both directions, against random same-day entries |
+| `scripts/turn_of_month.py` | The turn-of-the-month (Ultimo) calendar effect on the real Nifty index series, with a full window sweep |
 | `docs/strategy-ledger.md` | Every published strategy tested here, with its verdict and the method they all follow |
 | `scripts/bollinger_rsi_ablation.py` | RSI oversold, Bollinger band-touch, squeeze breakout and divergence, measured separately and combined |
 
@@ -661,6 +662,86 @@ day lets the quiet days outvote the heavy ones five to one, and a 2.27 return/dr
 falls out. The trade-weighted mean, which weights each session by the opportunity it
 actually offered, is negative. Both numbers are printed side by side for exactly this
 reason.
+
+## Turn of the month (the Ultimo effect)
+
+`scripts/turn_of_month.py`. Buy at the close of the **fifth-last** trading day of the
+month, sell at the close of the **third** trading day of the new month, sit in cash the
+rest of the time — about a third invested. The source's claim is explicitly about risk
+rather than return: on the S&P 500 since 1960, 7% CAGR against buy-and-hold's 7.5%, at a
+27% drawdown against 56%.
+
+This is the first strategy tested here whose signal is not a price. There is no indicator
+to warm up, no lookahead to guard, and no parameter fitted to the data — the rule is a
+calendar. Run on the real cap-weighted Nifty series from Yahoo, so it also carries no
+survivorship bias: an index is not a basket of today's survivors.
+
+### The effect is visible before any window is chosen
+
+Average session return by position in the month, `^CRSLDX` (Nifty 500), 20.93 years —
+against an all-session average of **+0.0538%**:
+
+| | −1 | −2 | −3 | −4 | −5 | +1 | +2 | +3 | +4 | +5 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Nifty 500 | **+0.281%** | +0.101% | +0.072% | +0.125% | −0.017% | **+0.278%** | **+0.202%** | +0.034% | −0.056% | +0.014% |
+| Nifty 100 | **+0.240%** | +0.111% | +0.066% | +0.123% | −0.008% | **+0.235%** | **+0.174%** | +0.010% | −0.060% | +0.021% |
+| Nifty 50 | **+0.208%** | +0.130% | +0.047% | +0.082% | −0.005% | **+0.210%** | +0.137% | +0.025% | −0.058% | +0.064% |
+
+The last two sessions of the month and the first two of the next run four to five times
+the average session, on all three indices independently, and the effect dies by +4. Nobody
+picked a window to produce that.
+
+### It reproduces the source's claim
+
+10 bps one way — and note this is the first strategy tested here where costs barely matter,
+because it trades twelve times a year rather than hundreds:
+
+| Index | Run | CAGR | Max DD | **ret/DD** | In market | sigma vs random | h1 / h2 |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Nifty 50 | turn-of-month | +7.01% | −35.35% | **0.20** | 34.2% | **+2.61** | +0.58 / +0.64 |
+| | random windows | −2.99% | −69.05% | 0.04 | 34.2% | — | −0.63 / +0.20 |
+| | buy-and-hold | +9.25% | −59.86% | 0.15 | 100% | — | — |
+| Nifty 100 | turn-of-month | +8.85% | −35.60% | **0.25** | 34.0% | **+2.02** | +0.79 / +0.73 |
+| | buy-and-hold | +11.55% | −61.51% | 0.19 | 100% | — | — |
+| Nifty 500 | turn-of-month | +10.54% | −35.57% | **0.30** | 34.0% | **+2.22** | +0.94 / +0.84 |
+| | random windows | +2.05% | −53.49% | 0.04 | 34.0% | — | +0.17 / +0.28 |
+| | buy-and-hold | +11.84% | −64.26% | 0.18 | 100% | — | — |
+
+It gives up one to two points of CAGR and takes **little more than half the drawdown**,
+which is what the source claimed and what the previous five strategies all failed to do.
+Against random windows of the same count and the same lengths — the control that matters,
+since a part-time book has a small drawdown for free — it wins by 2.0 to 2.6 sigma, and
+it is stable across both halves of every window.
+
+### The window is not fitted
+
+Every entry offset from −1 to −7 against every exit from +1 to +5, on the Nifty 500:
+
+**All 35 windows have a positive mean trade.** Return per drawdown runs 0.05 to 0.44, and
+**24 of 35 beat buy-and-hold's 0.18**. The published (−5,+3) scores 0.30 and is not the
+best — the best is (−4,+2) at **0.44** (+8.79% CAGR, −19.78% drawdown, 24.4% invested),
+with (−3,+2) at 0.39 and (−5,+2) at 0.37 alongside it. Sitting mid-plateau rather than on
+a peak is what a real effect looks like; a fitted one is a spike with nothing around it.
+
+### What is not settled
+
+The honest reservations, in order of how much they should bother you:
+
+* **The sample is ~250 monthly trades per index**, and 2.0–2.6 sigma is respectable, not
+  overwhelming. The case rests on the consistency — three indices, 35 windows, both halves,
+  and the raw day profile — rather than on any single test clearing a threshold.
+* **The tight windows have decayed.** (−2,+2) fell from +0.902% in the first half to
+  +0.236% in the second, (−3,+2) from +1.022% to +0.328%. The wider ones did not: (−5,+3)
+  went +0.940% to +0.838%, (−5,+1) +0.651% to +0.654%. Something concentrated at the very
+  turn looks arbitraged while a broader end-of-month drift persists.
+* **It is a lower-return strategy in absolute terms.** The entire case is risk-adjusted,
+  which is only useful to someone who can act on it — by levering it, or by holding
+  something else with the two thirds of the time it sits in cash.
+* The usual structural story — monthly salary flows, SIP inflows and fund rebalancing all
+  landing at the turn — is plausible in India and would explain why it survives, but this
+  test does not establish the mechanism, only the pattern.
+
+This is the first entry in the ledger to reach a verdict of **yes**.
 
 ## Refreshing the data
 
