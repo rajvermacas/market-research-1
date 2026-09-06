@@ -232,6 +232,14 @@ def indicator(p: Panel, name: str, *args) -> np.ndarray:
         v = p.has_bar.cumsum(axis=0).astype(float)
     elif name == "turnover_med":
         v = _pd(p.turnover).rolling(args[0], min_periods=args[0] // 2).median().to_numpy()
+    elif name == "turnover_mean":
+        v = _pd(p.turnover).rolling(args[0], min_periods=args[0] // 2).mean().to_numpy()
+    elif name == "range":          # (n-day high - n-day low) / close, a base-tightness measure
+        hi = _pd(p.high).rolling(args[0], min_periods=args[0]).max()
+        lo = _pd(p.low).rolling(args[0], min_periods=args[0]).min()
+        v = ((hi - lo) / px).to_numpy()
+    elif name == "hh_incl":        # highest high over the last n bars including today
+        v = _pd(p.high).rolling(args[0], min_periods=args[0]).max().to_numpy()
     elif name == "clv":            # close within the day's range: 0 low .. 1 high
         rng = p.high - p.low
         with np.errstate(invalid="ignore", divide="ignore"):
@@ -415,7 +423,7 @@ def _rescale(res: Result, m: np.ndarray, cost_bps: float, funding_rate: float) -
     r = np.diff(res.equity) / res.equity[:-1]
     g = res.gross[:-1]
     switch = np.abs(np.diff(np.concatenate([[1.0], m]))) * g
-    r2 = (m * r - np.maximum(m - 1, 0) * funding_rate / TRADING_DAYS
+    r2 = (m * r - np.maximum(m * g - 1, 0) * funding_rate / TRADING_DAYS
           - switch * cost_bps / 10_000)
     eq = np.concatenate([[1.0], np.cumprod(1 + r2)])
     return Result(eq, res.gross * np.concatenate([[1.0], m]),
@@ -434,27 +442,42 @@ def vol_target(res: Result, target: float, window: int, cap: float, funding_rate
 
 
 def equity_curve_filter(res: Result, window: int, scale: float, cost_bps: float,
-                        band: float = 0.0) -> Result:
-    """Run at `scale` exposure while the strategy's own equity sits below its moving average.
+                        band: float = 0.0, boost: float = 1.0, dd_stop: float = 0.0,
+                        funding_rate: float = 0.0, hedge: float = 0.0,
+                        hedge_ret: np.ndarray | None = None) -> Result:
+    """Run at `scale` exposure while the strategy's own equity sits below its moving average
+    (or, with `dd_stop`, more than that far below its running peak), and at `boost` otherwise.
 
     `band` adds hysteresis: cut once equity is `band` below the average, restore only once
     it is `band` above. Without it the filter flips every few days while equity hugs the
-    average, and each flip costs turnover.
+    average, and each flip costs turnover. All states are read off the UNSCALED curve, so
+    the filter cannot trap itself flat.
     """
     eq = res.equity
     ma = pd.Series(eq).rolling(window, min_periods=window).mean().to_numpy()
+    peak = np.maximum.accumulate(eq)
     cut = np.zeros(len(eq), bool)
     state = False
     for i in range(len(eq)):
         if np.isnan(ma[i]):
             continue
-        if not state and eq[i] < ma[i] * (1 - band):
+        if not state and (eq[i] < ma[i] * (1 - band) or (dd_stop and eq[i] < peak[i] * (1 - dd_stop))):
             state = True
         elif state and eq[i] > ma[i] * (1 + band):
             state = False
         cut[i] = state
-    m = np.where(cut[:-1], scale, 1.0)     # yesterday's state decides today's exposure
-    return _rescale(res, m, cost_bps, 0.0)
+    m = np.where(cut[:-1], scale, boost)     # yesterday's state decides today's exposure
+    out = _rescale(res, m, cost_bps, funding_rate)
+    if hedge and hedge_ret is not None:
+        # short `hedge` x gross of the large-cap index (Nifty futures in practice) while cut
+        g = res.gross[:-1] * m
+        h = np.where(cut[:-1], hedge * g, 0.0)
+        r = np.diff(out.equity) / out.equity[:-1]
+        switch = np.abs(np.diff(np.concatenate([[0.0], h])))
+        r2 = r - h * hedge_ret[1:] - switch * 5 / 10_000
+        eq = np.concatenate([[1.0], np.cumprod(1 + r2)])
+        out = Result(eq, out.gross, out.turnover, out.dates)
+    return out
 
 
 # ------------------------------------------------------------------------ strategies
@@ -542,6 +565,18 @@ def strat_breakout(p: Panel, a, elig, regime) -> np.ndarray:
     entry = np.full(p.N, np.nan)
     init_stop = np.full(p.N, np.nan)
     age = np.zeros(p.N, int)
+    weekly = rebalance_days(p, "weekly") if a.exit_weekly else np.ones(p.T, bool)
+    if a.vol_surge:
+        surge = p.turnover / indicator(p, "turnover_mean", 50)
+    if a.base_tight:
+        tight = indicator(p, "range", 20)
+    if a.near_high:
+        near = p.close / indicator(p, "hh_incl", 252)
+    if a.rank == "rs":
+        # relative strength: the name's 6-month return minus the universe's
+        rs6 = indicator(p, "ret", 126, 0)
+        idx_ret = np.nanmedian(np.where(elig, rs6, np.nan), axis=1)
+        mom = rs6 - idx_ret[:, None]
     for t in range(p.T):
         c = p.close[t]
         if held.any():
@@ -550,7 +585,7 @@ def strat_breakout(p: Panel, a, elig, regime) -> np.ndarray:
             stop = peak - a.atr_mult * atr[t]
             if a.init_atr:
                 stop = np.fmax(stop, init_stop)      # tighter stop until the trade has moved
-            out = held & ~np.isnan(c) & (c < stop)
+            out = held & ~np.isnan(c) & (c < stop) & weekly[t]
             if ll is not None:
                 out |= held & ~np.isnan(c) & (c < ll[t])
             if a.time_stop:
@@ -571,6 +606,12 @@ def strat_breakout(p: Panel, a, elig, regime) -> np.ndarray:
                 cand &= vol[t] < a.max_vol
             if a.clv:
                 cand &= indicator(p, "clv")[t] >= a.clv
+            if a.vol_surge:
+                cand &= surge[t] >= a.vol_surge
+            if a.base_tight:
+                cand &= tight[t] <= a.base_tight
+            if a.near_high:
+                cand &= near[t] >= a.near_high
             if cand.any():
                 s = np.where(cand, mom[t] if a.rank != "sharpe" else mom[t] / np.maximum(vol[t], 0.10), np.nan)
                 pick = top_k(s, free)
@@ -642,7 +683,13 @@ def run(p: Panel, a) -> tuple[Result, dict]:
               p.has_bar[:end_i], p.bad_ticks, p.nifty500, p.ind)
     res = simulate(q, W[:end_i], start_i, a.cost_bps, a.cash_rate, a.funding_rate, a.leverage)
     if a.eq_curve:
-        res = equity_curve_filter(res, a.eq_curve, a.eq_scale, a.cost_bps, a.eq_band)
+        hedge_ret = None
+        if a.hedge:
+            big = ew_index(p, eligibility(p, "liquid200", a.min_price, a.min_bars, a.min_turnover))
+            hedge_ret = np.diff(big[start_i:end_i]) / big[start_i:end_i - 1]
+            hedge_ret = np.concatenate([[0.0], hedge_ret])
+        res = equity_curve_filter(res, a.eq_curve, a.eq_scale, a.cost_bps, a.eq_band,
+                                  a.eq_boost, a.dd_stop, a.funding_rate, a.hedge, hedge_ret)
     if a.vol_target:
         res = vol_target(res, a.vol_target, a.vol_window, a.leverage, a.funding_rate, a.cost_bps)
     m = res.metrics()
@@ -673,6 +720,15 @@ def label(a) -> str:
             bits.append(f"ll{a.exit_n}")
         if a.init_atr:
             bits.append(f"init{a.init_atr:g}")
+        if a.vol_surge:
+            bits.append(f"vs{a.vol_surge:g}")
+        if a.base_tight:
+            bits.append(f"bt{a.base_tight:g}")
+        if a.near_high:
+            bits.append(f"nh{a.near_high:g}")
+        if a.exit_weekly:
+            bits.append("wkexit")
+        bits.append(a.rank)
         if a.time_stop:
             bits.append(f"ts{a.time_stop}")
     if a.strategy == "pullback":
@@ -690,7 +746,8 @@ def label(a) -> str:
     if a.max_vol:
         bits.append(f"vol<{a.max_vol:g}")
     if a.eq_curve:
-        bits.append(f"ec{a.eq_curve}@{a.eq_scale:g}" + (f"±{a.eq_band:g}" if a.eq_band else ""))
+        bits.append(f"ec{a.eq_curve}@{a.eq_scale:g}" + (f"±{a.eq_band:g}" if a.eq_band else "")
+                    + (f"/{a.eq_boost:g}" if a.eq_boost != 1 else "") + (f" dd{a.dd_stop:g}" if a.dd_stop else "") + (f" hedge{a.hedge:g}" if a.hedge else ""))
     if a.vol_target:
         bits.append(f"vt{a.vol_target:g}")
     if a.leverage != 1:
@@ -741,12 +798,18 @@ def build_parser() -> argparse.ArgumentParser:
                     help="cut exposure while equity is below its N-day average")
     ap.add_argument("--eq-scale", type=float, default=0.5, help="exposure while cut")
     ap.add_argument("--eq-band", type=float, default=0.0, help="hysteresis band around the average")
+    ap.add_argument("--eq-boost", type=float, default=1.0,
+                    help="exposure multiplier while NOT cut (>1 borrows at --funding-rate)")
+    ap.add_argument("--hedge", type=float, default=0.0,
+                    help="while cut, short this fraction of gross in the large-cap index proxy")
+    ap.add_argument("--dd-stop", type=float, default=0.0,
+                    help="also cut once the strategy's own equity is this far below its peak")
     # momentum
     ap.add_argument("--lookback", type=int, default=252)
     ap.add_argument("--skip", type=int, default=21)
     ap.add_argument("--top", type=int, default=20)
     ap.add_argument("--rebalance", default="monthly", choices=["daily", "weekly", "monthly"])
-    ap.add_argument("--rank", default="mom", choices=["mom", "sharpe", "mom2"])
+    ap.add_argument("--rank", default="mom", choices=["mom", "sharpe", "mom2", "rs"])
     ap.add_argument("--weighting", default="equal", choices=["equal", "invvol", "risk"])
     # breakout
     ap.add_argument("--entry-n", type=int, default=100)
@@ -754,6 +817,14 @@ def build_parser() -> argparse.ArgumentParser:
     ap.add_argument("--atr-mult", type=float, default=4.0)
     ap.add_argument("--risk", type=float, default=0.01)
     ap.add_argument("--clv", type=float, default=0.0)
+    ap.add_argument("--vol-surge", type=float, default=0.0,
+                    help="require the breakout day's turnover to be this multiple of its 50-day mean")
+    ap.add_argument("--base-tight", type=float, default=0.0,
+                    help="require the prior 20-day range / close to be at most this")
+    ap.add_argument("--near-high", type=float, default=0.0,
+                    help="require close >= this fraction of the 252-day high")
+    ap.add_argument("--exit-weekly", action="store_true",
+                    help="evaluate trailing-stop exits only on the last day of each week")
     ap.add_argument("--init-atr", type=float, default=0.0,
                     help="initial stop in ATRs below entry (0 = use --atr-mult)")
     ap.add_argument("--time-stop", type=int, default=0,

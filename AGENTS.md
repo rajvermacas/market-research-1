@@ -118,6 +118,22 @@ and occasionally reused.
 
 ## LESSONS
 
+- Measure a ceiling with a random search before declaring it. After a 30%/-25% target
+  plateaued at Calmar 1.18, a raised 35%/-25% target (Calmar 1.40) was tested by adding
+  mechanisms rather than re-tuning; 120 seeded random draws over the whole breakout space
+  topped out at 1.22 with a median of 0.71 and none at 1.40. The best draw used none of the
+  overlays the hand-tuned point relied on, which is what shows the plateau belongs to the
+  family and not to one setting.
+- Leverage of any shape moves CAGR and drawdown together. Flat leverage, state-dependent
+  leverage (1.2–1.5x while the strategy's own equity trends up), vol targeting and an index
+  hedge in weak states all left the return-to-drawdown ratio within 0.05 of where it started.
+  A ratio target is a question about the mechanism; sizing cannot answer it.
+- Entry-quality filters from the trading literature (volume surge, tight base, proximity to
+  the 52-week high, relative strength) each lowered Calmar on this data. They remove good
+  breakouts at least as fast as bad ones, and the cost of a missed winner in a low-hit-rate
+  system is larger than the cost of a stopped loser. Test each filter alone against the
+  unfiltered base before stacking any.
+
 - Put a liquidity floor in absolute rupees on the universe before believing any small-cap
   result. A rank-based "top 1000 by turnover" universe admitted names trading ₹10–90 lakh a
   day in 2007–2013, and those names supplied a third of the breakout system's CAGR (+29% fell

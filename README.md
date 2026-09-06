@@ -357,6 +357,47 @@ the ATR trails got it out; the deeper episodes are the grinds — 2014-16, 2018-
 the regime flips on and off and breakouts fail one after another. That is the cost of trend
 following and no filter tested here removes it; the equity-curve cut is the one that halves it.
 
+### Second loop: 35% CAGR under a 25% drawdown
+
+The target was then raised to **CAGR ≥ 35% with max drawdown ≤ 25%**, a Calmar of 1.40. Rather
+than re-tune the same knobs, this pass added mechanisms that change the return or drawdown
+structure, each measured against the +28.0% / -23.8% configuration above:
+
+| Change | CAGR | Max DD | Calmar |
+| --- | --- | --- | --- |
+| (reference) | +28.0% | -23.8% | 1.18 |
+| Volume surge on the breakout day (1.5x 50-day mean) | +25.4% | -29.6% | 0.86 |
+| Tight base (20-day range ≤ 30% of price) | +26.0% | -30.2% | 0.86 |
+| Close within 5% of the 52-week high | +26.6% | -23.1% | 1.15 |
+| Rank by relative strength vs the universe | +25.0% | -29.5% | 0.85 |
+| Weekly rather than daily stop evaluation | +23.1% | -22.4% | 1.03 |
+| Portfolio stop: cut at 15% below own peak | +27.2% | -25.1% | 1.08 |
+| Short the large-cap index against the book while cut (0.5x) | +27.1% | -28.7% | 0.95 |
+| State-dependent leverage: 1.2x while own equity trends up, 0.5x otherwise | +32.6% | -28.6% | 1.14 |
+| Same at 1.3x | +34.8% | -30.9% | 1.13 |
+| Same at 1.5x | +39.3% | -35.6% | 1.10 |
+
+None of the entry-quality filters helped: each removed good trades faster than bad ones. The
+portfolio stop and the index hedge both cut return more than drawdown, because the strategy's
+losing stretches are not reliably falling markets. Leverage of any shape moves the two numbers
+together and leaves the ratio where it was.
+
+A seeded random search over the whole breakout space (entry length, slots, trail, regime,
+rank, weighting, equity-curve settings, leverage, exits; 120 draws) puts the ceiling in
+numbers: best Calmar 1.22, 95th percentile 1.00, median 0.71, none at 1.40, none meeting the
+target. The best draw (+27.4% at -22.4%) is a different point on the same plateau, with no
+equity-curve overlay at all, which is the useful part: the ~1.2 is a property of trend following
+in this market on this data, not of one tuned setting.
+
+On rolling windows of the reference configuration, no 10-year window meets 35% / -25%; two of
+sixteen 5-year windows do (those starting 2019 and 2020), four with 1.3x leverage. The target is
+reachable by choosing the window, which is not a strategy.
+
+What would change the answer is a second, uncorrelated return source rather than a better
+filter: the momentum and breakout sleeves here are 0.6 correlated. This repository holds only
+NSE cash equities, so that source (index futures, bonds, gold, a genuine short book) cannot be
+tested from it.
+
 ## Refreshing the data
 
 ```bash
