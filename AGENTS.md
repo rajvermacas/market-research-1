@@ -43,6 +43,11 @@ scripts/kite_download.py                  deep intraday history from Kite Connec
                                           ~2015, vs Yahoo's ~730 trading days)
 scripts/rsi_slots_sweep.py                portfolio slot count vs return, drawdown and how
                                           much capital is actually deployed
+scripts/momentum_rotation.py              monthly cross-sectional momentum on today's Nifty 500
+scripts/strategy_lab.py                   one daily simulator for momentum / breakout / pullback
+                                          families on a point-in-time liquid universe, with
+                                          regime, equity-curve and vol-target overlays and
+                                          parameter sweeps (see README "Strategy lab")
 ```
 
 ## Conventions
@@ -112,6 +117,35 @@ wrong manufactures fake gaps on every split. Key on ISIN where available, since 
 and occasionally reused.
 
 ## LESSONS
+
+- Put a liquidity floor in absolute rupees on the universe before believing any small-cap
+  result. A rank-based "top 1000 by turnover" universe admitted names trading ₹10–90 lakh a
+  day in 2007–2013, and those names supplied a third of the breakout system's CAGR (+29% fell
+  to +20% with a ₹1 crore/day floor). Raising the floor to ₹5 crore took it to +18%. Report
+  the result at the floor the book could actually trade.
+- Check for phantom sessions before running rolling windows on a wide matrix. The daily panel
+  carries four Saturdays on which three symbols have a bar and 1,000 do not; a pandas rolling
+  window with `min_periods` equal to its length returns NaN for 200 days after each one, which
+  is exactly why one strategy sat in cash for all of 2012 while reporting no error. Drop days
+  where under half the active universe traded, and compute indicators on forward-filled prices
+  while keeping a has-bar mask for eligibility.
+- Charge turnover on an overlay that switches exposure. An equity-curve filter looked like a
+  free 5 points of drawdown until its switches were costed: it flipped ~17 times a year and
+  the cost took 1.8 points of CAGR. Any post-hoc scaling of a return stream (vol targeting,
+  equity-curve, regime) needs the same cost model as the trades underneath it.
+- Stop looping when the remaining gap is smaller than the parameter sensitivity. A 30%/-25%
+  target was one point away on either metric while neighbouring settings (top 8 vs 10 vs 12,
+  a 50- vs 100-day window) moved drawdown by 3–5 points. Crossing the line from there is a
+  choice of seed, not a finding; report the plateau and its spread instead.
+- A trend system's drawdowns come from the grinds, not the crashes. 2008 cost the breakout
+  book -22% because the regime filter and ATR trails got it out; the -24% to -30% episodes
+  were 2014–16, 2018–20 and 2022–23, where the regime flipped on and off and breakouts failed
+  one after another. Filters aimed at the crash (breadth, faster regime, initial stops) did
+  nothing for those; only cutting size while the strategy's own equity is falling did.
+- Rank the day's candidates by return-to-volatility, and floor the volatility. Raw 12-1 return
+  put names locked in upper circuits at the top of the list (tiny volatility, unbuyable); the
+  ratio with a 10% floor was worth +1.7 points of CAGR and 4 points of drawdown on the same
+  entries and exits.
 
 - Warm-up truncation is a silent window filter, and it flattered this strategy by 9 points
   of CAGR. Seeding the monthly RSI from the intraday panel itself needs 42 monthly bars,

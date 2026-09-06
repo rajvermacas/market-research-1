@@ -17,6 +17,7 @@ and backtesting.
 | `scripts/download_market_data.py` | Rebuilds everything above from NSE + Yahoo Finance |
 | `scripts/validate_data.py` | Structural and data-quality checks |
 | `scripts/hourly_rsi_screener.py` | Hourly RSI re-ignition screen under a daily/weekly/monthly trend filter |
+| `scripts/strategy_lab.py` | Daily strategy simulator: momentum, breakout, pullback families with regime overlays, point-in-time liquid universe |
 
 ### The data present
 
@@ -273,6 +274,88 @@ constraints are what keep the pattern local and shaped like an N.
 `--charts N` renders the top hits as candlesticks with the EMA and the A/B/C levels marked. Use it
 — geometric conditions are easy to satisfy in ways that look nothing like the intended shape, and
 the picture is the only quick way to catch that.
+
+## Strategy lab
+
+`scripts/strategy_lab.py` is one daily-resolution simulator for several strategy families, built
+to answer "what does this strategy actually return, and what does it cost to hold it" under the
+same accounting every time: `adj_close` total return, fills at the **next day's open**, 30 bps per
+unit of turnover, a daily (not month-end) drawdown, and CAGR from elapsed calendar time.
+
+```bash
+python scripts/strategy_lab.py --strategy ew                                   # benchmark
+python scripts/strategy_lab.py --strategy mom --lookback 252 --top 20 --regime sma200
+python scripts/strategy_lab.py --strategy breakout --entry-n 100 --top 10 --rank sharpe \
+    --regime sma100 --stock-sma 200 --daily-exit regime --eq-curve 50 --eq-band 0.02 --cash-rate 0.06
+python scripts/strategy_lab.py --sweep breakout --yearly                       # parameter grid
+```
+
+The universe is rebuilt point-in-time on every day: the top N names by trailing 126-day median
+turnover among those with a year of history, a price above ₹10 and **at least ₹1 crore a day of
+turnover**. That floor matters more than anything in the strategy: the first version of this lab
+used a plain rank and let names trading ₹10–90 lakh a day into the book, and those names supplied
+most of the apparent return. Adding the floor cut the breakout system from +29% to +20% CAGR
+before any other change. The panel also carried four Saturday "sessions" on which three symbols
+have a bar and nothing else does; one such row blanks every 200-day rolling window for 200 days,
+which is why the momentum strategy sat in cash for all of 2012 until they were dropped.
+
+### Results, 2007-01 to 2026-08, liquid universe, 30 bps, cash at 0%
+
+| Strategy | CAGR | Max DD | Calmar | Invested |
+| --- | --- | --- | --- | --- |
+| Equal-weight universe, monthly rebalance (benchmark) | +13.0% | -72.9% | 0.18 | 100% |
+| Momentum 12-1, top 20, monthly, no filters | +21.5% | -84.4% | 0.26 | 100% |
+| Momentum + abs-mom + own 200 SMA + index 200 SMA regime + daily exit | +19.4% | -41.8% | 0.46 | 61% |
+| Momentum ranked by return/vol, top 20, same filters | +22.5% | -41.8% | 0.54 | 60% |
+| RSI(2) pullback in uptrend, best of 48 settings | +7.8% | -46.6% | 0.17 | 55% |
+| 100-day breakout, 4 ATR trail, top 20, index 200 SMA regime | +19.4% | -32.0% | 0.61 | 64% |
+| Breakout, top 10, index 100 SMA regime | +26.4% | -30.9% | 0.85 | 62% |
+| Breakout, top 10, candidates ranked by 12-1 return / vol | +26.9% | -29.2% | 0.92 | 62% |
+| ... + equity-curve cut (half size below 50-day average, ±2% band) + cash at 6% | **+28.0%** | **-23.8%** | 1.18 | 55% |
+| ... at 1.05x gross | +29.0% | -25.1% | 1.16 | 58% |
+| ... at 1.1x gross, funded at 9% | +30.2% | -26.4% | 1.14 | 60% |
+
+Mean reversion is dead at these costs (36–64x annual turnover), and the pure momentum rotation
+carries the full crash. Trend following on breakouts is the family that works. The changes that
+moved it most were concentrating to ten names (top 20 on the final settings is +22.6% at -31.9%),
+a 100-day rather than 200-day index regime (+4 points of CAGR), ranking the day's breakouts by
+trailing return-to-volatility instead of raw return (+1.7 points, 4 points less drawdown), and
+cutting size while the strategy's own equity is falling (5 points less drawdown, once its own
+switching costs are charged).
+
+### The target, and why the loop stopped
+
+The brief was **CAGR ≥ 30% with max drawdown ≤ 25%**, a Calmar of 1.20 over nineteen and a half
+years that include 2008. Roughly 450 configurations were run across three sweeps and nine
+focused batches. The best fully-costed result is +28.0% at -23.8%; leverage trades one bound for
+the other (1.05x → +29.0% / -25.1%; 1.1x → +30.2% / -26.4%) and never satisfies both. Two sleeves
+(breakout 70% + momentum 30%) do no better, because their daily returns are 0.6 correlated.
+
+The loop stopped there for a reason the LESSONS in `AGENTS.md` already record: the remaining gap
+is about one point on either metric, and the neighbouring settings move the answer by more than
+that. On the same entry, `top 8` is -29% drawdown and `top 12` is -26%; the equity-curve window at
+100 days instead of 50 is -27%; the band at 3% instead of 2% is -27%. A setting that crosses the
+line by less than the parameter sensitivity is a curve fit, not a strategy.
+
+What the number rests on, before anyone trades it:
+
+- **Survivorship.** Delisted names are absent from the panel entirely, and a breakout system holds
+  exactly the names that later blow up. This inflates the return by an amount the data cannot
+  measure. Curing it needs NSE bhavcopy (see `AGENTS.md`).
+- **Capacity.** With the floor at ₹5 crore a day instead of ₹1 crore the same settings return
+  +16.8% at -27.8%. The edge lives in names trading ₹1–5 crore a day, which caps the book at a few
+  crore before impact eats it.
+- **Cash yield.** 6% on the ~45% of the book held in cash adds 2 points of CAGR; at 0% the same
+  configuration is +25.9% at -25.3%. That is a liquid-fund assumption, not a strategy property.
+- **Window.** From 2010 the same configuration is +25.4% at -23.8%; from 2015, +22.5% at -23.5%.
+  The 2007 and 2009 years carry a lot of the headline.
+- **Circuits.** Small-cap breakouts are often locked limit-up on the day after the signal; the
+  simulator fills at the open regardless.
+
+The strategy's drawdowns are not the crashes. 2008 cost it -22% because the regime filter and
+the ATR trails got it out; the deeper episodes are the grinds — 2014-16, 2018-20, 2022-23 — where
+the regime flips on and off and breakouts fail one after another. That is the cost of trend
+following and no filter tested here removes it; the equity-curve cut is the one that halves it.
 
 ## Refreshing the data
 
