@@ -480,6 +480,34 @@ def equity_curve_filter(res: Result, window: int, scale: float, cost_bps: float,
     return out
 
 
+def dd_budget_filter(res: Result, start: float, budget: float, floor: float,
+                     cost_bps: float) -> Result:
+    """Scale exposure by the managed curve's own drawdown: 1.0 until the drawdown reaches
+    `start`, then linearly down to `floor` as it approaches `budget`, and back up as it
+    heals. No leverage: the multiplier never exceeds 1. Steps of 0.05 keep churn down."""
+    r = np.diff(res.equity) / res.equity[:-1]
+    g = res.gross[:-1]
+    n = len(r)
+    m = np.ones(n)
+    eq = 1.0
+    peak = 1.0
+    prev = 1.0
+    out = np.empty(n + 1)
+    out[0] = 1.0
+    for i in range(n):
+        dd = 1 - eq / peak
+        raw = 1.0 - max(0.0, dd - start) / max(budget - start, 1e-9)
+        mi = float(np.clip(np.round(raw / 0.05) * 0.05, floor, 1.0))
+        m[i] = mi
+        eq *= 1 + mi * r[i] - abs(mi - prev) * g[i] * cost_bps / 10_000
+        prev = mi
+        peak = max(peak, eq)
+        out[i + 1] = eq
+    switch = np.abs(np.diff(np.concatenate([[1.0], m]))) * g
+    return Result(out, res.gross * np.concatenate([[1.0], m]),
+                  res.turnover + np.concatenate([[0.0], switch / 2]), res.dates)
+
+
 # ------------------------------------------------------------------------ strategies
 
 
@@ -690,6 +718,8 @@ def run(p: Panel, a) -> tuple[Result, dict]:
             hedge_ret = np.concatenate([[0.0], hedge_ret])
         res = equity_curve_filter(res, a.eq_curve, a.eq_scale, a.cost_bps, a.eq_band,
                                   a.eq_boost, a.dd_stop, a.funding_rate, a.hedge, hedge_ret)
+    if a.dd_budget:
+        res = dd_budget_filter(res, a.dd_start, a.dd_budget, a.dd_floor, a.cost_bps)
     if a.vol_target:
         res = vol_target(res, a.vol_target, a.vol_window, a.leverage, a.funding_rate, a.cost_bps)
     m = res.metrics()
@@ -748,6 +778,8 @@ def label(a) -> str:
     if a.eq_curve:
         bits.append(f"ec{a.eq_curve}@{a.eq_scale:g}" + (f"±{a.eq_band:g}" if a.eq_band else "")
                     + (f"/{a.eq_boost:g}" if a.eq_boost != 1 else "") + (f" dd{a.dd_stop:g}" if a.dd_stop else "") + (f" hedge{a.hedge:g}" if a.hedge else ""))
+    if a.dd_budget:
+        bits.append(f"ddb{a.dd_start:g}-{a.dd_budget:g}@{a.dd_floor:g}")
     if a.vol_target:
         bits.append(f"vt{a.vol_target:g}")
     if a.leverage != 1:
@@ -800,6 +832,11 @@ def build_parser() -> argparse.ArgumentParser:
     ap.add_argument("--eq-band", type=float, default=0.0, help="hysteresis band around the average")
     ap.add_argument("--eq-boost", type=float, default=1.0,
                     help="exposure multiplier while NOT cut (>1 borrows at --funding-rate)")
+    ap.add_argument("--dd-budget", type=float, default=0.0,
+                    help="drawdown at which exposure reaches --dd-floor (0 disables)")
+    ap.add_argument("--dd-start", type=float, default=0.10,
+                    help="drawdown at which exposure starts shrinking")
+    ap.add_argument("--dd-floor", type=float, default=0.25, help="minimum exposure multiplier")
     ap.add_argument("--hedge", type=float, default=0.0,
                     help="while cut, short this fraction of gross in the large-cap index proxy")
     ap.add_argument("--dd-stop", type=float, default=0.0,
