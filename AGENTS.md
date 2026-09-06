@@ -8,41 +8,65 @@ Whenever I point out or you catch yourself repeating same mistakes again, before
 
 ## Project
 
-Market research and systematic trading work on the Indian equity market (NSE).
+A **backtesting playground for the Indian equity market (NSE)** — not the repository of a single
+strategy. The data is already committed; `scripts/` is where strategies go.
 
-- **Data**: daily OHLCV for every NSE main-board listing, 2000 to date, plus hourly bars for the
-  ~730 trading days Yahoo serves, stored as year-partitioned Parquet under `data/`. Daily and
-  hourly are both committed; weekly and monthly are not, because they are a one-line resample of
-  daily and committing them would only cost repository size.
+- **Data**: daily OHLCV for every NSE main-board listing (2000 to date), Yahoo hourly bars for
+  the rolling window Yahoo serves, and a corporate-action-adjusted Kite hourly panel for the
+  Nifty 500 back to 2015-02. All year-partitioned Parquet under `data/`. Weekly and monthly are
+  not committed — they are a one-line resample of daily.
 - **Engine**: [Polars](https://pola.rs) is the dataframe library of choice. Prefer `pl.scan_parquet`
   + lazy expressions over eager pandas-style code.
-- **Purpose**: data analysis, trade strategy research, and backtesting.
+- **Purpose**: try strategies against this data, measure them honestly, and keep the result —
+  including the negative ones. Several strategies in `scripts/` were tested and found not to
+  work; they stay, with their numbers in the README's results ledger.
+- **Shape of the work**: one script per strategy or per experiment, each with an argparse CLI and
+  a docstring that states the setup in words before any code. Nothing is a library-only module;
+  everything runs from the command line.
 
 ## Layout
 
 ```
-data/universe/nse_universe.parquet        every NSE symbol -> company, series, ISIN, listing date,
+data/                                     the substrate — strategy code reads it, never writes it
+  universe/nse_universe.parquet           every NSE symbol -> company, series, ISIN, listing date,
                                           industry, and Nifty index membership flags
-data/ohlcv/daily/year=*/data.parquet      symbol, date, open, high, low, close, adj_close, volume
-data/ohlcv/hourly/year=*/data.parquet     symbol, datetime (Asia/Kolkata), open, high, low, close,
-                                          volume — no adj_close, Yahoo does not adjust intraday
-data/ohlcv/60minute_kite/year=*/          the same shape from Kite Connect: Nifty 500, back to
-                                          2015-02, and corporate-action ADJUSTED (Yahoo's
-                                          intraday panel is not). Use this for anything
-                                          spanning 2018 or 2020.
-data/ohlcv/_coverage_<interval>.csv       per-symbol bar counts and date ranges
-data/ohlcv/_manifest.json                 provenance of the current snapshot + known caveats
-scripts/download_market_data.py           (re)builds the universe and every price panel
-scripts/validate_data.py                  structural, quality and cross-interval checks
-scripts/screener.py                       pullback-in-uptrend screen over the daily panel
-scripts/ema_support.py                    how reliably each name holds its daily 20/50 EMA
-scripts/n_pattern.py                      impulse/pullback/resumption "N" on a rising 10 EMA
-scripts/hourly_rsi_screener.py            hourly RSI cross above 60 under a daily/weekly/monthly
+  ohlcv/daily/year=*/data.parquet         symbol, date, open, high, low, close, adj_close, volume
+  ohlcv/hourly/year=*/data.parquet        symbol, datetime (Asia/Kolkata), open, high, low, close,
+                                          volume — no adj_close, Yahoo does not adjust intraday,
+                                          and only ~730 trading days deep
+  ohlcv/60minute_kite/year=*/             the same shape from Kite Connect: Nifty 500, back to
+                                          2015-02, corporate-action ADJUSTED
+  ohlcv/60minute_kite_clean/year=*/       the above after clean_kite_panel.py — USE THIS ONE.
+                                          Anything spanning 2018 or 2020 needs a Kite panel;
+                                          the raw one carries token-reuse artefacts.
+  ohlcv/_coverage_<interval>.csv          per-symbol bar counts and date ranges
+  ohlcv/_manifest.json                    provenance of the Yahoo snapshot + known caveats
+                                          (it does not describe the Kite panels)
+
+scripts/                                  the playground
+
+  data pipeline
+    download_market_data.py               (re)builds the universe and the Yahoo panels
+    kite_download.py                      deep intraday history from Kite Connect
+    clean_kite_panel.py                   repairs token reuse, zero prints, adjustment breaks
+    validate_data.py                      structural, quality and cross-interval checks
+
+  strategies and screeners
+    screener.py                           pullback-in-uptrend screen over the daily panel
+    hourly_rsi_screener.py                hourly RSI cross above 60 under a daily/weekly/monthly
                                           RSI > 60 regime filter
-scripts/kite_download.py                  deep intraday history from Kite Connect (back to
-                                          ~2015, vs Yahoo's ~730 trading days)
-scripts/rsi_slots_sweep.py                portfolio slot count vs return, drawdown and how
-                                          much capital is actually deployed
+    n_pattern.py                          impulse/pullback/resumption "N" on a rising 10 EMA
+    ema_support.py                        how reliably each name holds its daily 20/50 EMA
+    rsi_backtest.py                       backtest of the hourly RSI setup — and the shared
+                                          engine (find_trades / simulate / performance)
+    momentum_rotation.py                  cross-sectional momentum, monthly rebalance, regime
+                                          overlay
+
+  research labs (one question each, about a strategy already in the tree)
+    rsi_filter_lab.py                     marginal effect of each candidate entry filter
+    rsi_stop_lab.py                       do the filters stack, and is the stop the real problem
+    rsi_combo_search.py                   every subset of the optional filters, scored
+    rsi_slots_sweep.py                    slot count vs return, drawdown and capital deployed
 ```
 
 ## Conventions
@@ -57,13 +81,43 @@ scripts/rsi_slots_sweep.py                portfolio slot count vs return, drawdo
 - Refreshing data is `python scripts/download_market_data.py --interval daily`; it rewrites the
   interval directory from scratch. Batches are checkpointed under `.cache/` so an interrupted run
   resumes; `--fresh` ignores them.
-- Commit the daily and hourly panels. Do not commit weekly/monthly — resample them from daily
-  instead. Hourly is the one intraday panel worth carrying: it cannot be derived from daily, and
-  Yahoo only serves a rolling ~730 trading days of it, so a snapshot is the only way to keep
-  history that has already scrolled off.
+- Commit the daily, hourly and Kite panels. Do not commit weekly/monthly — resample them from
+  daily instead (`resample(daily, "1w" | "1mo")` in `screener.py`). Intraday panels are worth
+  carrying because they cannot be derived from daily and the providers only serve a rolling
+  window, so a snapshot is the only way to keep history that has already scrolled off.
+- All scratch output — caches, feature frames, screener results — goes under `.cache/`
+  (gitignored). Nothing a run produces belongs in `data/`.
 - After changing anything that touches the data files, run `python scripts/validate_data.py`.
 - `_manifest.json` is the source of truth for snapshot stats. Do not hard-code row counts in prose
   that will silently go stale — point at the manifest.
+
+## Adding a strategy
+
+A strategy is a new file in `scripts/`, named for the mechanism. Before writing one, read the
+LESSONS at the bottom of this file — every rule there was paid for.
+
+- **Reuse the toolkit; do not write a second indicator.** `screener.rsi` (validated against a
+  textbook Wilder loop), `screener.resample`, `screener.fetch_market_caps`,
+  `hourly_rsi_screener.ema`, and from `rsi_backtest`: `prior_bar_rsi`, `attach_htf`,
+  `attach_market_cap`, `find_trades`, `simulate`, `elapsed_years`, `performance`. A second copy
+  drifts from the first, and then two scripts disagree and the wrong one produces the numbers.
+- **Say the setup in words in the docstring** — entry, stop, exit, universe, rebalance — then
+  check the filters actually select for it.
+- **Point-in-time discipline.** Higher-timeframe values read the last *completed* bar; anything
+  fetched live (market cap) is walked back and the assumption stated. No column may depend on a
+  bar the decision could not have seen.
+- **Warm-up guards are mandatory** on any recursive indicator (`period * 3` bars is the template
+  in `prior_bar_rsi`), and indicators are seeded from the longest history available rather than
+  from the panel being traded.
+- **Report, every time**: the equal-weight buy-and-hold control over the same window (the *mean*
+  of normalised prices), max drawdown, return per unit of drawdown, how much capital was actually
+  deployed, the cost assumption, and the result on each half of the window separately.
+- **Sweep free parameters on the longest panel available**, which for intraday means
+  `60minute_kite_clean`, not the 2.9-year Yahoo hourly panel.
+- **One adjustment convention per test.** Do not mix the unadjusted Yahoo hourly panel with the
+  adjusted Kite one; `rsi_backtest.py --daily-from-hourly` exists for exactly this.
+- **Write the outcome down** — in the commit message, and as a row in the README's results ledger.
+  A negative result is a finding and is kept, not deleted.
 
 ## Credentials
 
@@ -82,14 +136,20 @@ Read these before drawing conclusions from a backtest:
    results as market-wide. Curing this needs NSE bhavcopy (see below), not more Yahoo requests.
 1. **Survivorship bias.** The universe is NSE's *current* main-board listing, so pre-snapshot
    delistings are absent.
-2. **Adjustments.** `open/high/low/close` are split-adjusted; `adj_close` is also dividend-adjusted.
-   Use `adj_close` (or the `adj_close / close` ratio) for total-return work.
+2. **Adjustments differ per panel.** In the daily panel `open/high/low/close` are split-adjusted
+   and `adj_close` is also dividend-adjusted — use `adj_close` (or the `adj_close / close` ratio)
+   for total-return work. The Yahoo hourly panel is not corporate-action adjusted at all; the Kite
+   panels are. Never mix two conventions inside one test.
 3. **Partial last bar.** A snapshot taken mid-session/week/month leaves an incomplete final bar;
    `last_bar_possibly_partial` in `_manifest.json` flags it.
    Median history is ~2,400 bars, not 6,600 — filter on bar count before cross-sectional ranking.
 4. **Upstream gaps and bad ticks.** Yahoo drops the odd session for individual symbols, and a small
    number of bars violate OHLC ordering. Reported by `validate_data.py`, not silently patched.
-5. **Out of scope.** NSE Emerge (SME) symbols and BSE-exclusive listings are not served by Yahoo.
+5. **Kite artefacts.** Kite reuses instrument tokens, so the raw `60minute_kite` panel gives a
+   recent listing the prices of whatever security held its token earlier. Trade
+   `60minute_kite_clean`. 28 symbols whose total return still disagrees with Yahoo's by more than
+   a quarter are reported by `clean_kite_panel.py` rather than patched.
+6. **Out of scope.** NSE Emerge (SME) symbols and BSE-exclusive listings are not served by Yahoo.
 
 ## Curing survivorship bias
 
