@@ -118,6 +118,21 @@ and occasionally reused.
 
 ## LESSONS
 
+- A hard drawdown gate is a claim about assumptions, not just about a number. The
+  configuration that read -23.8% at 30 bps and 6% cash read -28.1% at 50 bps and -29.5%
+  with cash at 0%. Score a gated search under the worst plausible assumptions, then confirm
+  the winners under the base ones, and demand margin: the recommended book sits at -21.5%
+  to -22.0% under every cost, cash, window and universe tested, not at -24.9% under one.
+- When the constraint is the drawdown, control the drawdown, not a proxy for it. Regime
+  filters, trend filters and equity-curve cuts all move drawdown as a side effect and leak
+  under different costs; an exposure rule that reads the book's own drawdown holds it where
+  it is set. Never let that rule's floor reach zero: a book at zero exposure cannot make the
+  new high that re-arms it, and the grid showed CAGR collapsing to single digits there.
+- Report the CAGR with its best year removed. One calendar year (+205% in 2021) carries a
+  third of the 19-year compounding of the hard-gate configuration; ex-best-year it is +20%,
+  not +27%. That is the honest expectation for the next five years, and it belongs next to
+  the headline, not in a footnote.
+
 - Measure a ceiling with a random search before declaring it. After a 30%/-25% target
   plateaued at Calmar 1.18, a raised 35%/-25% target (Calmar 1.40) was tested by adding
   mechanisms rather than re-tuning; 120 seeded random draws over the whole breakout space

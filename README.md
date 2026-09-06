@@ -287,6 +287,9 @@ python scripts/strategy_lab.py --strategy ew                                   #
 python scripts/strategy_lab.py --strategy mom --lookback 252 --top 20 --regime sma200
 python scripts/strategy_lab.py --strategy breakout --entry-n 100 --top 10 --rank sharpe \
     --regime sma100 --stock-sma 200 --daily-exit regime --eq-curve 50 --eq-band 0.02 --cash-rate 0.06
+python scripts/strategy_lab.py --strategy breakout --entry-n 150 --top 12 --atr-mult 3 --exit-weekly \
+    --rank mom2 --regime sma100 --stock-sma 100 --eq-curve 50 --eq-band 0.02 --eq-scale 0.3 \
+    --dd-budget 0.22 --dd-start 0.12 --dd-floor 0.25 --cash-rate 0.06   # the hard-gate configuration
 python scripts/strategy_lab.py --sweep breakout --yearly                       # parameter grid
 ```
 
@@ -397,6 +400,61 @@ What would change the answer is a second, uncorrelated return source rather than
 filter: the momentum and breakout sleeves here are 0.6 correlated. This repository holds only
 NSE cash equities, so that source (index futures, bonds, gold, a genuine short book) cannot be
 tested from it.
+
+### Third loop: the drawdown is a hard gate, no leverage, no derivatives
+
+The constraints were then fixed as: **max drawdown strictly under 25%**, gross exposure never
+above 100%, no futures or options, and the objective is the highest CAGR inside that. Two things
+follow from a gate being hard. First, the number has to survive the assumptions it was measured
+under: the +28.0% / -23.8% configuration above is -28.1% at 50 bps of cost instead of 30, -25.3%
+with cash at 0% instead of 6%, and -29.5% with both, so it is not inside the gate in any sense
+that matters. Second, the right tool is no longer a filter but an exposure rule that reads the
+drawdown itself: `--dd-budget` keeps exposure at 100% until the book's own drawdown passes
+`--dd-start`, shrinks it linearly to `--dd-floor` as the drawdown approaches the budget, and
+restores it as the drawdown heals. It never borrows; it only de-risks.
+
+A random search of 150 configurations was then scored under the **worst** assumptions (50 bps,
+0% cash) rather than the base ones, every candidate inside the gate was re-run under all four
+assumption sets, and the leader was checked across its parameter neighbourhood. The result:
+
+```bash
+python scripts/strategy_lab.py --strategy breakout --entry-n 150 --top 12 --atr-mult 3 --exit-weekly \
+    --rank mom2 --regime sma100 --stock-sma 100 --eq-curve 50 --eq-band 0.02 --eq-scale 0.3 \
+    --dd-budget 0.22 --dd-start 0.12 --dd-floor 0.25 --cash-rate 0.06
+```
+
+150-day breakouts, twelve names, a 3 ATR trail evaluated weekly, candidates ranked by a blend of
+12-1 and 6-1 momentum, a 100-day index regime and a 100-day own-trend filter, exposure cut to
+30% while the book's equity is under its 50-day average and scaled down between a 12% and a
+22% drawdown.
+
+| Assumptions | CAGR | Max DD |
+| --- | --- | --- |
+| 30 bps, cash at 6% (base) | **+27.4%** | **-21.5%** |
+| 50 bps, cash at 6% | +23.6% | -21.6% |
+| 30 bps, cash at 0% | +25.4% | -21.8% |
+| 50 bps, cash at 0% (worst) | +22.0% | -22.0% |
+| Base, from 2010 | +25.5% | -21.5% |
+| Base, from 2015 | +23.6% | -21.5% |
+| Base, 500-name universe | +24.9% | -22.0% |
+| Worst, from 2010 | +20.3% | -22.0% |
+
+The drawdown sits between -21.5% and -22.0% under every assumption, window and universe tested,
+which is what the budget rule is for: the gate holds with three points of margin instead of one.
+Of seventeen single-parameter neighbours (slots, entry length, trail, rank, filters, overlay
+settings), fifteen stay inside the gate under both base and worst assumptions; the two that do
+not miss it by 0.1 and 1.3 points, and only under the worst case. CAGR across the neighbourhood
+runs from +17.5% to +28.6%, so the return is the soft number and the drawdown the hard one,
+which is the right way round for this brief.
+
+The cost of the gate is return: the best configuration inside it under base assumptions alone was
++28.0%, and inside it under every assumption +27.4%, against +29.8% for the same entries with no
+drawdown control at all. The 35% asked for is not available inside the gate on this data by
+any construction tested (three grid sweeps, sixteen focused batches, 470 random draws).
+
+Read the CAGR with its concentration in mind. 2021 returned +205% for this configuration; with
+the best calendar year set to zero the CAGR is +20.3%. That is the shape of trend following,
+and the reason a 19-year number should not be read as a promise for the next five.
 
 ## Refreshing the data
 
