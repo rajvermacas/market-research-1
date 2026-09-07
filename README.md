@@ -609,6 +609,48 @@ F1 beats the index in **14 of 19** years and loses in 2009, 2012, 2018, 2022 and
 keeps the book in cash through a recovery (2009, 2012) or the ones where breakouts fail one
 after another (2018, 2022, 2025).
 
+### Fifth loop: 40% under a 30% drawdown
+
+The goal was raised to **40% CAGR with max drawdown under 30%**, still unlevered, on the
+corrected fills. The looser gate re-admits the concentrated books, so the search went there:
+four to eight slots, 60-125-day highs, 4-6 ATR trails, 50-100-day own-trend filters, the
+1,000- and 1,500-name universes, and the drawdown budget re-sized to the new gate (about 130
+more configurations).
+
+Concentration buys return at a fixed price in drawdown: each slot removed from eight adds
+roughly two points of CAGR and three of drawdown. Four slots is the only way to a raw 40%
+(+40.6% at -39.3% on 90-day highs and a 5 ATR trail), and no budget brings that inside the
+gate at 40%: the best budgeted four-slot book is +38.5% at -33.0%. The frontier inside the
+gate is a **five-slot book at +37.1% / -29.1%** (90-day high, 5 ATR trail, 75-day own trend,
+budget cutting exposure between a 15% and a 30% drawdown):
+
+```bash
+python scripts/strategy_lab.py --strategy breakout --entry-n 90 --top 5 --atr-mult 5 --clv 1.0 \
+    --rank mom2 --regime sma100 --stock-sma 75 --daily-exit regime --min-price 5 --min-bars 126 \
+    --dd-budget 0.30 --dd-start 0.15 --dd-floor 0.5 --cash-rate 0.06
+```
+
+| Assumptions / window | CAGR | Max DD |
+| --- | --- | --- |
+| 30 bps, cash at 6% (base) | **+37.1%** | **-29.1%** |
+| 50 bps, cash at 6% | +35.6% | -29.6% |
+| 30 bps, cash at 0% | +32.5% | -30.0% |
+| 50 bps, cash at 0% | +31.0% | -30.4% |
+| Base, from 2010 / from 2015 / to 2016 | +33.0% / +37.3% / +26.4% | -29.1% / -31.3% / -29.1% |
+| Base, 500-name universe | +17.4% | -31.5% |
+| CAGR ex-best year / ex-top-2 years | +29.8% | +22.9% |
+
+It beats the Nifty 50 in 13 of 19 years. It is also the most selected point in this
+repository: one-notch neighbours run from +28.3% to +38.1% (a 75- or 125-day high, a 4 ATR
+trail or a 50-day own trend each cost 5 to 9 points), five of ten neighbours breach 30%, every
+stressed assumption breaches it by a fraction, and on the 500 most liquid names it returns
+half as much. 2007 (+191%) and 2020 (+194%) are a third of its compounding.
+
+So: 40% inside a 30% drawdown is not available on this data without leverage. The unlevered
+frontier on corrected fills runs from about +33% at -25% (eight slots) to +37% at -29% (five
+slots) to +40% at -39% (four slots), and every point on it is a whole-window maximum whose
+forward expectation, by the review's reasoning, is roughly two-thirds of the headline.
+
 ## Refreshing the data
 
 ```bash

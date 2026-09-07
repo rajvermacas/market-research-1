@@ -118,6 +118,17 @@ and occasionally reused.
 
 ## LESSONS
 
+- Concentration is a fixed exchange rate, not a free lunch. From eight slots down to four,
+  each slot removed added about two points of CAGR and three points of drawdown, and the
+  drawdown budget could buy back drawdown only at roughly one point of CAGR per two of
+  drawdown. A return-to-drawdown ratio above ~1.3 was never available at any slot count;
+  a higher CAGR target inside a fixed ratio is a request for leverage by another name.
+- The most concentrated books are the most selected. The five-slot leader's one-notch
+  neighbours spanned ten points of CAGR and half of them breached the gate; the eight-slot
+  book's spanned four. Fewer names means fewer trades deciding the result, which means the
+  parameter that picked those trades is the one being fitted. Widen the neighbourhood
+  test as the slot count falls.
+
 - A guard on the signal bar is not a guard on the fill bar. The strong-close breakout refused
   rangeless signal bars, and the simulator went on filling entries at the next open when that
   open was locked limit-up (15 of 376 trades) and selling into lower-circuit locks the first
