@@ -118,6 +118,22 @@ and occasionally reused.
 
 ## LESSONS
 
+- Test a concentrated book from more than one start date before believing its drawdown.
+  The four-slot book's -24.8% over 2007-2026 became -33.7% when started in 2015: the
+  full-window run entered 2015 holding cushioned 2014 winners, the 2015 run bought the
+  failing breakouts of early 2015. With four names the drawdown in any year is decided by
+  which four are held going in. Report the worst start date, not the one the search used.
+- A channel exit (close below the N-day low) alongside an ATR trail was the only exit change
+  that raised the return-to-drawdown ratio, by about 0.15 across the concentrated books. It
+  cuts the trades that stall and drift rather than the ones that reverse sharply, which the
+  ATR trail already handles. Add exits that address a different failure mode than the ones
+  already present; a second rule for the same failure only adds whipsaw.
+- Mechanisms aimed at the losing years lost more than the years did. Late entries into the
+  2009 and 2012 recovery breakouts, keeping cushioned winners through regime exits and a
+  rising-turnover filter each cost more CAGR than the target years were worth. A losing
+  year in a trend system is usually the price of the rule that made the winning ones, not
+  a gap to be patched.
+
 - Concentration is a fixed exchange rate, not a free lunch. From eight slots down to four,
   each slot removed added about two points of CAGR and three points of drawdown, and the
   drawdown budget could buy back drawdown only at roughly one point of CAGR per two of

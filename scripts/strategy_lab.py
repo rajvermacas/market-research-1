@@ -609,6 +609,14 @@ def strat_breakout(p: Panel, a, elig, regime) -> np.ndarray:
     init_stop = np.full(p.N, np.nan)
     age = np.zeros(p.N, int)
     weekly = rebalance_days(p, "weekly") if a.exit_weekly else np.ones(p.T, bool)
+    if a.late_entry:
+        # a qualifying breakout bar (regime and slots aside); late entries may take it for
+        # --late-entry days afterwards while the close still sits at or above that bar's close
+        sig = (p.close >= hh) & ~np.isnan(hh) & (p.high > p.low)
+        if a.clv:
+            sig &= indicator(p, "clv") >= a.clv
+    if a.turnover_trend:
+        to_trend = indicator(p, "turnover_mean", 50) / indicator(p, "turnover_mean", 200)
     if a.vol_surge:
         surge = p.turnover / indicator(p, "turnover_mean", 50)
     if a.base_tight:
@@ -636,13 +644,29 @@ def strat_breakout(p: Panel, a, elig, regime) -> np.ndarray:
             if a.stock_sma:
                 out |= held & ~(c > indicator(p, "sma", a.stock_sma)[t])
             if not regime[t] and a.daily_exit:
-                out |= held
+                if a.keep_winners:
+                    # a position with this much cushion keeps its trail through a regime exit
+                    out |= held & ~(c / entry - 1 >= a.keep_winners)
+                else:
+                    out |= held
             if out.any():
                 W[t, out] = 0.0
                 held[out] = False
         free = a.top - held.sum()
         if free > 0 and regime[t]:
             cand = elig[t] & ~held & (c >= hh[t]) & ~np.isnan(hh[t]) & (p.high[t] > p.low[t])
+            if a.late_entry and t > a.late_entry:
+                k = a.late_entry
+                recent = (sig[t - k:t] & (c[None, :] >= p.close[t - k:t])).any(axis=0)
+                late = elig[t] & ~held & recent
+                if a.clv:
+                    late &= p.high[t] > p.low[t]
+                cand_late = late & ~cand
+            else:
+                cand_late = np.zeros(p.N, bool)
+            if a.turnover_trend:
+                cand &= to_trend[t] >= a.turnover_trend
+                cand_late &= to_trend[t] >= a.turnover_trend
             if a.stock_sma:
                 cand &= c > indicator(p, "sma", a.stock_sma)[t]
             if a.max_vol:
@@ -655,6 +679,10 @@ def strat_breakout(p: Panel, a, elig, regime) -> np.ndarray:
                 cand &= tight[t] <= a.base_tight
             if a.near_high:
                 cand &= near[t] >= a.near_high
+            if a.late_entry:
+                if a.stock_sma:
+                    cand_late &= c > indicator(p, "sma", a.stock_sma)[t]
+                cand |= cand_late
             if cand.any():
                 s = np.where(cand, mom[t] if a.rank != "sharpe" else mom[t] / np.maximum(vol[t], 0.10), np.nan)
                 if a.clv_first:
@@ -962,6 +990,12 @@ def label(a) -> str:
             bits.append(f"clv{a.clv:g}")
         if a.clv_first:
             bits.append(f"clv1st{a.clv_first:g}")
+        if a.late_entry:
+            bits.append(f"late{a.late_entry}")
+        if a.keep_winners:
+            bits.append(f"keep{a.keep_winners:g}")
+        if a.turnover_trend:
+            bits.append(f"tot{a.turnover_trend:g}")
         bits.append(a.rank)
         if a.time_stop:
             bits.append(f"ts{a.time_stop}")
@@ -1059,6 +1093,12 @@ def build_parser() -> argparse.ArgumentParser:
     ap.add_argument("--risk", type=float, default=0.01)
     ap.add_argument("--clv", type=float, default=0.0,
                     help="require the breakout bar to close at least this far up its range (1.0 = at the high)")
+    ap.add_argument("--late-entry", type=int, default=0,
+                    help="also enter names whose qualifying breakout was within this many days, if still at or above it")
+    ap.add_argument("--keep-winners", type=float, default=0.0,
+                    help="on a regime exit keep positions with at least this open gain (0 = sell all)")
+    ap.add_argument("--turnover-trend", type=float, default=0.0,
+                    help="require 50-day mean turnover / 200-day mean turnover >= this")
     ap.add_argument("--clv-first", type=float, default=0.0,
                     help="rank breakouts closing above this CLV ahead of all others (two-tier book)")
     ap.add_argument("--vol-surge", type=float, default=0.0,

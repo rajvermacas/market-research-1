@@ -646,10 +646,67 @@ trail or a 50-day own trend each cost 5 to 9 points), five of ten neighbours bre
 stressed assumption breaches it by a fraction, and on the 500 most liquid names it returns
 half as much. 2007 (+191%) and 2020 (+194%) are a third of its compounding.
 
-So: 40% inside a 30% drawdown is not available on this data without leverage. The unlevered
-frontier on corrected fills runs from about +33% at -25% (eight slots) to +37% at -29% (five
-slots) to +40% at -39% (four slots), and every point on it is a whole-window maximum whose
-forward expectation, by the review's reasoning, is roughly two-thirds of the headline.
+So at that stage 40% inside a 30% drawdown looked unavailable without leverage: the frontier
+on corrected fills ran from about +33% at -25% (eight slots) to +37% at -29% (five) to +40% at
+-39% (four). The sixth loop below moved it with one more exit rule.
+
+### Sixth loop: 40% under a 25% drawdown
+
+The goal was raised again, to **40% CAGR under a 25% drawdown**, still unlevered and on
+corrected fills: a return-to-drawdown ratio of 1.6 against a frontier that had never passed
+1.3. Five mechanisms aimed at the years the book loses were added and tested on both the
+eight-slot and five-slot books. Four hurt: late entries into breakouts that happened while
+the regime was off (the 2009 and 2012 recoveries) cost 4-13 points; keeping winners with a
+large cushion through a regime exit cost 1-4; a rising-turnover filter cost 5-15; and every
+variant of those combined. The fifth helped, and it is the only exit rule that has: a
+**channel exit**, selling at the next open when the close falls below the lowest low of the
+last N sessions, alongside the ATR trail.
+
+On the five-slot book a 40-day channel took the drawdown from -29% to -26% for one point of
+CAGR. On the concentrated books it moved the whole frontier: four slots with a 40-day channel
+and no budget returns **+41.4% at -28.6%**, which is the previous loop's 40%/30% target met
+outright, and the ratio across the four- and five-slot books rose from about 1.3 to 1.5. Under
+the 25% gate the best point is four slots, a 25-day channel and a drawdown budget cutting
+exposure between an 18% and a 30% drawdown:
+
+```bash
+python scripts/strategy_lab.py --strategy breakout --entry-n 90 --top 4 --atr-mult 5 --exit-n 25 \
+    --clv 1.0 --rank mom2 --regime sma100 --stock-sma 75 --daily-exit regime \
+    --min-price 5 --min-bars 126 --dd-budget 0.30 --dd-start 0.18 --dd-floor 0.5 --cash-rate 0.06
+```
+
+| Assumptions / window | CAGR | Max DD |
+| --- | --- | --- |
+| 30 bps, cash at 6% (base) | **+38.9%** | **-24.8%** |
+| 50 bps, cash at 6% | +37.0% | -25.1% |
+| 30 bps, cash at 0% | +34.6% | -26.2% |
+| 50 bps, cash at 0% | +32.6% | -26.4% |
+| Base, from 2010 | +34.5% | -24.8% |
+| Base, from 2015 | +36.9% | **-33.7%** |
+| Base, 500-name universe | +20.8% | -31.5% |
+| CAGR ex-best year / ex-top-2 years | +30.7% | +23.0% |
+
+It beats the Nifty 50 in 16 of 19 years. It does not reach 40%: the fine grid around it (120
+configurations of channel length and budget) tops out at +38.9% inside the gate, and the one
+neighbour that crosses 40% (+40.3%) does so at -25.7%. That is the plateau under this gate:
+38-39% on this path.
+
+**On this path** is the operative phrase, and the 2015 row shows why. Started in January 2015
+instead of 2007, the same rules lose -33.7% in 2015-16 (-41.8% without the budget) where the
+full-window run loses -20%. The full-window book entered 2015 holding four 2014 winners with a
+cushion and half in cash; the 2015-start book began flat, bought the breakouts of early 2015,
+and those failed. A four-name book's drawdown in any given year is decided by which four names
+it happens to hold going in, so its maximum drawdown is a property of one path, not of the
+rules. The one-notch neighbourhood says the same: sixteen neighbours span +22% to +40% CAGR
+and seven of them breach the gate (a 4 ATR trail is -34%, a 20-day channel -32%, three slots
+-28%, five slots -29%). Concentration bought the return; it also removed the averaging that
+made the eight-slot book's drawdown mean something.
+
+What survives the loop as a finding: the channel exit is worth about 0.15 of Calmar across the
+concentrated books and belongs in the family. What does not: the claim that any four- or
+five-slot configuration holds a 25% drawdown with margin. The forward expectation for this
+book, by the review's reasoning applied to a smaller trade count, is a CAGR in the high twenties
+with drawdowns that will exceed 30% on some path.
 
 ## Refreshing the data
 
