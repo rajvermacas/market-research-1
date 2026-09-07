@@ -118,6 +118,27 @@ and occasionally reused.
 
 ## LESSONS
 
+- Of every entry filter tested, "the breakout bar closed at its high" was the only one that
+  helped, and it helped by removing trades, not adding return: it halved the trade count,
+  cut the drawdown from -27% to -22% at a small cost in CAGR, and that drawdown budget could
+  then be spent on concentration. Judge a filter by the ratio it leaves, not the return.
+- A bar with no range passes any "closed at the high" test. Circuit-locked small caps have
+  open = high = low = close; the order simulator bought them and reported +32% where the
+  honest number was +28%. Define CLV as zero on a rangeless bar and never fill on a day that
+  never traded off its lock.
+- On daily bars, resting stop orders underperform close-confirmed signals. Buy-stops at the
+  level cost 7 points of CAGR to intraday false breakouts and stop exits at the trail cost 2
+  more to lows that touched and recovered; pyramiding into winners cost 4. Keep the
+  next-open model unless intraday data says otherwise.
+- Two simulators of the same rules should agree to a fraction of a point, and when they do
+  not, find the reason before using either. A 2.5-point gap here came down to whether the
+  trailing stop's peak included the signal bar's close. Both are defensible; the difference
+  is the parameter sensitivity, and it belongs in the write-up.
+- A target met on base assumptions and missed under stress is two different findings. Report
+  both, name which assumption moves it (here the cash yield on 58% idle capital, worth 3.5
+  points of CAGR and 3 points of drawdown), and offer the configuration that holds under all
+  of them alongside the one that hits the number.
+
 - A hard drawdown gate is a claim about assumptions, not just about a number. The
   configuration that read -23.8% at 30 bps and 6% cash read -28.1% at 50 bps and -29.5%
   with cash at 0%. Score a gated search under the worst plausible assumptions, then confirm

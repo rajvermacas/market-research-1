@@ -456,6 +456,75 @@ Read the CAGR with its concentration in mind. 2021 returned +205% for this confi
 the best calendar year set to zero the CAGR is +20.3%. That is the shape of trend following,
 and the reason a 19-year number should not be read as a promise for the next five.
 
+### Fourth loop: 35% inside the gate, without leverage
+
+The goal was restated as **35% CAGR with max drawdown under 25%, no leverage, no derivatives**.
+Three more mechanisms were built and tested; one of them worked.
+
+**Stop orders (did not help).** `--strategy breakout_orders` is a second simulator that trades
+the same signals with resting orders: a buy-stop at the breakout level filled intraday, and a
+sell-stop at the trail filled intraday at the level (or at the open on a gap through), with
+slippage. Against the reference book, buy-stop entries cost 7 points of CAGR (false breakouts
+that pierce the level and close back below it) and intraday stop exits cost 2 more (lows that
+touch the trail and recover). Pyramiding into winners (`--pyramid-units`) cost 4 points. On
+daily data, entering after a confirmed close and exiting at the next open is the better model.
+
+**Strong close (helped).** `--clv 1.0` requires the breakout bar to close at its high. It cuts
+the trade count by half, drops the invested fraction from 62% to 42%, and lifts the same book
+from +29.8% / -27.3% to +27.9% / -22.5% — less return, far less drawdown, so the freed drawdown
+budget can be spent on concentration: eight slots instead of ten and a 75-day high instead of
+100 take it to +32.0% / -23.3%, and a 100-day own-trend filter instead of 200 to +34.2%. Two
+universe settings — a ₹5 price floor instead of ₹10, six months of history instead of a year,
+both still behind the ₹1 crore/day turnover floor — add the rest.
+
+```bash
+# F1: the target on base assumptions
+python scripts/strategy_lab.py --strategy breakout --entry-n 75 --top 8 --atr-mult 4 --clv 1.0 \
+    --rank mom2 --regime sma100 --stock-sma 100 --daily-exit regime --min-price 5 --min-bars 126 \
+    --cash-rate 0.06
+# F2: the same with a drawdown budget, inside the gate under every assumption
+python scripts/strategy_lab.py ...same... --dd-budget 0.25 --dd-start 0.15 --dd-floor 0.5
+```
+
+| | F1 | F2 (F1 + drawdown budget) |
+| --- | --- | --- |
+| 30 bps, cash at 6% (base) | **+35.6% / -23.3%** | **+33.3% / -22.7%** |
+| 50 bps, cash at 6% | +34.4% / -23.4% | +31.4% / -23.4% |
+| 30 bps, cash at 0% | +31.0% / -25.4% | +27.8% / -24.2% |
+| 50 bps, cash at 0% | +29.8% / -26.3% | +26.1% / -24.8% |
+| Base, from 2010 | +31.6% / -23.3% | +29.1% / -22.7% |
+| Base, from 2015 | +35.3% / -23.3% | +32.3% / -21.8% |
+| Base, 500-name universe | +27.2% / -36.8% | +24.1% / -28.5% |
+| Invested (mean gross) | 42% | 41% |
+| Annual one-way turnover | 2.3x | 2.6x |
+| CAGR with the best year set to zero | +28.8% | +26.6% |
+
+Gross exposure never exceeds 100% in either run. Costs matter little here because the book turns
+over only 2.3 times a year; the cash yield matters a lot, because 58% of the book is in cash on
+an average day and 6% on that is 3.5 points of CAGR. That is why F1 leaves the gate with cash at
+0%: the yield cushions the equity path through the 2015-16 and 2018-20 grinds. F2 spends 2.3
+points of CAGR to hold the drawdown under 25% whichever way those assumptions fall.
+
+**Read before trading it.** This is the maximum of a search that has now run about 750
+configurations on one 19.6-year history, so the headline is optimistic by an amount that cannot
+be measured from the same data. The specific concerns, in order:
+
+1. **Universe dependence.** On the 500 most liquid names the same rules lose 8 points of CAGR and
+   the drawdown is -36.8%. The edge is in names ranked 500 to 1,000 by turnover — ₹1-5 crore a
+   day — and it does not survive without them. Capacity is a few crore.
+2. **Regime dependence.** The 100-day index regime is load-bearing: at 200 days the drawdown is
+   -40%, at 125 days -30%. A rule that sensitive to its one parameter is a risk in itself.
+3. **Concentration.** 2007 returned +172%; without it the CAGR is +28.8%. Eight names at a time is
+   a concentrated book, and the path is the path of a handful of trades a year.
+4. **Survivorship and circuits.** Delisted names are absent from the panel, and a small-cap
+   breakout that closes at its high is often locked limit-up the next morning. The simulator now
+   refuses bars with no range and fills at the open otherwise, which is still generous.
+
+The honest reading of the fourth loop: the 35% is reachable on this data inside the gate at 30 bps
+with idle cash in a liquid fund, and +33% is reachable with the gate held under every assumption
+tested. Both rest on the strong-close filter, the small-cap tier and a single regime length, and
+the next five years will pay something closer to the ex-best-year figures than the headline.
+
 ## Refreshing the data
 
 ```bash

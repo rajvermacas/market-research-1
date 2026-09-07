@@ -42,6 +42,9 @@ Strategies (`--strategy`):
                 daily management.
     pullback    short-term mean reversion inside an uptrend: RSI(2) oversold above the
                 200-day average; exit on strength or after --max-hold days.
+    breakout_orders
+                the breakout book traded with resting stop orders filled intraday (buy-stop at
+                the level, sell-stop at the trail), optional pyramiding. See its docstring.
 
 Every strategy can wear the same overlays: a regime filter on the equal-weight index
 (`--regime sma200|sma100|dd10|none`), an own-trend filter per name (`--stock-sma`), an
@@ -243,7 +246,7 @@ def indicator(p: Panel, name: str, *args) -> np.ndarray:
     elif name == "clv":            # close within the day's range: 0 low .. 1 high
         rng = p.high - p.low
         with np.errstate(invalid="ignore", divide="ignore"):
-            v = np.where(rng > 0, (p.close - p.low) / rng, 0.5)
+            v = np.where(rng > 0, (p.close - p.low) / rng, 0.0)   # a locked bar is not a strong close
     else:
         raise KeyError(name)
     p.ind[key] = v
@@ -627,7 +630,7 @@ def strat_breakout(p: Panel, a, elig, regime) -> np.ndarray:
                 held[out] = False
         free = a.top - held.sum()
         if free > 0 and regime[t]:
-            cand = elig[t] & ~held & (c >= hh[t]) & ~np.isnan(hh[t])
+            cand = elig[t] & ~held & (c >= hh[t]) & ~np.isnan(hh[t]) & (p.high[t] > p.low[t])
             if a.stock_sma:
                 cand &= c > indicator(p, "sma", a.stock_sma)[t]
             if a.max_vol:
@@ -642,6 +645,9 @@ def strat_breakout(p: Panel, a, elig, regime) -> np.ndarray:
                 cand &= near[t] >= a.near_high
             if cand.any():
                 s = np.where(cand, mom[t] if a.rank != "sharpe" else mom[t] / np.maximum(vol[t], 0.10), np.nan)
+                if a.clv_first:
+                    # two tiers: strong-close breakouts rank ahead of ordinary ones
+                    s = s + np.where(indicator(p, "clv")[t] >= a.clv_first, 1e3, 0.0)
                 pick = top_k(s, free)
                 if len(pick):
                     if a.weighting == "risk":
@@ -689,8 +695,182 @@ def strat_pullback(p: Panel, a, elig, regime) -> np.ndarray:
     return W
 
 
+def simulate_breakout_orders(p: Panel, a, elig: np.ndarray, regime: np.ndarray, start_i: int,
+                             end_i: int) -> Result:
+    """Breakout trend following traded with STOP ORDERS instead of next-open market orders.
+
+    At the close of t-1 the book knows: its trailing stops (peak close minus --atr-mult ATRs,
+    held at the entry stop while --init-atr is set and the trade has not moved), and a list of
+    buy-stop orders at the prior --entry-n-day high for the best-ranked eligible names that
+    closed within --order-band of that level. On day t:
+
+        sell stop   open <= stop -> fill at open (gap through); low <= stop -> fill at the
+                    stop less --slip-bps. Regime and own-trend exits are market-on-open.
+        buy stop    open >= level -> fill at open unless it gapped more than --order-band
+                    above the level (skip); high >= level -> fill at the level plus slip.
+        pyramid     with --pyramid-units > 1 each entry buys one unit; a further unit is
+                    bought at the next open each time the close is --pyramid-step ATRs above
+                    the last fill, up to the unit count.
+
+    P&L is per position: a name exited at F earns F/C_prev - 1 for the day, a name entered
+    at F earns C/F - 1 on its new weight, holds earn C/C_prev - 1. Costs are --cost-bps on
+    the value traded. No leverage: gross is capped at --leverage (1.0).
+    """
+    T = end_i
+    cost = a.cost_bps / 10_000
+    slip = a.slip_bps / 10_000
+    hh = indicator(p, "hh", a.entry_n)
+    atr = indicator(p, "atr", 20)
+    mom = indicator(p, "ret", a.lookback, a.skip)
+    if a.rank == "mom2":
+        score_all = 0.5 * mom + 0.5 * indicator(p, "ret", a.lookback // 2, a.skip)
+    elif a.rank == "sharpe":
+        score_all = mom / np.maximum(indicator(p, "vol", 63), 0.10)
+    else:
+        score_all = mom
+    sma_s = indicator(p, "sma", a.stock_sma) if a.stock_sma else None
+    vol = indicator(p, "vol", 63) if a.max_vol else None
+    unit_w = a.exposure / a.top / max(a.pyramid_units, 1)
+
+    N = p.N
+    w = np.zeros(N)
+    held = np.zeros(N, bool)
+    peak = np.full(N, np.nan)
+    stop = np.full(N, np.nan)
+    last_fill = np.full(N, np.nan)
+    units = np.zeros(N, int)
+    eq = 1.0
+    equity = np.empty(T - start_i)
+    gross = np.empty(T - start_i)
+    turn = np.zeros(T - start_i)
+    equity[0] = 1.0
+    gross[0] = 0.0
+    for t in range(start_i + 1, T):
+        k = t - start_i
+        c_prev = p.close[t - 1]
+        o = np.where(np.isnan(p.open_[t]), c_prev, p.open_[t])
+        hi = p.high[t]
+        lo = p.low[t]
+        c = p.close[t]
+        tradable = p.has_bar[t] & ~np.isnan(c_prev)
+        bad = (p.ret[t] == 0.0) & (c_prev != c)        # bad tick: freeze the name for the day
+        day_ret = 0.0
+        traded = 0.0
+        new_w = w.copy()
+
+        # ---- exits, decided on yesterday's close or triggered intraday today
+        if held.any():
+            idx = np.flatnonzero(held)
+            for i in idx:
+                if bad[i] or not tradable[i]:
+                    continue
+                fill = np.nan
+                if (not regime[t - 1] and a.daily_exit) or (sma_s is not None and not c_prev[i] > sma_s[t - 1, i]):
+                    fill = o[i]
+                elif a.exit_mode == "close":
+                    if c_prev[i] < stop[i]:
+                        fill = o[i]
+                elif o[i] <= stop[i]:
+                    fill = o[i]
+                elif lo[i] <= stop[i]:
+                    fill = stop[i] * (1 - slip)
+                if not np.isnan(fill):
+                    r = fill / c_prev[i] - 1
+                    day_ret += w[i] * r
+                    traded += w[i] * (1 + r)
+                    new_w[i] = 0.0
+                    held[i] = False
+                    units[i] = 0
+        # holds earn the full day
+        hold_mask = held & tradable & ~bad
+        r_hold = np.where(hold_mask, c / c_prev - 1, 0.0)
+        day_ret += float(w @ np.nan_to_num(r_hold))
+        # ---- pyramids: add a unit at the open when yesterday's close cleared the step
+        if a.pyramid_units > 1 and held.any():
+            for i in np.flatnonzero(held & tradable & ~bad):
+                if units[i] < a.pyramid_units and c_prev[i] >= last_fill[i] + a.pyramid_step * atr[t - 1, i]:
+                    if new_w.sum() + unit_w <= a.leverage + 1e-9:
+                        day_ret += unit_w * (c[i] / o[i] - 1)
+                        traded += unit_w
+                        new_w[i] += unit_w
+                        units[i] += 1
+                        last_fill[i] = o[i]
+        # ---- entries via buy stops
+        free = a.top - int(held.sum())
+        if free > 0 and regime[t - 1]:
+            lvl = hh[t]
+            if a.entry_mode == "close":       # closed above the prior high: buy at the open
+                prior = hh[t - 1]
+                cand = (elig[t - 1] & ~held & tradable & ~bad & ~np.isnan(prior) & (c_prev >= prior)
+                        & (p.high[t - 1] > p.low[t - 1]))
+                if a.clv:
+                    cand &= indicator(p, "clv")[t - 1] >= a.clv
+            else:                             # buy stop resting at the level
+                cand = (elig[t - 1] & ~held & tradable & ~bad & ~np.isnan(lvl)
+                        & (c_prev >= lvl * (1 - a.order_band)) & (c_prev < lvl))
+            if sma_s is not None:
+                cand &= c_prev > sma_s[t - 1]
+            if vol is not None:
+                cand &= vol[t - 1] < a.max_vol
+            if cand.any():
+                order = np.argsort(-np.where(cand, np.nan_to_num(score_all[t - 1], nan=-1e9), -np.inf))
+                for j in order[:cand.sum()]:
+                    if free == 0:
+                        break
+                    fill = np.nan
+                    if hi[j] == lo[j]:                # locked all day: nothing to buy
+                        continue
+                    if a.entry_mode == "close":
+                        fill = o[j]
+                    elif o[j] >= lvl[j]:
+                        if o[j] <= lvl[j] * (1 + a.order_band):
+                            fill = o[j]
+                    elif hi[j] >= lvl[j]:
+                        fill = lvl[j] * (1 + slip)
+                    if np.isnan(fill) or new_w.sum() + unit_w > a.leverage + 1e-9:
+                        continue
+                    day_ret += unit_w * (c[j] / fill - 1)
+                    traded += unit_w
+                    new_w[j] = unit_w
+                    held[j] = True
+                    units[j] = 1
+                    last_fill[j] = fill
+                    peak[j] = c[j]
+                    stop[j] = fill - (a.init_atr or a.atr_mult) * atr[t - 1, j]
+                    free -= 1
+        # ---- carry and bookkeeping
+        g_prev = w.sum()
+        eq *= 1 + a.cash_rate / TRADING_DAYS * max(1 - g_prev, 0.0)
+        eq *= (1 + day_ret) * (1 - cost * traded)
+        # weights as fractions of the new equity: each name's end-of-day value / equity
+        val = np.zeros(N)
+        hm = held & (new_w > 0)
+        entered = hm & (units == 1) & (last_fill == last_fill) & np.isnan(peak) == False
+        # value of holds and adds: weight * C/C_prev for carried units, unit * C/fill for new
+        val[hm] = new_w[hm]
+        # approximate: carried units scale by C/C_prev, new fills by C/fill — recompute exactly
+        for i in np.flatnonzero(hm):
+            if w[i] > 0 and new_w[i] > w[i]:            # carried plus an added unit at the open
+                val[i] = w[i] * (c[i] / c_prev[i]) + (new_w[i] - w[i]) * (c[i] / o[i])
+            elif w[i] > 0:
+                val[i] = w[i] * (c[i] / c_prev[i]) if (tradable[i] and not bad[i]) else w[i]
+            else:
+                val[i] = new_w[i] * (c[i] / last_fill[i])
+        w = val / (1 + day_ret)
+        # trailing stops for tomorrow
+        for i in np.flatnonzero(held):
+            if tradable[i] and not bad[i]:
+                peak[i] = max(peak[i], c[i]) if not np.isnan(peak[i]) else c[i]
+                trail = peak[i] - a.atr_mult * atr[t, i]
+                stop[i] = max(stop[i], trail) if a.init_atr else trail
+        turn[k] = traded / 2
+        equity[k] = eq
+        gross[k] = w.sum()
+    return Result(equity, gross, turn, p.dates[start_i:T])
+
+
 STRATEGIES = {"ew": strat_ew, "mom": strat_mom, "breakout": strat_breakout,
-              "pullback": strat_pullback}
+              "pullback": strat_pullback, "breakout_orders": None}
 
 
 # --------------------------------------------------------------------------- driver
@@ -700,16 +880,19 @@ def run(p: Panel, a) -> tuple[Result, dict]:
     elig = eligibility(p, a.universe, a.min_price, a.min_bars, a.min_turnover)
     idx = ew_index(p, elig)
     reg = regime_on(p, idx, a.regime, elig)
-    W = STRATEGIES[a.strategy](p, a, elig, reg)
     start_i = int(np.searchsorted(p.dates, np.datetime64(a.start)))
     if a.end:
         end_i = int(np.searchsorted(p.dates, np.datetime64(a.end), side="right"))
     else:
         end_i = p.T
-    q = Panel(p.dates[:end_i], p.symbols, p.close[:end_i], p.open_[:end_i], p.high[:end_i],
-              p.low[:end_i], p.raw_close[:end_i], p.turnover[:end_i], p.ret[:end_i],
-              p.has_bar[:end_i], p.bad_ticks, p.nifty500, p.ind)
-    res = simulate(q, W[:end_i], start_i, a.cost_bps, a.cash_rate, a.funding_rate, a.leverage)
+    if a.strategy == "breakout_orders":
+        res = simulate_breakout_orders(p, a, elig, reg, start_i, end_i)
+    else:
+        W = STRATEGIES[a.strategy](p, a, elig, reg)
+        q = Panel(p.dates[:end_i], p.symbols, p.close[:end_i], p.open_[:end_i], p.high[:end_i],
+                  p.low[:end_i], p.raw_close[:end_i], p.turnover[:end_i], p.ret[:end_i],
+                  p.has_bar[:end_i], p.bad_ticks, p.nifty500, p.ind)
+        res = simulate(q, W[:end_i], start_i, a.cost_bps, a.cash_rate, a.funding_rate, a.leverage)
     if a.eq_curve:
         hedge_ret = None
         if a.hedge:
@@ -744,8 +927,12 @@ def label(a) -> str:
     bits = [a.strategy, a.universe]
     if a.strategy in ("mom",):
         bits += [f"lb{a.lookback}", f"top{a.top}", a.rebalance, a.rank]
-    if a.strategy == "breakout":
+    if a.strategy in ("breakout", "breakout_orders"):
         bits += [f"n{a.entry_n}", f"top{a.top}", f"atr{a.atr_mult:g}", a.weighting]
+        if a.pyramid_units > 1:
+            bits.append(f"pyr{a.pyramid_units}x{a.pyramid_step:g}")
+        if a.strategy == "breakout_orders":
+            bits.append(f"in:{a.entry_mode}/out:{a.exit_mode}")
         if a.exit_n:
             bits.append(f"ll{a.exit_n}")
         if a.init_atr:
@@ -758,6 +945,10 @@ def label(a) -> str:
             bits.append(f"nh{a.near_high:g}")
         if a.exit_weekly:
             bits.append("wkexit")
+        if a.clv:
+            bits.append(f"clv{a.clv:g}")
+        if a.clv_first:
+            bits.append(f"clv1st{a.clv_first:g}")
         bits.append(a.rank)
         if a.time_stop:
             bits.append(f"ts{a.time_stop}")
@@ -853,7 +1044,10 @@ def build_parser() -> argparse.ArgumentParser:
     ap.add_argument("--exit-n", type=int, default=0)
     ap.add_argument("--atr-mult", type=float, default=4.0)
     ap.add_argument("--risk", type=float, default=0.01)
-    ap.add_argument("--clv", type=float, default=0.0)
+    ap.add_argument("--clv", type=float, default=0.0,
+                    help="require the breakout bar to close at least this far up its range (1.0 = at the high)")
+    ap.add_argument("--clv-first", type=float, default=0.0,
+                    help="rank breakouts closing above this CLV ahead of all others (two-tier book)")
     ap.add_argument("--vol-surge", type=float, default=0.0,
                     help="require the breakout day's turnover to be this multiple of its 50-day mean")
     ap.add_argument("--base-tight", type=float, default=0.0,
@@ -862,6 +1056,13 @@ def build_parser() -> argparse.ArgumentParser:
                     help="require close >= this fraction of the 252-day high")
     ap.add_argument("--exit-weekly", action="store_true",
                     help="evaluate trailing-stop exits only on the last day of each week")
+    ap.add_argument("--slip-bps", type=float, default=10.0, help="slippage on stop-order fills")
+    ap.add_argument("--entry-mode", default="stop", choices=["stop", "close"])
+    ap.add_argument("--exit-mode", default="stop", choices=["stop", "close"])
+    ap.add_argument("--order-band", type=float, default=0.03,
+                    help="place buy stops only on names closing within this of the level; skip gaps beyond it")
+    ap.add_argument("--pyramid-units", type=int, default=1)
+    ap.add_argument("--pyramid-step", type=float, default=1.0, help="ATRs between pyramid units")
     ap.add_argument("--init-atr", type=float, default=0.0,
                     help="initial stop in ATRs below entry (0 = use --atr-mult)")
     ap.add_argument("--time-stop", type=int, default=0,
