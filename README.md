@@ -330,7 +330,7 @@ switching costs are charged).
 
 The brief was **CAGR ≥ 30% with max drawdown ≤ 25%**, a Calmar of 1.20 over nineteen and a half
 years that include 2008. Roughly 450 configurations were run across three sweeps and nine
-focused batches. The best fully-costed result is +28.0% at -23.8%; leverage trades one bound for
+focused batches at this stage (about 1,400 by the end of the fourth loop). The best fully-costed result is +28.0% at -23.8%; leverage trades one bound for
 the other (1.05x → +29.0% / -25.1%; 1.1x → +30.2% / -26.4%) and never satisfies both. Two sleeves
 (breakout 70% + momentum 30%) do no better, because their daily returns are 0.6 correlated.
 
@@ -517,13 +517,97 @@ be measured from the same data. The specific concerns, in order:
 3. **Concentration.** 2007 returned +172%; without it the CAGR is +28.8%. Eight names at a time is
    a concentrated book, and the path is the path of a handful of trades a year.
 4. **Survivorship and circuits.** Delisted names are absent from the panel, and a small-cap
-   breakout that closes at its high is often locked limit-up the next morning. The simulator now
-   refuses bars with no range and fills at the open otherwise, which is still generous.
+   breakout that closes at its high is often locked limit-up the next morning. At the time of
+   this table the simulator refused only rangeless *signal* bars; the independent review below
+   found it still filled entries and exits on locked bars, and the corrected numbers follow.
 
 The honest reading of the fourth loop: the 35% is reachable on this data inside the gate at 30 bps
 with idle cash in a liquid fund, and +33% is reachable with the gate held under every assumption
 tested. Both rest on the strong-close filter, the small-cap tier and a single regime length, and
 the next five years will pay something closer to the ex-best-year figures than the headline.
+
+### Independent review, corrected accounting, and the Nifty 50 scorecard
+
+A second model instance, given only the repository and the search logs and told to be
+adversarial, reviewed F1 and F2. It reproduced F1 exactly and verified the indicator alignment
+(`hh` excludes the signal bar), the lagged regime index, the two-leg fill arithmetic, cost on
+both legs, the cash-yield compounding and the bad-tick handling against hand calculations. It
+then found two accounting errors that both lean the same way, and one undercount:
+
+- **Entries filled on upper-circuit bars.** The signal-bar guard did not cover the fill bar:
+  15 of F1's 376 entries were bought at an open with no range, which no order could have got.
+- **Exits filled on lower-circuit locks.** 24 of 376 exits filled on a rangeless bar, 21 of
+  them -5% lower-circuit locks; the first bar that actually traded averaged 7.3% lower.
+- **The search was ~1,400 breakout evaluations**, not the ~750 stated above.
+
+Both fills are now fixed in `simulate()`: a buy is dropped on a locked bar (the strategy
+re-places it if the signal persists) and a sell is carried to the first bar with range. The
+breakout state also now starts at the test window, so no ghost positions from the warm-up
+occupy slots on day one. On corrected accounting:
+
+| | F1 | F2 |
+| --- | --- | --- |
+| 30 bps, cash at 6% (base) | **+33.1% / -24.6%** | **+30.9% / -24.0%** |
+| 50 bps, cash at 6% | +31.9% / -25.3% | +28.9% / -24.5% |
+| 30 bps, cash at 0% | +28.5% / -28.1% | +25.3% / -25.6% |
+| 50 bps, cash at 0% (worst) | +27.4% / -28.9% | +23.9% / -26.0% |
+| CAGR ex-best year / ex-top-2 years | +27.1% / +22.0% | +25.0% / +20.1% |
+
+So on honest fills the 35% is not reached, and the 25% gate holds only on base assumptions:
+the corrections cost 2.5 points of CAGR and 1.3 of drawdown, and F2 no longer holds the gate
+under stress. The earlier fourth-loop table stands as the record of what was claimed before
+the review.
+
+**Plateau or overfit — the review's verdict, in its own numbers.** Mixed, leaning overfit on
+the level though not on the mechanism. The edge is real: trade-level t-statistic 6.2 on 376
+trades, deflated Sharpe ≈ 1.0 after 1,400 trials, every one-notch neighbour beats the
+benchmark. The level is selected: the local hill-climb batches (184 rows) have CAGR mean 29.2
+with SD 3.4, and the expected maximum of 184 such draws is about 38, so 35.6 is exactly what
+the best of those draws looks like around a ~29% true mean. F1 is Calmar rank 1 of 16 in its
+neighbourhood. CAGR is a plateau (neighbours 29-37%); the drawdown gate is not (4 of 15
+neighbours breach -25%). Tuning against a truly untuned family member is worth +13 points of
+CAGR, 4-6 times the neighbourhood spread, most of it from two whole-window choices: the
+strong-close bar and the 100-day regime. Selecting the best neighbour on 2007-16 and running
+it on 2017-26 lands at rank 9 of 19, the median. The reviewer's forward expectation, after the
+fill corrections, the cash assumption and a survivorship haircut it could not measure: **CAGR
+15-22% with drawdowns of -30% to -40%**, delivered as a few +50-100% years amid a third of years
+flat or negative, on about 20 trades a year of which two decide the year. Its list of what it
+would demand before trading — a point-in-time universe from bhavcopy, a participation-based
+impact model at a stated book size, a historical cash-rate series, a true walk-forward, and a
+pass/fail gate matrix over neighbourhood × cost × cash × universe — is the next piece of work.
+
+**Against the Nifty 50.** The index history (Yahoo `^NSEI`, price only, from 2007-09-17) gives
+19 measurable calendar years; 2007 is not covered, and the strategy's +149% that year beat any
+index figure. On corrected accounting, over 2007-09 to 2026-08 the Nifty 50 returned 9.3% a
+year (about 10.6% with dividends) with a -59.9% drawdown.
+
+| Year | Nifty 50 | F1 | F2 |
+| --- | --- | --- | --- |
+| 2008 | -51.8% | -16.1% | -16.6% |
+| 2009 | +75.8% | +57.6% | +55.1% |
+| 2010 | +17.9% | +22.6% | +22.6% |
+| 2011 | -24.6% | +2.3% | +2.3% |
+| 2012 | +27.7% | -2.5% | -2.5% |
+| 2013 | +6.8% | +23.0% | +23.0% |
+| 2014 | +31.4% | +86.1% | +86.1% |
+| 2015 | -4.1% | -2.4% | -5.0% |
+| 2016 | +3.0% | +22.8% | +9.2% |
+| 2017 | +28.6% | +65.4% | +55.2% |
+| 2018 | +3.2% | -2.8% | -3.3% |
+| 2019 | +12.0% | +14.0% | +8.8% |
+| 2020 | +14.9% | +96.1% | +91.7% |
+| 2021 | +24.1% | +86.8% | +86.6% |
+| 2022 | +4.3% | +3.0% | +3.0% |
+| 2023 | +20.0% | +120.9% | +118.8% |
+| 2024 | +8.8% | +48.8% | +47.7% |
+| 2025 | +10.5% | -0.2% | -0.2% |
+| 2026 (to Aug) | -7.8% | +9.9% | +9.9% |
+
+F1 beats the index in **14 of 19** years and loses in 2009, 2012, 2018, 2022 and 2025; F2 in
+12 of 19. On rolling windows of the daily curves, F1 is ahead in 79% of 1-year windows, 99% of
+3-year windows and 100% of 5-year windows. The losing years are the ones the regime filter
+keeps the book in cash through a recovery (2009, 2012) or the ones where breakouts fail one
+after another (2018, 2022, 2025).
 
 ## Refreshing the data
 

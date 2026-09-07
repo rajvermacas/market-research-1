@@ -118,6 +118,24 @@ and occasionally reused.
 
 ## LESSONS
 
+- A guard on the signal bar is not a guard on the fill bar. The strong-close breakout refused
+  rangeless signal bars, and the simulator went on filling entries at the next open when that
+  open was locked limit-up (15 of 376 trades) and selling into lower-circuit locks the first
+  bar that actually traded would have filled 7% lower (24 of 376). Together: 2.5 points of
+  CAGR. Every fill in a small-cap backtest needs the same test: could an order have traded at
+  this price on this bar?
+- Reset strategy state at the test window. The breakout book ran its state from the warm-up
+  start, so on the first test day it "held" six names the simulator never bought and those
+  slots stayed dead until the ghosts exited. Conservative here, but any `--start` comparison
+  was subtly inconsistent.
+- Count the search honestly, including the random draws and the single runs. "About 750"
+  was ~1,400 once the logs were tallied, and the expected maximum of that many draws around a
+  29% mean with a 3.4-point spread is 38%: the 35.6% headline was the best draw, not the
+  mean. Report the local mean and the neighbourhood next to any maximum.
+- Get the review from something that did not do the search, and hand it the logs. The
+  reviewer reproduced the result, checked seven components against hand calculations, and
+  found both fill errors in one pass; the author had looked at the same code for two days.
+
 - Of every entry filter tested, "the breakout bar closed at its high" was the only one that
   helped, and it helped by removing trades, not adding return: it halved the trade count,
   cut the drawdown from -27% to -22% at a small cost in CAGR, and that drawdown budget could

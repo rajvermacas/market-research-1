@@ -374,6 +374,7 @@ def simulate(p: Panel, W: np.ndarray, start_i: int, cost_bps: float, cash_rate: 
     equity[0] = 1.0
     gross[0] = 0.0
     open_ok = ~np.isnan(p.open_)
+    pending = np.zeros(N, bool)          # sells waiting for a bar that actually trades
     for t in range(start_i + 1, T):
         k = t - start_i
         # split the day into an overnight leg (prior close -> open) and an intraday leg
@@ -396,7 +397,17 @@ def simulate(p: Panel, W: np.ndarray, start_i: int, cost_bps: float, cash_rate: 
         eq *= 1 + rp
         w = w * (1 + r_on) / (1 + rp)
 
-        tgt = W[t - 1]
+        tgt = W[t - 1].copy()
+        # a bar with no range is a circuit lock: nothing can be bought at that open, and a
+        # sell there fills only in the model. Drop buys; carry sells to the next bar with range.
+        locked = (p.high[t] == p.low[t]) & ~np.isnan(p.close[t])
+        if pending.any():
+            tgt[pending & ~locked] = 0.0
+            pending &= locked
+        sells = ~np.isnan(tgt) & (tgt < w) & locked
+        buys_locked = ~np.isnan(tgt) & (tgt > w) & locked
+        pending |= sells
+        tgt[sells | buys_locked] = np.nan
         m = ~np.isnan(tgt)
         if m.any():
             new = w.copy()
@@ -586,6 +597,7 @@ def strat_mom(p: Panel, a, elig, regime) -> np.ndarray:
 
 def strat_breakout(p: Panel, a, elig, regime) -> np.ndarray:
     W = np.full((p.T, p.N), np.nan)
+    t0 = getattr(a, "_start_i", 0)
     hh = indicator(p, "hh", a.entry_n)
     ll = indicator(p, "ll", a.exit_n) if a.exit_n else None
     atr = indicator(p, "atr", 20)
@@ -608,7 +620,7 @@ def strat_breakout(p: Panel, a, elig, regime) -> np.ndarray:
         rs6 = indicator(p, "ret", 126, 0)
         idx_ret = np.nanmedian(np.where(elig, rs6, np.nan), axis=1)
         mom = rs6 - idx_ret[:, None]
-    for t in range(p.T):
+    for t in range(t0, p.T):
         c = p.close[t]
         if held.any():
             age[held] += 1
@@ -881,6 +893,7 @@ def run(p: Panel, a) -> tuple[Result, dict]:
     idx = ew_index(p, elig)
     reg = regime_on(p, idx, a.regime, elig)
     start_i = int(np.searchsorted(p.dates, np.datetime64(a.start)))
+    a._start_i = start_i
     if a.end:
         end_i = int(np.searchsorted(p.dates, np.datetime64(a.end), side="right"))
     else:
