@@ -43,6 +43,12 @@ rather than on intuition.
 | `rsi_combo_search.py` | Every subset of the optional filters, scored, and reported only if it earns in both halves |
 | `rsi_slots_sweep.py` | Portfolio slot count vs return, drawdown, and how much capital is actually deployed |
 
+### The loop
+
+| Script | What it does |
+| --- | --- |
+| `strategy_loop.py` | Proposes a whole strategy, backtests it, ranks it, mutates the best ones and repeats — for as long as you leave it running. Scores on a train window only, reports the untouched holdout beside it, and audits its own leaderboard for overfitting before you read it |
+
 ### Data pipeline
 
 | Script | What it does |
@@ -65,7 +71,8 @@ Import these instead of writing a second copy that can drift from the first:
 | `rsi_backtest` | `prior_bar_rsi`, `attach_htf` | Higher-timeframe RSI joined onto intraday bars, shifted so it is knowable at the bar — with the warm-up guard |
 | `rsi_backtest` | `attach_market_cap` | Today's cap walked back through the price series |
 | `rsi_backtest` | `find_trades(frame, cost, reward_risk, ...)` | Forward walk from each signal to whichever of stop or target it reaches first |
-| `rsi_backtest` | `simulate(trades, prices, slots, cost, ...)` | Equal-weight portfolio with a slot limit, marked bar by bar |
+| `rsi_backtest` | `walk_signals(symbol, ...arrays..., idx, ...)` | The same walk for one symbol, given its bars as arrays — for callers that resolve the same panel thousands of times |
+| `rsi_backtest` | `simulate(trades, prices, slots, cost, ...)` | Equal-weight portfolio with a slot limit, marked bar by bar; `detail=True` also returns deployment and the returns of the trades actually taken |
 | `rsi_backtest` | `elapsed_years(grid)`, `performance(equity, years)` | CAGR and max drawdown, with elapsed time read off the timestamps |
 
 ## Quickstart
@@ -448,6 +455,48 @@ constraints are what keep the pattern local and shaped like an N.
 `--charts N` renders the top hits as candlesticks with the EMA and the A/B/C levels marked. Use it
 — geometric conditions are easy to satisfy in ways that look nothing like the intended shape, and
 the picture is the only quick way to catch that.
+
+### The loop
+
+`scripts/strategy_loop.py` is the research labs generalised. A lab asks one question about one
+setup; the loop draws an entire strategy — entry level, regime filters, candle filters, stop
+rule, target, slot count, per-symbol cap — out of a space of about 1.3 x 10^25 configurations,
+backtests it, scores it, and uses the best of what it has found so far as the parent for the next
+draw. It runs until you stop it and resumes from its own ledger, so leaving it going overnight is
+the intended mode.
+
+```bash
+python scripts/strategy_loop.py --minutes 30            # search
+python scripts/strategy_loop.py --minutes 30            # again: resumes the same ledger
+python scripts/strategy_loop.py --report                # the leaderboard, without re-running
+python scripts/strategy_loop.py --replay 1              # the leader, in full, over both windows
+python scripts/strategy_loop.py --self-check            # fast path vs the engine everyone uses
+python scripts/strategy_loop.py --min-deployed 0.25 --min-trades 150 --objective sharpe
+```
+
+One iteration is: filter the pre-resolved signal superset, walk every surviving signal forward to
+its stop or target, run the equal-weight book, score the equity curve. None of that is a second
+implementation — the exits come from `rsi_backtest.walk_signals` and the portfolio from
+`rsi_backtest.simulate`, which is why the loop reproduces what `rsi_backtest.py` prints for the
+same configuration: 4,606 trades, 3,133 taken, -52.12% drawdown, CAGR +0.59% against its +0.58%,
+the last digit being a window 0.07 years shorter. `--self-check` asserts that agreement on
+demand. Roughly a thousand configurations a minute go through it on the 11.5-year Kite panel.
+
+**The leaderboard is the least trustworthy thing the loop prints.** A search this wide over one
+window will always find something that looks extraordinary, because with enough draws something
+fits the noise. Four things are built in against that:
+
+- **The score never sees the holdout.** Candidates are ranked on the first 70% of the window
+  (`--train-frac`); the remaining years are simulated but only reported, never optimised against.
+- **Both halves of the train window must pay.** A candidate that loses money in either half is
+  recorded in the ledger, but never becomes a parent and never ranks.
+- **Deployment is a column, and can be a constraint.** Return per drawdown rewards a book that
+  sits in cash: hold nothing and your drawdown is zero. `--min-deployed` refuses candidates that
+  win by not turning up.
+- **Every run ends with a selection audit** — the rank correlation between train and holdout
+  score across all trials, the holdout hit rate of the top block against the base rate of every
+  trial, and how many candidates beat equal-weight buy-and-hold out of sample. Read it before the
+  table. If that correlation is near zero, the leaderboard is a list of coincidences.
 
 ## Refreshing the data
 

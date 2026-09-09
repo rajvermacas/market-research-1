@@ -178,6 +178,62 @@ def find_trades_scaled(frame: pl.DataFrame, cost: float, first_rr: float, runner
     return pl.DataFrame(rows).sort("entry_time") if rows else pl.DataFrame()
 
 
+def walk_signals(symbol: str, times, open_, high, low, close, stops, idx,
+                 cost: float, reward_risk: float, stack: bool = True) -> list[dict]:
+    """Resolve one symbol's signals against its own bars — the walk itself.
+
+    Split out of find_trades so a search loop can hold the per-symbol arrays once and
+    re-resolve thousands of candidate filter sets against them, instead of re-grouping
+    the whole panel per candidate. There is exactly one copy of this logic: two would
+    drift, and then the fast path and the slow path would disagree about the same trade.
+
+    `idx` holds the positions of the signal bars within these arrays; `stops` is a stop
+    *price* per bar (pass `low` for the entry-candle-low stop).
+    """
+    rows = []
+    last_exit = -1
+    for i in idx:
+        if not stack and i <= last_exit:   # legacy: one position per symbol at a time
+            continue
+        stop, entry = stops[i], close[i]
+        if i >= len(close) - 1:   # no bar left to resolve against
+            continue
+        if not np.isfinite(entry) or entry <= 0 or not np.isfinite(stop) or stop >= entry:
+            continue            # a cross closing at its own low leaves no risk to size
+        risk = entry - stop
+        target = entry + reward_risk * risk
+
+        after_low, after_high = low[i + 1:], high[i + 1:]
+        stop_hits = np.flatnonzero(after_low <= stop)
+        target_hits = np.flatnonzero(after_high >= target)
+        first_stop = stop_hits[0] if stop_hits.size else np.inf
+        first_target = target_hits[0] if target_hits.size else np.inf
+
+        if first_stop == np.inf and first_target == np.inf:
+            j = len(close) - 1
+            exit_price, outcome = close[j], "open"
+        elif first_stop <= first_target:   # a tie resolves against us, deliberately
+            j = i + 1 + int(first_stop)
+            exit_price = open_[j] if open_[j] <= stop else stop
+            outcome = "stop"
+        else:
+            j = i + 1 + int(first_target)
+            exit_price = open_[j] if open_[j] >= target else target
+            outcome = "target"
+        last_exit = j
+        rows.append({
+            "symbol": symbol,
+            "entry_time": int(times[i]), "entry": float(entry),
+            "stop": float(stop), "target": float(target),
+            "exit_time": int(times[j]), "exit": float(exit_price),
+            "outcome": outcome,
+            "bars_held": int(j - i),
+            "ret": float(exit_price / entry * (1 - cost) ** 2 - 1),
+            "risk_pct": float(risk / entry),
+        })
+    return rows
+
+
 def find_trades(frame: pl.DataFrame, cost: float, reward_risk: float,
                 stop_column: str | None = None, stack: bool = True) -> pl.DataFrame:
     """Walk each signal forward to whichever of the stop or the target it reaches first.
@@ -195,57 +251,18 @@ def find_trades(frame: pl.DataFrame, cost: float, reward_risk: float,
     rows = []
     for (symbol,), part in frame.group_by("symbol", maintain_order=True):
         part = part.sort("datetime")
-        signal = part["signal"].to_numpy()
-        idx = np.flatnonzero(signal)
+        idx = np.flatnonzero(part["signal"].to_numpy())
         if not idx.size:
             continue
-        times = part["datetime"].dt.epoch("us").to_numpy()
-        high = part["high"].to_numpy()
         low = part["low"].to_numpy()
-        stops = part[stop_column].to_numpy() if stop_column else low
-        open_ = part["open"].to_numpy()
-        close = part["close"].to_numpy()
-
-        last_exit = -1
-        for i in idx:
-            if not stack and i <= last_exit:   # legacy: one position per symbol at a time
-                continue
-            stop, entry = stops[i], close[i]
-            if i >= len(close) - 1:   # no bar left to resolve against
-                continue
-            if not np.isfinite(entry) or entry <= 0 or not np.isfinite(stop) or stop >= entry:
-                continue            # a cross closing at its own low leaves no risk to size
-            risk = entry - stop
-            target = entry + reward_risk * risk
-
-            after_low, after_high = low[i + 1:], high[i + 1:]
-            stop_hits = np.flatnonzero(after_low <= stop)
-            target_hits = np.flatnonzero(after_high >= target)
-            first_stop = stop_hits[0] if stop_hits.size else np.inf
-            first_target = target_hits[0] if target_hits.size else np.inf
-
-            if first_stop == np.inf and first_target == np.inf:
-                j = len(close) - 1
-                exit_price, outcome = close[j], "open"
-            elif first_stop <= first_target:   # a tie resolves against us, deliberately
-                j = i + 1 + int(first_stop)
-                exit_price = open_[j] if open_[j] <= stop else stop
-                outcome = "stop"
-            else:
-                j = i + 1 + int(first_target)
-                exit_price = open_[j] if open_[j] >= target else target
-                outcome = "target"
-            last_exit = j
-            rows.append({
-                "symbol": symbol,
-                "entry_time": int(times[i]), "entry": float(entry),
-                "stop": float(stop), "target": float(target),
-                "exit_time": int(times[j]), "exit": float(exit_price),
-                "outcome": outcome,
-                "bars_held": int(j - i),
-                "ret": float(exit_price / entry * (1 - cost) ** 2 - 1),
-                "risk_pct": float(risk / entry),
-            })
+        rows.extend(walk_signals(
+            symbol,
+            part["datetime"].dt.epoch("us").to_numpy(),
+            part["open"].to_numpy(), part["high"].to_numpy(), low,
+            part["close"].to_numpy(),
+            part[stop_column].to_numpy() if stop_column else low,
+            idx, cost, reward_risk, stack,
+        ))
     if not rows:
         return pl.DataFrame()
     trades = pl.DataFrame(rows).sort("entry_time")
@@ -272,12 +289,17 @@ def find_trades(frame: pl.DataFrame, cost: float, reward_risk: float,
 
 
 def simulate(trades: pl.DataFrame, prices: pl.DataFrame, slots: int, cost: float,
-             per_symbol: int | None = None):
+             per_symbol: int | None = None, detail: bool = False):
     """Equal-weight portfolio, at most `slots` concurrent positions, marked hourly.
 
     `per_symbol` caps how many of those may be in one name at once; None is unlimited,
     which lets a trending stock stack several entries — and, at the extreme, occupy every
     slot. `max_stacked` in the return says how far that actually went.
+
+    `detail` appends a seventh element: how much of the book was actually deployed, and
+    the returns of the trades the portfolio *took*. Both are otherwise unknowable from
+    outside — a caller that reconstructs the slot logic to get them writes a second
+    portfolio simulator, and the two eventually disagree.
     """
     grid = prices["datetime"].dt.epoch("us").to_numpy()
     symbols = [c for c in prices.columns if c != "datetime"]
@@ -290,6 +312,8 @@ def simulate(trades: pl.DataFrame, prices: pl.DataFrame, slots: int, cost: float
 
     cash, open_pos = 1.0, []          # open_pos: [col, shares, exit_index, exit_price]
     equity = np.empty(len(grid))
+    open_count = np.empty(len(grid))
+    taken_returns: list[float] = []
     taken = skipped = blocked = max_stacked = 0
 
     for t in range(len(grid)):
@@ -320,15 +344,22 @@ def simulate(trades: pl.DataFrame, prices: pl.DataFrame, slots: int, cost: float
                 int(np.searchsorted(grid, row["exit_time"])), row["exit"], allocation,
             ])
             taken += 1
+            taken_returns.append(row["ret"])
             # open_pos already holds the position just appended, so this count is the
             # concurrent depth in that name — it must not be incremented again on the way out.
             same = sum(1 for p in open_pos if p[0] == column[row["symbol"]])
             max_stacked = max(max_stacked, same)
 
         equity[t] = cash + sum(p[1] * matrix[t, p[0]] for p in open_pos)
+        open_count[t] = len(open_pos)
     # What the final equity owes to positions never closed: booked at the last mark, not
     # at a real exit. Reported so the reader can discount it.
     unrealised = sum(p[1] * matrix[-1, p[0]] - p[4] for p in open_pos)
+    if detail:
+        extra = {"deployed": float(open_count.mean() / slots),
+                 "avg_open": float(open_count.mean()),
+                 "taken_returns": np.asarray(taken_returns, dtype=float)}
+        return equity, taken, skipped, blocked, max_stacked, unrealised, extra
     return equity, taken, skipped, blocked, max_stacked, unrealised
 
 

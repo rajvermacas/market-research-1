@@ -67,6 +67,12 @@ scripts/                                  the playground
     rsi_stop_lab.py                       do the filters stack, and is the stop the real problem
     rsi_combo_search.py                   every subset of the optional filters, scored
     rsi_slots_sweep.py                    slot count vs return, drawdown and capital deployed
+
+  the loop
+    strategy_loop.py                      unattended search over the whole family: propose a
+                                          strategy, backtest it, rank it, mutate the best and
+                                          repeat. Scores on a train window only, reports the
+                                          holdout beside it, and audits its own leaderboard
 ```
 
 ## Conventions
@@ -99,7 +105,8 @@ LESSONS at the bottom of this file — every rule there was paid for.
 - **Reuse the toolkit; do not write a second indicator.** `screener.rsi` (validated against a
   textbook Wilder loop), `screener.resample`, `screener.fetch_market_caps`,
   `hourly_rsi_screener.ema`, and from `rsi_backtest`: `prior_bar_rsi`, `attach_htf`,
-  `attach_market_cap`, `find_trades`, `simulate`, `elapsed_years`, `performance`. A second copy
+  `attach_market_cap`, `find_trades`, `walk_signals`, `simulate`, `elapsed_years`,
+  `performance`. A second copy
   drifts from the first, and then two scripts disagree and the wrong one produces the numbers.
 - **Say the setup in words in the docstring** — entry, stop, exit, universe, rebalance — then
   check the filters actually select for it.
