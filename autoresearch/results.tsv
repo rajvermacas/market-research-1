@@ -25,3 +25,5 @@ timestamp	commit	strategy_sha	score	train_sharpe	val_sharpe	train_cagr	val_cagr	
 2026-09-09T10:59:36Z	cce29b9	fc9b1c1fac47	1.5776	1.5776	2.1867	24.53	34.47	-16.41	-10.76	0.566	9.74	3343	25	nifty500	iter 22: trailing stop at 20% instead of 15%
 2026-09-09T10:59:48Z	13f4125	d729d4825d14	1.5392	1.5392	2.2353	24.53	37.44	-17.45	-11.05	0.590	10.11	3479	25	nifty500	iter 23: trailing stop at 25%
 2026-09-09T11:00:00Z	13f4125	e5c8250c4d00	1.5904	1.5904	2.2017	24.46	34.54	-15.24	-10.70	0.561	9.65	3308	25	nifty500	iter 24: measure the stop against a 126-session high instead of 63
+2026-09-09T11:00:12Z	47e359c	42f9ad40952d	1.5236	1.5236	2.1962	20.19	33.95	-13.83	-10.88	0.540	9.35	3187	25	nifty500	iter 25: stop measured against a 252-session high
+2026-09-09T11:00:40Z	47e359c	69fc356dcaab	1.6327	1.6327	2.2651	25.30	36.05	-15.57	-13.21	0.581	10.12	3471	25	nifty500	iter 26: rank on a blend of 63/126/252-session momentum

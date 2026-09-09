@@ -5,7 +5,7 @@ THIS IS THE ONLY FILE THE LOOP MAY EDIT. Read `program.md` before changing it.
 
     universe    every name tradable on the bar — liquid enough, listed long enough
     filter      EMA(20) above EMA(100) on the total-return close
-    rank        trailing 126-session return, highest first
+    rank        the mean cross-sectional rank of the 63, 126 and 252-session returns
     hold        the top 25, equal weight, cash whenever fewer than 25 qualify
     regime      the whole book goes to cash while an equal-weight index of the tradable
                 universe is below its own 200-session average
@@ -21,13 +21,13 @@ from __future__ import annotations
 import numpy as np
 
 from prepare import Panel
-from toolkit import (ema, equal_weight, hold_until_rebalance, pct_change,
+from toolkit import (cs_rank, ema, equal_weight, hold_until_rebalance, pct_change,
                      rolling_max, sma, top_n)
 
 FAST = 20
 SLOW = 100
 SLOTS = 25
-LOOKBACK = 126
+LOOKBACKS = (63, 126, 252)
 REBALANCE = 21
 REGIME_MA = 30
 STOP = 0.20
@@ -56,7 +56,9 @@ def generate_weights(panel: Panel) -> np.ndarray:
     trend = ema(close, FAST) > ema(close, SLOW)
     eligible = panel.tradable & trend
 
-    strength = pct_change(close, LOOKBACK)
+    # Blend three horizons by cross-sectional rank rather than trusting one. Ranks are
+    # comparable across horizons in a way raw returns are not.
+    strength = np.nanmean([cs_rank(pct_change(close, k)) for k in LOOKBACKS], axis=0)
     picks = top_n(strength, SLOTS, eligible)
     target = equal_weight(picks, slots=SLOTS)
     held = hold_until_rebalance(target, panel.mark, REBALANCE)
