@@ -31,7 +31,7 @@ LOOKBACK = 126
 REBALANCE = 21
 REGIME_MA = 30
 STOP = 0.20
-STOP_WINDOW = 63
+STOP_WINDOW = 126
 
 
 def market_index(panel: Panel) -> np.ndarray:
