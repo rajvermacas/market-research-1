@@ -27,3 +27,7 @@ timestamp	commit	strategy_sha	score	train_sharpe	val_sharpe	train_cagr	val_cagr	
 2026-09-09T11:00:00Z	13f4125	e5c8250c4d00	1.5904	1.5904	2.2017	24.46	34.54	-15.24	-10.70	0.561	9.65	3308	25	nifty500	iter 24: measure the stop against a 126-session high instead of 63
 2026-09-09T11:00:12Z	47e359c	42f9ad40952d	1.5236	1.5236	2.1962	20.19	33.95	-13.83	-10.88	0.540	9.35	3187	25	nifty500	iter 25: stop measured against a 252-session high
 2026-09-09T11:00:40Z	47e359c	69fc356dcaab	1.6327	1.6327	2.2651	25.30	36.05	-15.57	-13.21	0.581	10.12	3471	25	nifty500	iter 26: rank on a blend of 63/126/252-session momentum
+2026-09-09T11:01:41Z	d009705	8df94c4f3a55	1.5272	1.5272	2.2447	25.01	38.19	-19.30	-13.98	0.630	11.30	3914	25	nifty500	iter 27: refill a stopped-out slot the same session instead of holding cash
+2026-09-09T11:02:08Z	d009705	5496badbdb0d	1.5697	1.5697	2.2937	25.43	39.01	-19.23	-13.89	0.624	11.23	3883	25	nifty500	iter 28: refill stopped slots, but no daily trend-break exit
+2026-09-09T11:02:41Z	d009705	9e9e7e66705d	1.6194	1.6194	2.2480	25.39	35.71	-17.42	-14.47	0.586	10.26	3521	25	nifty500	iter 29: drop the EMA trend filter now that the stop handles exits
+2026-09-09T11:03:00Z	d009705	c58d0a1f3ea4	1.6464	1.6464	2.1982	27.14	37.60	-16.10	-15.84	0.587	10.52	2606	25	nifty500	iter 30: 18 slots instead of 25, now that the stop and regime are in place

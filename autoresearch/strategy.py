@@ -26,7 +26,7 @@ from toolkit import (cs_rank, ema, equal_weight, hold_until_rebalance, pct_chang
 
 FAST = 20
 SLOW = 100
-SLOTS = 25
+SLOTS = 18
 LOOKBACKS = (63, 126, 252)
 REBALANCE = 21
 REGIME_MA = 30
