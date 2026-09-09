@@ -1,19 +1,38 @@
 #!/usr/bin/env python3
-"""Baseline momentum book, held only while the market itself is above its own average.
+"""Blended-momentum book with a market regime switch and a trailing stop.
 
 THIS IS THE ONLY FILE THE LOOP MAY EDIT. Read `program.md` before changing it.
+
+Best of a 30-iteration search: SCORE 1.6464, up from 0.7677 for the plain crossover it
+started as. Nine of those thirty changes were kept; `results.tsv` holds the other twenty-one.
 
     universe    every name tradable on the bar — liquid enough, listed long enough
     filter      EMA(20) above EMA(100) on the total-return close
     rank        the mean cross-sectional rank of the 63, 126 and 252-session returns
-    hold        the top 25, equal weight, cash whenever fewer than 25 qualify
+    hold        18 slots, equal weight, cash in any slot that cannot be filled
+    stop        out of a name once it closes 20% below its own 126-session high, and out
+                until the next rebalance rather than straight back in
     regime      the whole book goes to cash while an equal-weight index of the tradable
-                universe is below its own 200-session average
-    stop        out of a name once it is 15% below its own 63-session high
+                universe is below its own 30-session average
     rebalance   every 21 sessions; positions drift untouched in between
 
 The index is chained from the cross-sectional mean of daily returns among names tradable on
 the previous bar, so it is knowable at each close and never re-based on a date chosen later.
+
+Three things the search established that are not visible in the parameters:
+
+  * The regime switch is worth more than everything else combined — 0.77 to 1.52 on its own —
+    and its value is entirely in reacting the same session. Requiring three consecutive
+    sessions before flipping gave back two thirds of it.
+  * The cash the stop creates is part of the stop. Refilling an emptied slot the same session
+    scored 1.53 against 1.63 for leaving it empty until the rebalance.
+  * The EMA filter is nearly redundant with the ranking. Removing it costs 0.03, which is real
+    but small; it is kept on that margin, not on conviction.
+
+What was tried and rejected: inverse-volatility sizing, absolute momentum, ranking on return
+per unit of volatility, skipping the most recent month, rebalancing every 10 or 42 sessions,
+40 slots, and a daily exit on the trend breaking. Every one of them improved 2016-2021 while
+hurting 2008-2015.
 """
 
 from __future__ import annotations
@@ -44,9 +63,10 @@ def market_index(panel: Panel) -> np.ndarray:
     members = np.zeros_like(panel.tradable)
     members[1:] = panel.tradable[:-1]          # held from yesterday's close into today
     day = np.where(members & np.isfinite(r), r, np.nan)
-    with np.errstate(invalid="ignore"):
-        step = np.nanmean(np.where(np.isnan(day), np.nan, day), axis=1)
-    step = np.where(np.isfinite(step), step, 0.0)
+    # Summed and divided rather than np.nanmean, which warns on the early rows where nothing
+    # is tradable yet. Those sessions are simply flat for the index.
+    live = np.count_nonzero(np.isfinite(day), axis=1)
+    step = np.where(live > 0, np.nansum(day, axis=1) / np.maximum(live, 1), 0.0)
     return np.cumprod(1.0 + step)
 
 
@@ -58,7 +78,9 @@ def generate_weights(panel: Panel) -> np.ndarray:
 
     # Blend three horizons by cross-sectional rank rather than trusting one. Ranks are
     # comparable across horizons in a way raw returns are not.
-    strength = np.nanmean([cs_rank(pct_change(close, k)) for k in LOOKBACKS], axis=0)
+    ranks = np.array([cs_rank(pct_change(close, k)) for k in LOOKBACKS])
+    seen = np.count_nonzero(np.isfinite(ranks), axis=0)
+    strength = np.where(seen > 0, np.nansum(ranks, axis=0) / np.maximum(seen, 1), np.nan)
     picks = top_n(strength, SLOTS, eligible)
     target = equal_weight(picks, slots=SLOTS)
     held = hold_until_rebalance(target, panel.mark, REBALANCE)

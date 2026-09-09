@@ -209,6 +209,25 @@ Three things the harness checks that a human reviewer reliably does not:
 
 Every run appends to `autoresearch/results.tsv`, including the reverted ones.
 
+A 30-iteration run took the score from 0.77 to 1.65 and is recorded in `results.tsv` and in git
+history, one commit per kept change. Nine iterations were kept and twenty-one thrown away. The
+survivor holds 18 names ranked on blended momentum, stops out 20% below a 126-session high, and
+sits in cash whenever the market is below its own 30-session average.
+
+Two things about it are worth more than the score. It survives universes it was not fitted to,
+which is the test this repository's earlier breadth filter failed outright:
+
+| Universe | Train Sharpe | Benchmark | Validation Sharpe | Benchmark | Max drawdown |
+| --- | --- | --- | --- | --- | --- |
+| Nifty 500 (fitted here) | 1.65 | 0.58 | 2.20 | 1.06 | −16.1% vs −63.7% |
+| Nifty 200 | 1.38 | 0.74 | 1.78 | 1.13 | −16.1% vs −57.8% |
+| Nifty Midcap 150 | 1.31 | 0.80 | 2.03 | 1.13 | −15.5% vs −60.7% |
+| Full NSE main board | 1.35 | 0.40 | 2.04 | 0.92 | −16.7% vs −70.4% |
+
+And it is expensive. At 10 turns of the book a year, raising the cost assumption from 25 bps to
+50 takes the score to 1.47 and 100 bps takes it to 1.11, so execution is not a detail here.
+Survivorship bias applies to every row above: each universe is its *current* membership.
+
 ## Results so far
 
 Numbers are from the run recorded in git history for each line; re-run the command to confirm
@@ -222,8 +241,11 @@ apply throughout — see [Data caveats](#data-caveats).
 | — breadth regime filter | Nifty 500, then full NSE | +17.7% → +27.1% on one universe; +44.2% → +3.8% on the other | **Fitted to one universe.** A real regime effect cannot do that |
 | — slot count (`rsi_slots_sweep.py`) | 11.6 yrs, Nifty 500 | +4.4% to +6.2% across a 13-fold range of slots, vs benchmark +25.0% | **Not the free parameter it looked like** on the short window |
 | Cross-sectional momentum (`momentum_rotation.py`) | 2015→, Nifty 500 | +29.7% CAGR at −15.5% drawdown unlevered (ratio 1.92); +35.7% at −19.8% at 1.25x, funded at 9% | **Most promising so far, and unsettled.** Survivorship is severe on today's index members, and it has not been tested on any universe but the one it was built on |
-| Autoresearch baseline (`autoresearch/strategy.py`) | 2008-15 / 2016-21, Nifty 500 | Sharpe 0.77 / 1.57; +16.6% CAGR vs benchmark +10.8%, then +39.4% vs +19.7% | The floor the loop starts from. On the Nifty 200 the same rules score 0.66 and *lose* to the benchmark on the first window — the edge lives in the smaller half of the 500 |
-| — momentum skipping the last month | same | Score 0.77 → 0.68 | **Reverted.** The standard reversal skip costs 2.7 points of CAGR on the first window here |
+| Autoresearch, 30 iterations (`autoresearch/strategy.py`) | 2008-15 / 2016-21, Nifty 500 | Score 0.77 → 1.65. +27.1% CAGR at −16.1% drawdown vs benchmark +10.8% at −63.7%, then +37.6% at −15.8% vs +19.7% at −41.3% | **The best thing in this repository so far, and the most expensive to run.** 10 turns of the book a year: at 100 bps round trip instead of 25 the score falls to 1.11 |
+| — market regime switch | same | Score 0.77 → 1.52 across four iterations | The one change that mattered. Cash while an equal-weight index of the tradable universe is below its own 30-session average |
+| — 20% trailing stop off a 126-session high | same | 1.52 → 1.59 | Cuts the 2008-2015 drawdown to −16%. Refilling the slot it empties *costs* 0.08 — staying in cash is part of the stop's value |
+| — momentum blended over 63/126/252 sessions | same | 1.59 → 1.63 | Ranking by mean cross-sectional rank across three horizons beats any single one |
+| — everything else tried | same | 21 of 30 iterations reverted | Inverse-vol sizing, absolute momentum, volatility-adjusted ranking, regime hysteresis, and every rebalance cadence but 21 sessions all improved 2016-2021 while hurting 2008-2015, which is what the `min` in the score is for |
 | EMA support (`ema_support.py`) | 3 yrs rolling | Cohort median hold rate ~37% on the 20 EMA, ~41% on the 50 | A ranking tool, not a strategy — read a name against the cohort, not against 50% |
 
 ## The data

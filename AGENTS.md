@@ -253,6 +253,15 @@ and occasionally reused.
 - Never hard-code a bars-per-year constant to annualise. `252 * 7` looked obviously right for
   NSE hourly and was 2.8% too high, overstating every CAGR in the repository. Derive elapsed
   time from the first and last timestamps.
+- An iteration that changes two things measures neither. A search step meant to test refilling
+  a stopped-out slot also quietly added a daily trend-break exit, and scored worse; only after
+  splitting them did it emerge that refilling costs 0.08 of score on its own and the exit costs
+  a further 0.04. Two changes in one run means reverting both and learning nothing about either.
+- A strategy's docstring drifts silently while its constants are swept. After four iterations of
+  tuning, `autoresearch/strategy.py` still described a 200-session regime average and a 15% stop
+  it had not used for three commits. State the setup in words, then re-read those words against
+  the constants before committing.
+
 - Get the arithmetic audited by something that did not write it. Four errors survived repeated
   self-review here — three of them pointing the same way, toward a better-looking result —
   and an independent pass found all four in fifteen minutes.

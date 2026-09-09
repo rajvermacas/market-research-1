@@ -31,3 +31,4 @@ timestamp	commit	strategy_sha	score	train_sharpe	val_sharpe	train_cagr	val_cagr	
 2026-09-09T11:02:08Z	d009705	5496badbdb0d	1.5697	1.5697	2.2937	25.43	39.01	-19.23	-13.89	0.624	11.23	3883	25	nifty500	iter 28: refill stopped slots, but no daily trend-break exit
 2026-09-09T11:02:41Z	d009705	9e9e7e66705d	1.6194	1.6194	2.2480	25.39	35.71	-17.42	-14.47	0.586	10.26	3521	25	nifty500	iter 29: drop the EMA trend filter now that the stop handles exits
 2026-09-09T11:03:00Z	d009705	c58d0a1f3ea4	1.6464	1.6464	2.1982	27.14	37.60	-16.10	-15.84	0.587	10.52	2606	25	nifty500	iter 30: 18 slots instead of 25, now that the stop and regime are in place
+2026-09-09T11:08:47Z	6b93520	11ae9f403170	1.6464	1.6464	2.1982	27.14	37.60	-16.10	-15.84	0.587	10.52	2606	25	nifty500	final: 18 slots, blended momentum, 20% stop off a 126-session high, 30-session regime
