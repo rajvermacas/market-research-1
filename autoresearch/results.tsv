@@ -21,3 +21,5 @@ timestamp	commit	strategy_sha	score	train_sharpe	val_sharpe	train_cagr	val_cagr	
 2026-09-09T10:58:16Z	3f9d807	64c13efacd41	1.4554	1.4554	2.2124	23.29	38.71	-17.43	-11.39	0.602	10.33	3562	25	nifty500	iter 18: require the name's own 126-session return to be positive
 2026-09-09T10:58:33Z	3f9d807	b6076ca613b4	1.3725	1.3725	2.2891	18.92	36.85	-17.71	-11.56	0.542	9.62	3273	25	nifty500	iter 19: rank on return per unit of volatility
 2026-09-09T10:59:09Z	3f9d807	6273f098b731	1.5582	1.5582	2.3618	22.04	34.38	-14.88	-9.39	0.519	9.00	3071	25	nifty500	iter 20: trailing stop 15% below the name's 63-session high
+2026-09-09T10:59:25Z	cce29b9	1b1abc48f2db	1.3336	1.3336	2.1633	14.46	24.31	-14.85	-7.12	0.411	7.68	2612	25	nifty500	iter 21: trailing stop at 10% instead of 15%
+2026-09-09T10:59:36Z	cce29b9	fc9b1c1fac47	1.5776	1.5776	2.1867	24.53	34.47	-16.41	-10.76	0.566	9.74	3343	25	nifty500	iter 22: trailing stop at 20% instead of 15%
