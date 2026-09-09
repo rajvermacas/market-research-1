@@ -4,3 +4,4 @@ timestamp	commit	strategy_sha	score	train_sharpe	val_sharpe	train_cagr	val_cagr	
 2026-09-09T10:53:49Z	2a13ab5	4cd9a3d5b85b	0.7653	0.7653	1.5358	15.46	36.44	-59.86	-35.89	0.897	4.74	1581	25	nifty500	iter 1: sticky daily exit when the name's own EMA trend breaks
 2026-09-09T10:54:14Z	2a13ab5	4458f2c3171c	0.9770	0.9770	1.7870	19.49	36.55	-38.59	-21.59	0.668	6.25	2139	25	nifty500	iter 2: cash while the equal-weight index is below its 200-session average
 2026-09-09T10:54:31Z	24e07b6	01a577713d95	1.2014	1.2014	1.9235	22.35	37.42	-27.27	-27.74	0.625	6.64	2268	25	nifty500	iter 3: regime average 100 sessions instead of 200
+2026-09-09T10:54:43Z	9e70eb6	0118bf8db965	1.2410	1.2410	1.9829	21.42	36.76	-27.38	-18.96	0.628	8.25	2828	25	nifty500	iter 4: regime average 50 sessions

@@ -27,7 +27,7 @@ SLOW = 100
 SLOTS = 25
 LOOKBACK = 126
 REBALANCE = 21
-REGIME_MA = 100
+REGIME_MA = 50
 
 
 def market_index(panel: Panel) -> np.ndarray:
