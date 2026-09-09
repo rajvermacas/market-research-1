@@ -166,7 +166,11 @@ in [AGENTS.md](AGENTS.md#lessons)):
    points across 2.9 years of bull market and by under two points across 11.6 years.
 9. **Render the hits before believing a chart-pattern screen.** Geometric conditions are easy to
    satisfy in ways that look nothing like the intended shape.
-10. **Write the result down — especially a negative one.** Commit message, and a row in the
+10. **If you search a space, hold part of the window back.** Rank on the train window only,
+    report the untouched holdout beside it, and compare the winners against the base rate of
+    everything you tried. Of 20,439 configurations searched here, 1.3% beat buy-and-hold out
+    of sample and none of the leaders did.
+11. **Write the result down — especially a negative one.** Commit message, and a row in the
     ledger below.
 
 Scratch output belongs in `.cache/` (gitignored). After anything touches `data/`, run
@@ -185,6 +189,7 @@ apply throughout — see [Data caveats](#data-caveats).
 | — breadth regime filter | Nifty 500, then full NSE | +17.7% → +27.1% on one universe; +44.2% → +3.8% on the other | **Fitted to one universe.** A real regime effect cannot do that |
 | — slot count (`rsi_slots_sweep.py`) | 11.6 yrs, Nifty 500 | +4.4% to +6.2% across a 13-fold range of slots, vs benchmark +25.0% | **Not the free parameter it looked like** on the short window |
 | Cross-sectional momentum (`momentum_rotation.py`) | 2015→, Nifty 500 | +29.7% CAGR at −15.5% drawdown unlevered (ratio 1.92); +35.7% at −19.8% at 1.25x, funded at 9% | **Most promising so far, and unsettled.** Survivorship is severe on today's index members, and it has not been tested on any universe but the one it was built on |
+| Automated search (`strategy_loop.py`) | 11.5 yrs, Kite Nifty 500; 38,820 configurations over two 25-minute runs | Best book found: +45.1% CAGR at -16.2% drawdown, ret/DD 2.78, Sharpe 2.11 — on the 8 years it was scored on. On the 3.5 years it never saw: +16.6% at -35.4%, ret/DD 0.47, against a market doing +32.1% | **The leaderboard is the overfitting, not the edge.** Neither run's top 10 beat equal-weight buy-and-hold out of sample; 257 of 20,439 scored candidates did |
 | EMA support (`ema_support.py`) | 3 yrs rolling | Cohort median hold rate ~37% on the 20 EMA, ~41% on the 50 | A ranking tool, not a strategy — read a name against the cohort, not against 50% |
 
 ## The data
@@ -497,6 +502,34 @@ fits the noise. Four things are built in against that:
   score across all trials, the holdout hit rate of the top block against the base rate of every
   trial, and how many candidates beat equal-weight buy-and-hold out of sample. Read it before the
   table. If that correlation is near zero, the leaderboard is a list of coincidences.
+
+**What 38,820 configurations found.** Two runs of 25 minutes each on the 11.5-year Kite panel —
+one on the defaults, one requiring the book to be at least 25% invested and to take at least 150
+trades:
+
+| | scored on 2015-02 → 2023-03 | holdout 2023-03 → 2026-08 |
+| --- | --- | --- |
+| Best book, defaults | +18.6% CAGR, -7.1% drawdown, ret/DD 2.63 | +12.8% CAGR, -13.9%, ret/DD 0.92 |
+| Best book, >= 25% deployed | +45.1% CAGR, -16.2% drawdown, ret/DD 2.78, Sharpe 2.11 | +16.6% CAGR, -35.4%, ret/DD 0.47 |
+| Equal-weight buy-and-hold | +17.6% CAGR, -50.1% | +32.1% CAGR, -25.4% |
+
+The second row is what a screenshot of this would show: +1,913% total return over eight years, a
+2.78 return per unit of drawdown, a Sharpe above 2. Out of sample the same rules return half the
+index at a drawdown 10 points larger, and the return-per-drawdown the search was maximising falls
+by 83%.
+
+Neither run's top ten beat equal-weight buy-and-hold out of sample. Across all 20,439 scored
+candidates 257 did, and not one of them was a candidate the search promoted. The rank correlation
+between the train score and the holdout score was +0.353 in the first run and -0.078 in the
+second, and it flips sign between the two on matched deployment subpopulations: the ordering is a
+property of whichever corner of the space that run happened to wander into, not a signal. And
+after 25,813 draws the elite pool had collapsed onto a single book wearing ten hats — the top ten
+differ only in knobs that bind nothing.
+
+Replay the winner over the whole 11.5 years and it returns +34.1% CAGR against a market of
++20.8%, which is exactly what any fitted configuration looks like when you measure it on the
+window that fitted it. That is the loop's real output: not a strategy, but a cheap and repeatable
+way to find out how much of one is real.
 
 ## Refreshing the data
 

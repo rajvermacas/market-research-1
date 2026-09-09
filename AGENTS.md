@@ -229,6 +229,26 @@ and occasionally reused.
   self-review here — three of them pointing the same way, toward a better-looking result —
   and an independent pass found all four in fifteen minutes.
 
+- A leaderboard is not a finding; the audit underneath it is. Searching 25,813 configurations
+  of one setup produced a book at +45.1% CAGR, a -16.2% drawdown and a 2.78 return per
+  drawdown on the eight years it was scored on — and 0.47 on the 3.5 years the score never
+  saw, against a market that returned +32.1%. Of 20,439 scored candidates only 1.3% beat
+  equal-weight buy-and-hold out of sample and none of the leaders did, and the rank
+  correlation between the two windows was +0.35 in one run and -0.08 in another. Any search
+  wide enough to be interesting needs a holdout the objective cannot see, a base rate to
+  measure the winners against, and that correlation printed, before its table means anything.
+
+- Return per drawdown pays a strategy for not trading. The first books the search promoted
+  took 100 trades in eight years and sat 76% in cash: hold nothing and the drawdown is small,
+  so the ratio rewards absence rather than skill. Either constrain deployment in the search
+  or read the deployment column before believing any risk-adjusted ratio — the two runs with
+  and without a 25% floor promoted completely different strategies.
+
+- Measuring a fitted configuration on the window that fitted it is not a test, however long
+  that window is. The search's winner replayed over the full 11.5 years shows +34.1% CAGR
+  against a market of +20.8% and looks like a discovery; 8 of those 11.5 years are the years
+  it was selected on, and the 3.5 it was not returned half the index.
+
 
 Rules accumulated from mistakes made in this repo. Add to this list — never remove — whenever a
 mistake recurs.
