@@ -9,6 +9,7 @@ THIS IS THE ONLY FILE THE LOOP MAY EDIT. Read `program.md` before changing it.
     hold        the top 25, equal weight, cash whenever fewer than 25 qualify
     regime      the whole book goes to cash while an equal-weight index of the tradable
                 universe is below its own 200-session average
+    stop        out of a name once it is 15% below its own 63-session high
     rebalance   every 21 sessions; positions drift untouched in between
 
 The index is chained from the cross-sectional mean of daily returns among names tradable on
@@ -20,7 +21,8 @@ from __future__ import annotations
 import numpy as np
 
 from prepare import Panel
-from toolkit import ema, equal_weight, hold_until_rebalance, pct_change, sma, top_n
+from toolkit import (ema, equal_weight, hold_until_rebalance, pct_change,
+                     rolling_max, sma, top_n)
 
 FAST = 20
 SLOW = 100
@@ -28,6 +30,8 @@ SLOTS = 25
 LOOKBACK = 126
 REBALANCE = 21
 REGIME_MA = 30
+STOP = 0.15
+STOP_WINDOW = 63
 
 
 def market_index(panel: Panel) -> np.ndarray:
@@ -56,6 +60,20 @@ def generate_weights(panel: Panel) -> np.ndarray:
     picks = top_n(strength, SLOTS, eligible)
     target = equal_weight(picks, slots=SLOTS)
     held = hold_until_rebalance(target, panel.mark, REBALANCE)
+
+    # Trailing stop: leave a name once it is STOP below its own high of the last STOP_WINDOW
+    # sessions, and stay out until the next rebalance rather than buying it straight back.
+    peak = rolling_max(close, STOP_WINDOW, min_samples=STOP_WINDOW // 2)
+    with np.errstate(invalid="ignore"):
+        stopped = close < (1.0 - STOP) * peak
+    alive = np.zeros(close.shape, dtype=bool)
+    live = np.ones(close.shape[1], dtype=bool)
+    for t in range(close.shape[0]):
+        if t % REBALANCE == 0:
+            live = np.ones(close.shape[1], dtype=bool)
+        live &= ~np.nan_to_num(stopped[t], nan=False)
+        alive[t] = live
+    held = held * alive
 
     index = market_index(panel).reshape(-1, 1)
     on = (index > sma(index, REGIME_MA)).ravel()
