@@ -11,12 +11,13 @@ under `data/`. Ideas that were tested and found not to work stay in the tree wit
 results written down, because the next idea is worth more when the last one's failure is on
 record.
 
-## The two halves
+## The three parts
 
 | | |
 | --- | --- |
 | `data/` | The substrate. Strategy code reads it and never writes to it; only the downloaders rebuild it. |
 | `scripts/` | The playground. Screeners, backtests and parameter labs — one file each, each with a `--help`. |
+| `autoresearch/` | The search. One editable strategy file behind an immutable scoring harness, for running an agent in a keep-or-revert loop. |
 
 ## What is in `scripts/`
 
@@ -165,6 +166,49 @@ in [AGENTS.md](AGENTS.md#lessons)):
 Scratch output belongs in `.cache/` (gitignored). After anything touches `data/`, run
 `python scripts/validate_data.py`.
 
+## The autoresearch loop
+
+`autoresearch/` runs a different kind of experiment. Instead of a human writing one strategy and
+measuring it, an agent proposes a change, the harness scores it, and git keeps it or throws it
+away — the [autoresearch pattern](https://github.com/karpathy/autoresearch), on this panel.
+
+The discipline is the whole point, so it is enforced rather than trusted:
+
+| File | |
+| --- | --- |
+| `strategy.py` | **The only file the loop may edit.** Returns a bars x symbols matrix of target weights |
+| `program.md` | The instructions the agent reads — goal, rules, ideas, when to stop. The file a *human* iterates on |
+| `prepare.py` | Builds the panel: total-return prices, a causally-computed tradability mask, forward-filled marks |
+| `evaluate.py` | The simulation, the costs, the benchmark, the score, the look-ahead probe |
+| `toolkit.py` | Causal, warm-up-guarded indicators over the matrix, so no iteration writes a second RSI |
+| `backtest.py` | The command an iteration runs. Prints the report, appends `results.tsv` |
+| `test_harness.py` | Synthetic panels whose right answers are known by construction |
+| `harness.lock` | Hashes of the four harness files. A run whose measurement has moved refuses to score |
+
+```
+python autoresearch/backtest.py --note "what this iteration changed"
+```
+
+The score is `min(train Sharpe, validation Sharpe)` over two disjoint windows — 2008-2015 and
+2016-2021 — net of a 25 bps round trip, and zero for a book that opens fewer than 100 positions
+or averages under 20% invested. A minimum, because the loop will otherwise converge on whatever
+fits one window; the guards, because both of those failure modes post a flattering Sharpe while
+being unrunnable. The 2022-onward window is neither printed nor written to `results.tsv`, and is
+worth something only for as long as it stays unseen.
+
+Three things the harness checks that a human reviewer reliably does not:
+
+- **Causality.** The strategy is re-run on truncated history, and the run fails if the book
+  changes when the future is removed. A threshold fitted on the full panel gives itself away.
+- **Reachability.** Weights on names that were not liquid enough on that bar are zeroed before
+  scoring, so nothing is earned in a stock nobody could have bought.
+- **Its own arithmetic.** `test_harness.py` pins the one-bar shift, the cost of a round trip,
+  drift between rebalances, the benchmark as a mean rather than a median, and annualisation read
+  off the timestamps. Four arithmetic errors once survived repeated self-review in this
+  repository; these are the tests that catch that class.
+
+Every run appends to `autoresearch/results.tsv`, including the reverted ones.
+
 ## Results so far
 
 Numbers are from the run recorded in git history for each line; re-run the command to confirm
@@ -178,6 +222,8 @@ apply throughout — see [Data caveats](#data-caveats).
 | — breadth regime filter | Nifty 500, then full NSE | +17.7% → +27.1% on one universe; +44.2% → +3.8% on the other | **Fitted to one universe.** A real regime effect cannot do that |
 | — slot count (`rsi_slots_sweep.py`) | 11.6 yrs, Nifty 500 | +4.4% to +6.2% across a 13-fold range of slots, vs benchmark +25.0% | **Not the free parameter it looked like** on the short window |
 | Cross-sectional momentum (`momentum_rotation.py`) | 2015→, Nifty 500 | +29.7% CAGR at −15.5% drawdown unlevered (ratio 1.92); +35.7% at −19.8% at 1.25x, funded at 9% | **Most promising so far, and unsettled.** Survivorship is severe on today's index members, and it has not been tested on any universe but the one it was built on |
+| Autoresearch baseline (`autoresearch/strategy.py`) | 2008-15 / 2016-21, Nifty 500 | Sharpe 0.77 / 1.57; +16.6% CAGR vs benchmark +10.8%, then +39.4% vs +19.7% | The floor the loop starts from. On the Nifty 200 the same rules score 0.66 and *lose* to the benchmark on the first window — the edge lives in the smaller half of the 500 |
+| — momentum skipping the last month | same | Score 0.77 → 0.68 | **Reverted.** The standard reversal skip costs 2.7 points of CAGR on the first window here |
 | EMA support (`ema_support.py`) | 3 yrs rolling | Cohort median hold rate ~37% on the 20 EMA, ~41% on the 50 | A ranking tool, not a strategy — read a name against the cohort, not against 50% |
 
 ## The data

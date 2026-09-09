@@ -23,6 +23,9 @@ strategy. The data is already committed; `scripts/` is where strategies go.
 - **Shape of the work**: one script per strategy or per experiment, each with an argparse CLI and
   a docstring that states the setup in words before any code. Nothing is a library-only module;
   everything runs from the command line.
+- **Two modes**: `scripts/` is a human writing one strategy and measuring it. `autoresearch/` is
+  an agent proposing changes to a single file behind a scoring harness it may not touch, keeping
+  or reverting each one on git. Read `autoresearch/program.md` before working in there.
 
 ## Layout
 
@@ -67,6 +70,17 @@ scripts/                                  the playground
     rsi_stop_lab.py                       do the filters stack, and is the stop the real problem
     rsi_combo_search.py                   every subset of the optional filters, scored
     rsi_slots_sweep.py                    slot count vs return, drawdown and capital deployed
+
+autoresearch/                             the keep-or-revert search loop
+  program.md                              the agent's instructions — the file a human iterates on
+  strategy.py                             THE ONLY FILE THE LOOP MAY EDIT: weights per bar/symbol
+  prepare.py                              builds the bars x symbols panel and the tradable mask
+  evaluate.py                             simulation, costs, benchmark, score, look-ahead probe
+  toolkit.py                              causal warm-up-guarded indicators over the matrix
+  backtest.py                             the command an iteration runs; appends results.tsv
+  test_harness.py                         synthetic checks on the harness arithmetic
+  harness.lock                            hashes of the four harness files above
+  results.tsv                             every run, including the reverted ones
 ```
 
 ## Conventions
@@ -118,6 +132,27 @@ LESSONS at the bottom of this file — every rule there was paid for.
   adjusted Kite one; `rsi_backtest.py --daily-from-hourly` exists for exactly this.
 - **Write the outcome down** — in the commit message, and as a row in the README's results ledger.
   A negative result is a finding and is kept, not deleted.
+
+## The autoresearch loop
+
+`autoresearch/` is a search, not a script, and its rules are stricter than the rest of the tree.
+
+- **Only `strategy.py` may change.** `prepare.py`, `evaluate.py`, `toolkit.py` and `backtest.py`
+  are hashed into `harness.lock`; a run whose hashes disagree exits 2 instead of printing a
+  score. `--update-lock` re-blesses them and is a human's decision, never an iteration's. If the
+  metric or a cost assumption looks wrong, that is a finding to report — not a thing to fix and
+  then keep the resulting number.
+- **One idea per iteration**, run `python autoresearch/backtest.py --note "..."`, then commit if
+  `SCORE` improved and `git checkout -- autoresearch/strategy.py` if it did not. `results.tsv`
+  keeps the row either way.
+- **`SCORE` is `min(train Sharpe, validation Sharpe)`** over 2008-2015 and 2016-2021, net of a
+  25 bps round trip, zeroed for a book that barely trades or barely invests. The 2022-onward
+  holdout is not printed by the loop and never reaches `results.tsv`.
+- **After touching anything in `autoresearch/`, run `python autoresearch/test_harness.py`.** It
+  pins the shift, the costs, the drift, the benchmark and the annualisation on synthetic panels
+  whose answers are known by construction.
+- The look-ahead probe samples four truncation points. It is a floor, not a proof: a threshold
+  fitted on the whole panel can still slip past it, and the reviewer is still you.
 
 ## Credentials
 
