@@ -1,3 +1,5 @@
 timestamp	commit	strategy_sha	score	train_sharpe	val_sharpe	train_cagr	val_cagr	train_dd	val_dd	exposure	turns_per_year	trades	cost_bps	universe	note
 2026-09-09T09:06:14Z	119b205	6c8c24fa3a9f	0.7677	0.7677	1.5705	16.60	39.35	-66.64	-37.73	0.945	4.64	1563	25	nifty500	baseline: EMA 20/100 trend, top 25 by 126d return, 21-session rebalance
 2026-09-09T09:09:51Z	7ef126c	fc24774e1ead	0.6829	0.6829	1.5069	13.86	37.41	-66.25	-38.48	0.938	4.85	1618	25	nifty500	rank on momentum skipping the most recent 21 sessions
+2026-09-09T10:53:49Z	2a13ab5	4cd9a3d5b85b	0.7653	0.7653	1.5358	15.46	36.44	-59.86	-35.89	0.897	4.74	1581	25	nifty500	iter 1: sticky daily exit when the name's own EMA trend breaks
+2026-09-09T10:54:14Z	2a13ab5	4458f2c3171c	0.9770	0.9770	1.7870	19.49	36.55	-38.59	-21.59	0.668	6.25	2139	25	nifty500	iter 2: cash while the equal-weight index is below its 200-session average
