@@ -506,9 +506,11 @@ class Elites:
     time sorting its own history than backtesting.
     """
 
-    def __init__(self, size: int, seed: list[dict]):
+    def __init__(self, size: int, seed: list[dict] = ()):
         self.size = size
-        self.rows = list(seed)[:size]
+        self.rows: list[dict] = []
+        for record in seed:               # through add(), so a resumed pool is deduped too
+            self.add(record)
 
     @staticmethod
     def _fingerprint(record: dict) -> tuple:
@@ -533,6 +535,14 @@ class Elites:
         self.rows.sort(key=lambda t: t["score"], reverse=True)
         del self.rows[self.size:]
         return self.rows[0] is record
+
+
+def top_rows(trials: list[dict], count: int) -> list[dict]:
+    """The leaderboard as the loop would hold it — best first, one row per distinct book."""
+    pool = Elites(count)
+    for record in leaderboard(trials, len(trials)):
+        pool.add(record)
+    return pool.rows
 
 
 def print_table(rows: list[dict], panel: Panel | None, args) -> None:
@@ -807,7 +817,7 @@ def main() -> int:
 
     if args.report:
         print(f"ledger {ledger} — {len(trials):,} trials")
-        print_table(leaderboard(trials, args.top), panel, args)
+        print_table(top_rows(trials, args.top), panel, args)
         print_audit(trials, panel, args)
         return 0
 
@@ -817,7 +827,7 @@ def main() -> int:
         return replay(trials, panel, args, args.replay)
 
     rng = random.Random(args.seed + len(trials))
-    elites = Elites(max(args.elite, args.top), leaderboard(trials, max(args.elite, args.top)))
+    elites = Elites(max(args.elite, args.top), leaderboard(trials, len(trials)))
     seen = {t["key"] for t in trials}
     stop = {"now": False}
 
