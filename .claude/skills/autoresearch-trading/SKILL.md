@@ -88,6 +88,9 @@ when comparing mechanisms.
   returns — check `invested` before celebrating `ret/DD`.
 - Negative results are findings: keep the file, log the row, say so.
 
+Run every command from the repo root (the folder containing scripts/ and data/),
+not from the skill directory.
+
 ## Fresh-session bootstrap
 
 1. `git log --oneline -5`, `git status --short` — find the workstream branch.
