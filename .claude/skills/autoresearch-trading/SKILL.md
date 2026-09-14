@@ -78,6 +78,20 @@ Verdict logic mirrors Phase A (train selects, forward judges, halves must pass)
 and appends to `.cache/strategy_lab/results.tsv`. Keep `top` and costs fixed
 when comparing mechanisms.
 
+## Searchable risk (nothing hardcoded)
+
+Risk settings are trial params, not house doctrine. Per trial, via
+`--params-json` keys, `--trail-k` / `--max-hold` flags, or the candidate's
+third return value `risk={trail_k, max_hold}` (candidate wins on conflict):
+- `trail_k`: exit a name whose month low prints below its running peak x (1-k)
+- `max_hold`: drop a name after N months held, however it ranks
+- `regime` is exposure in [0,1], so partial tiers (0.4/0.7/1.0) are expressible
+  per trial instead of cash-or-full
+- `--select cagr|calmar`: the keep ruler. `cagr` chases raw train return,
+  `calmar` chases ret/DD with a `--cagr-guard` floor against cash-like winners.
+  Fixed per ledger so trials stay comparable; the loop discovers risk
+  SETTINGS, never the ruler mid-ledger.
+
 ## Reading results (what counts as winning)
 
 - Train-only CAGR lead with forward lagging bench = overfit smell, not a winner.
