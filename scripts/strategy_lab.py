@@ -217,6 +217,8 @@ def main() -> int:
                 f"{m['fwd_dd']*100:.3f}\t{m['fwd_bench_cagr']*100:.3f}\t{note}\n")
     print(f"{status.upper()}: {note} | forward {'PASSES' if m['fwd_cagr'] > 0 else 'FAILS'} "
           f"(never drove selection)")
+    dd_flag = "" if m['fwd_dd'] >= m['fwd_bench_dd'] else " [WARN fwd DD worse than bench]"
+    print(f"forward DD {m['fwd_dd']*100:.2f}% vs bench {m['fwd_bench_dd']*100:.2f}%{dd_flag}")
     return 0
 
 

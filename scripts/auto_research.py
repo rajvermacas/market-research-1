@@ -335,8 +335,10 @@ def main() -> int:
     print(f"results {results_path} | best {best_path}")
     if split_i is not None:
         verdict = "PASSES forward" if best["fwd_cagr"] > 0 else "FAILS forward"
-        print(f"Overfit check: forward {best['fwd_cagr']*100:+.2f}% vs fwd bench "
-              f"{best['fwd_bench_cagr']*100:+.2f}% -> {verdict} (forward never drove selection).")
+        dd_flag = "" if best["fwd_dd"] >= best["fwd_bench_dd"] else " [WARN fwd DD worse than bench]"
+        print(f"Overfit check: forward {best['fwd_cagr']*100:+.2f}% (DD {best['fwd_dd']*100:.2f}%) "
+              f"vs fwd bench {best['fwd_bench_cagr']*100:+.2f}% (DD {best['fwd_bench_dd']*100:.2f}%) "
+              f"-> {verdict}{dd_flag} (forward never drove selection).")
     print("Caveat: today's-index universe; momentum flattered by survivorship. "
           "Validate on an un-fitted universe before believing a regime effect.")
     return 0
