@@ -298,6 +298,8 @@ mistake recurs.
   forward-pick on an un-fitted universe before believing it.
 - Always report CAGR *and* max drawdown together, train and forward both, every time
   a strategy is discussed. CAGR alone hides risk; the user weighs both equally.
+- Calmar (ret/DD) is always decision-relevant for the user: quote it with every
+  CAGR/DD pair, train and forward, strategy and bench alike.
 - One harness version per comparison. A harness edit (strategy_lab backtest rewrite)
   changed same-params numbers mid-ledger (newhigh 15/0.1/6 read 28.26/28.42 under the
   old harness, 30.02/9.89 under the new one), and a stale row nearly crowned a false
