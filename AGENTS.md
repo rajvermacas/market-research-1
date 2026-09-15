@@ -292,3 +292,7 @@ mistake recurs.
   outright, and anything near it makes the repo painful to clone.
 - Sleep between retry attempts, not after the last one — a trailing back-off multiplies wasted time
   across thousands of symbols that will never resolve.
+- Best strategy means best FORWARD performer, not best train. Train selects candidates,
+  forward crowns the winner — a train leader whose forward lags the bench is overfit,
+  never the best. But selecting on forward spends the holdout: re-validate the
+  forward-pick on an un-fitted universe before believing it.
