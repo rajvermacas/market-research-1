@@ -296,3 +296,5 @@ mistake recurs.
   forward crowns the winner — a train leader whose forward lags the bench is overfit,
   never the best. But selecting on forward spends the holdout: re-validate the
   forward-pick on an un-fitted universe before believing it.
+- Always report CAGR *and* max drawdown together, train and forward both, every time
+  a strategy is discussed. CAGR alone hides risk; the user weighs both equally.
