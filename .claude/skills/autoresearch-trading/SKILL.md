@@ -298,6 +298,16 @@ rule, ledger paths, stop time, report format. Hard-won rules:
   trials at once on one ledger; the rows survived (atomic appends at this
   line size) but the ledger best could silently lag. If parallel trials are
   wanted, give each process its own ledger pair and merge afterwards.
+- Orchestrator smoke duty before a handoff: run the new file's FLAT/no-op
+  config (its keys at zero, or its defaults) and compare it to the intended
+  parent. If the flat base does not equal the champion, the brief must set the
+  file's OWN base as the comparison target and must pass only keys the file
+  actually reads. Loop-12: a brief told a worker to beat +83.93 on a file whose
+  true base was +77.32 (it composed tiershape+fastgate+sustaincond, not
+  rankpersist) and to sweep `pers_*` keys the file never consumed — the worker
+  caught both, but part of its window was wasted. Designer deliverables must
+  therefore state their import chain, their flat-base metric, and the exact
+  keys they consume.
 - Dedupe before a batch: grep the ledger for the candidate name and param
   signature and skip any (candidate, params) row that already exists —
   identical reruns are noise, not evidence. A retest is legitimate only on a
