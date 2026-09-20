@@ -222,6 +222,12 @@ and occasionally reused.
 - Never hard-code a bars-per-year constant to annualise. `252 * 7` looked obviously right for
   NSE hourly and was 2.8% too high, overstating every CAGR in the repository. Derive elapsed
   time from the first and last timestamps.
+- Annualising from a bar count is only safe if no calendar period is missing.
+  `strategy_lab.seg()` divides month counts by 12; one skipped month would silently
+  understate elapsed time and overstate CAGR. The Loop-11 audits hand-verified the
+  monthly panel is continuous (139 intervals ≈ 2015-01 → 2026-09), but nothing in
+  the harness asserts it — assert month continuity (or derive elapsed time from the
+  first/last timestamps) before trusting a CAGR.
 - Get the arithmetic audited by something that did not write it. Four errors survived repeated
   self-review here — three of them pointing the same way, toward a better-looking result —
   and an independent pass found all four in fifteen minutes.
