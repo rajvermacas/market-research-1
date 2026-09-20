@@ -139,8 +139,14 @@ one mechanism per worker handoff, one shared wall-clock stop.**
 - **Worker (background subagent) — owns the NUMBERS for its handoff.**
   It does not invent strategy, does not edit files, does not run git. It runs
   its pre-registered trials one at a time, logs every row through the harness,
-  and stops only at its wall-clock stop. Prescribed config: model
-  `opencode/muse-spark-1.3-contributor-free#xhigh`.
+  and stops only at its wall-clock stop. Worker model: **the same model and
+  reasoning effort as the parent main session** — look the parent's model up
+  via the models tool and pass that exact providerID/modelID (with the same
+  effort variant). Never hardcode a model ID in this skill, and never
+  downgrade workers to a different or free-tier model: in Loop-11 all three
+  workers died on a free model's rate limit while the parent model was never
+  throttled, leaving the loop with no numbers and forcing the orchestrator to
+  run the queues itself.
 
 ### Ledger isolation (mutual exclusion)
 
@@ -160,6 +166,32 @@ what was written — if it changed underneath (a concurrent writer slipped in),
 re-run instead of accepting a stale verdict. `results_validate.tsv` /
 `best_validate.json` holds the un-fitted-universe verdict and follows the
 same single-writer rule.
+
+### Worker failure policy (the loop does not stop)
+
+A worker error — rate limit, crash, timeout, provider outage — is a staffing
+event, not a loop stop. The wall-clock stop is the only stop. On an error
+notification (or when a worker's ledger mtime goes stale with no live
+process):
+
+1. Read its ledger tail and `w<ID>_best.json` — state is durable, nothing is
+   lost with the session.
+2. Relaunch the SAME handoff to a fresh worker, or hand the remaining queue
+   to a live worker. The fresh brief starts with: "resume from
+   `w<ID>_results.tsv` / `w<ID>_best.json`; rows already there are done, do
+   not repeat them."
+3. If the provider still refuses workers, absorb the queue in the main
+   session — the orchestrator runs the trials itself on the worker's ledger.
+   This is cheap insurance: in Loop-11 the absorbed queues produced ~40 rows
+   while the free-tier workers produced none. The ledger, not the role, is
+   the record.
+4. Never stand still and never let a worker failure trigger close-out early.
+   A dead worker is a queued action, not a reason to pause: relaunch first,
+   close out only at the wall-clock stop. The test of the orchestrator is
+   whether the loop keeps producing rows after a worker dies.
+
+The orchestrator owns worker liveness: check `ps` and ledger mtimes
+periodically and redeploy without waiting for an error notification.
 
 ### Worker rotation (breadth beats depth)
 
