@@ -17,6 +17,11 @@ The agent changes code each loop; a fixed harness keeps score.
 - Reuse, never reimplement: `screener.rsi` (Wilder, validated), `screener.resample`,
   `momentum_rotation.performance`, `auto_research.load_monthly`.
 - Scratch goes to `.cache/` (gitignored). Never write to `data/`.
+  Exception: the four `best*.json` ledgers are force-tracked in git
+  (`.cache/strategy_lab/best.json`, `best_validate.json`,
+  `.cache/auto_research/best.json`, `best_nse_all.json`) — both harnesses
+  resume from `best.json` alone, so these files are all a fresh session
+  needs to continue from the last best instead of from scratch.
 - Costs always charged (default 25 bps/side monthly). Years from month counts,
   never a bars-per-year constant. Equal-weight mean buy-hold bench, never median.
 - Universe is today's listing: survivorship flatters everything. Winners must be
@@ -112,3 +117,7 @@ not from the skill directory.
 3. Read `.cache/strategy_lab/results.tsv` for mechanism history.
 4. Continue the loop from current best; commit new `strat_*`/harness files with
    messages stating setup + verdict.
+5. End of loop: `git add` any changed `best*.json` ledgers plus new files,
+   commit, and `git push origin <workstream-branch>` — the next fresh
+   session (or clone) must find the latest best on git, never restart
+   from scratch.
