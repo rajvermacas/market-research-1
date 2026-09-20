@@ -51,15 +51,18 @@ would silently carry the Loop-12 discount.
 Flat-base metric (off-switch must reproduce exactly): train +85.23% /
 DD -17.49% / calmar 4.87, fwd +53.76%.
 
-Loop-13 close (PROMOTED to the main ledger): gw_w 0.13 / gf_lb 12 -> train
-+86.88% / DD -17.34% / calmar 5.01, fwd +48.19%, full DD -25.79% (top 15).
-Plateau, not a spike: gw 0.10-0.13 clear 86.2-86.9 (0.14-0.15 fall to ~85.4);
-gf_lb 11-12 are the ridge with ~1pp shoulders; cost-stressed 50bps -> 84.70 /
--17.64 / 4.80, 100bps -> 80.40 / -18.23 / 4.41 (better calmar than the
-un-tilted 50bps 4.56). The gain is
+Loop-13/14 close (PROMOTED to the main ledger): gw_w 0.13 / gf_lb 12 with
+**lookback 12** -> train +88.14% / DD -17.34% / calmar 5.08, fwd +49.27%,
+full DD -26.27% (top 15). lookback 11 ties on train/DD exactly and gives up
+1.1pp of forward; 13-14 fall away (86.2 / 83.5). Re-measured on lookback 12:
+50bps -> 85.95 / -17.64 / 4.87, 100bps -> 81.64 / -18.23 / 4.48; 2017 start ->
+83.11 / -16.05 / 5.18; nifty500 discards (39.20 / -26.65, fwd DD worse than
+bench). Plateau, not a spike: gw 0.10-0.13 clear 86.2-88.1 (0.14-0.15 fall to
+~85.4); gf_lb 11-12 are the ridge with ~1pp shoulders; `floor_lb` is
+load-bearing (19 exactly; +/-2 collapses to 77.9 / 75.5), `max_dist` is inert
+(0.05-0.06 bitwise identical), `fast_ma` is shallow. The gain is
 train-side — the un-tilted champion (85.23 / 4.87, fwd +53.76) remains the
-forward-preserving alternative, and the term trades ~5.5pp of forward for
-+1.7pp of train. Out-of-sample: discards on nifty500 (38.96 / -26.65, fwd DD
+forward-preserving alternative. Out-of-sample: discards on nifty500 (fwd DD
 worse than bench). The gf_w gate-failure leg stays off (harmful on this base).
 
 PIT argument: inherited unchanged from strat_l12b_gatefail — fail/wobble
