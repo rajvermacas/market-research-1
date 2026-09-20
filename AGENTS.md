@@ -346,3 +346,9 @@ mistake recurs.
   (Loop-13: gatefail's `gf_w=0.05` and printclose's `clv_scale=0.8` would have broken
   the off-switch identity). Set your own neutral default first, and require the
   off-switch to reproduce the champion exactly before any variant is believed.
+- Re-measure, don't inherit, when the promoted config changes. Loop-13's gw 0.13
+  promotion carried the gw 0.12 cost-stress numbers (84.44 / calmar 4.79) into the
+  README and the champion annotation; a worker's control mismatch (84.70 / 4.80)
+  exposed it. Every auxiliary figure (cost stress, window splits, transfer) is valid
+  only for the exact params it was measured on — re-run it on promotion, or label it
+  with the params it belongs to.
