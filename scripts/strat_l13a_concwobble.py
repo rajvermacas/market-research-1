@@ -54,8 +54,9 @@ DD -17.49% / calmar 4.87, fwd +53.76%.
 Loop-13 close (PROMOTED to the main ledger): gw_w 0.13 / gf_lb 12 -> train
 +86.88% / DD -17.34% / calmar 5.01, fwd +48.19%, full DD -25.79% (top 15).
 Plateau, not a spike: gw 0.10-0.13 clear 86.2-86.9 (0.14-0.15 fall to ~85.4);
-gf_lb 11-12 are the ridge with ~1pp shoulders; cost-stressed 50bps -> 84.44 /
--17.64 / 4.79 (better calmar than the un-tilted 50bps 4.56). The gain is
+gf_lb 11-12 are the ridge with ~1pp shoulders; cost-stressed 50bps -> 84.70 /
+-17.64 / 4.80, 100bps -> 80.40 / -18.23 / 4.41 (better calmar than the
+un-tilted 50bps 4.56). The gain is
 train-side — the un-tilted champion (85.23 / 4.87, fwd +53.76) remains the
 forward-preserving alternative, and the term trades ~5.5pp of forward for
 +1.7pp of train. Out-of-sample: discards on nifty500 (38.96 / -26.65, fwd DD
