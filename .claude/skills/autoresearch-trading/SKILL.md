@@ -113,20 +113,32 @@ not from the skill directory.
 ## Execution pattern (orchestrator + worker)
 
 Time-boxed loops run as TWO roles so the main session stays free to talk
-while trials execute in the background:
+while trials execute in the background. Duties are strictly segregated:
 
-- **Orchestrator (main session):** owns the loop — writes the worker brief
-  (current best, forbidden repeats, ledger vs validate files, keep rules,
-  ONE wall-clock stop condition per AGENTS.md mandatory rule), monitors via
-  side-channel only (`ps` for the harness process, `results.tsv` tail, `git
-  status` — never interrupts the worker), verifies the worker's claims
-  against `best.json`/ledger before reporting, owns commit + push.
-- **Worker (background subagent):** executes trials continuously until the
-  wall-clock stop condition — never stops at queue-exhaustion or first keep.
-  Prescribed config: model
-  `opencode/muse-spark-1.3-contributor-free#xhigh`. The worker logs every
-  row via the harness, writes new `strat_*.py` files (import, never copy),
-  and on time expiry commits + pushes before reporting its table.
+- **Orchestrator (main session) — owns the STRATEGY loop:**
+  designs new mechanisms/ideas (`strat_*` concepts: rank + regime logic),
+  writes the worker brief (current best, forbidden repeats, ledger vs
+  validate files, keep rules, ONE wall-clock stop condition per the
+  AGENTS.md mandatory rule), and DYNAMICALLY budgets the worker's trials —
+  e.g. 1–2 confirmation trials per new mechanism, stop a grid once the
+  peak is confirmed, kill a line whose DD will never pass slack. Monitors
+  via side-channel only (`ps`, `results.tsv` tail, `git status` — never
+  interrupts the worker), verifies claims against `best.json`/ledger,
+  owns commit + push, reports to the user.
+- **Worker (background subagent) — owns the NUMBERS:**
+  implements the briefed mechanisms (import, never copy), runs
+  param fine-tuning trials, logs every row via the harness. It does NOT
+  invent strategy — new ideas come from the orchestrator's brief. It stops
+  only at the wall-clock stop condition, never at queue-exhaustion or
+  first keep. Prescribed config: model
+  `opencode/muse-spark-1.3-contributor-free#xhigh`.
+
+**"Run the loop for N minutes/hours" means:** the orchestrator runs the
+strategy loop for that duration — designing and feeding new ideas round
+by round — while the worker burns the time on numbers. The orchestrator
+plans and re-plans the worker's trial budget dynamically as results come
+in; an idle worker gets the next idea, a confirmed line gets its grid
+shut off.
 
 ## Fresh-session bootstrap
 
