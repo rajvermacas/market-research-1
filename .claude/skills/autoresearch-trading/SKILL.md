@@ -164,11 +164,47 @@ one mechanism per worker handoff, one shared wall-clock stop.**
   unavailable). It reads the skill, the champion files and the LIVE ledger
   tails, then writes 2–3 new mechanism files with documented SPACE variants,
   smoke-tests them on isolated ledgers, and reports each hypothesis, its
-  falsification test, and the ideas it rejected. It never runs trial
+  falsification test, and the ideas it rejected. Every deliverable must carry
+  a **novelty statement**: its closest prior art from the mechanism inventory
+  and the one thing that changed (new signal, or a base it was never tested
+  on). A file whose novelty statement is "same signal, new shape/weights" is
+  rejected unread. It never runs trial
   campaigns, never edits existing files, never touches the main ledger.
   Designer files are namespaced by loop and designer:
   `strat_l<loop><designer>_<idea>.py` (e.g. `strat_l12b_printclose.py`), so
   parallel designers cannot collide.
+
+### Mechanism inventory (the anti-repeat ledger)
+
+Designers MUST read this before writing a file, and every deliverable must
+name its closest prior art here plus the one thing that changed. A family
+marked DEAD may only be retested when the base it was falsified on has
+changed (say which base and why) — a new filename, shape, or weight on the
+same signal is NOT a new mechanism and will be rejected at the novelty gate.
+
+- **LIVE:** floor-lift fresh-print rank + tier-shape exposure + breadth tiers
+  (the base chain); regime-conditional weak-month cap (`cap_weak`/`cap_full`);
+  short hold clock (`max_hold 3`); eligibility-wobble discount (`gw_w 0.13 /
+  gf_lb 12`).
+- **DEAD** (falsified with champion-reproducing controls): breadth ramps;
+  exposure hysteresis; rank smoothing/skip/blending/borda; positive
+  persistence weights; sector/industry neutrality (80%-null `industry`);
+  volume gates; vol targeting; index-DD veto; book-health/attrition floors;
+  path exits and path-conditional hold clocks; retention bonus/grandfathered
+  exits; trailing stops; band-conditional freshness; symmetric count caps
+  (`cap_full` inert for values >= top); close-location tilt; drought-shape
+  tilts; freshness/drought/CLV re-based onto the capped champion; the
+  gate-failure share `gf_w`; top-13 DD repair via hold/cap levers.
+- **PARTIAL:** negative persistence premium (live on the rankpersist line,
+  dead on the conc chain); `cap_weak`/`max_hold`/`b_hi`/`regime_ma` are
+  sharp peaks — their local neighbourhood is closed to tuning, but changing
+  their *mechanism* is not.
+- **OPEN AXES (start here):** score-weighted position sizing (every test so
+  far is equal-weight top-N); staggered/overlapping rebalance dates;
+  intraday Kite panel in selection (`60minute_kite_clean` is under-used by
+  strategy_lab); liquidity / market-cap conditioning; breadth *change*
+  rather than level; relative strength or beta vs index; recency-weighted
+  wobble (the L13 term's shape family); book turnover budgets.
 
 ### The round (standard playbook)
 
@@ -333,6 +369,16 @@ rule, ledger paths, stop time, report format. Hard-won rules:
   `clv_scale=0.8` both broke the off-switch until the designer set its own
   neutral defaults). The designer must set neutral defaults first, and the
   worker's first row must be the off-switch identity check.
+- **Novelty gate before a screen:** read the designer's file and check its
+  signal against the mechanism inventory. If the family is DEAD and the base
+  it was falsified on is unchanged, reject the file and re-task the designer
+  with an OPEN axis — never spend a worker window on a known replay. A
+  legitimate retest (changed base) is allowed but the worker brief must say
+  which base changed.
+- **Assign the two designers DISTINCT axes** — never the same family from two
+  pens. Loop-12's four designer files all modulated the freshness/eligibility
+  channel, which bought parameter breadth but no mechanism breadth; Loop-13's
+  screens confirmed they were substitutes.
 - Dedupe before a batch: grep the ledger for the candidate name and param
   signature and skip any (candidate, params) row that already exists —
   identical reruns are noise, not evidence. A retest is legitimate only on a
