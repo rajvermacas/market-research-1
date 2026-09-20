@@ -346,6 +346,10 @@ mistake recurs.
   (Loop-13: gatefail's `gf_w=0.05` and printclose's `clv_scale=0.8` would have broken
   the off-switch identity). Set your own neutral default first, and require the
   off-switch to reproduce the champion exactly before any variant is believed.
+  To NEUTRALIZE a delegate's term, FORCE the key (`p["gw_w"] = 0.0`), never
+  `setdefault` — a caller-passed value beats a setdefault, so passing the
+  champion's `gw_w` through while re-implementing its term double-applies it
+  (Loop-14's wobble-recency first smoke read 81.36 instead of the identity).
 - Re-measure, don't inherit, when the promoted config changes. Loop-13's gw 0.13
   promotion carried the gw 0.12 cost-stress numbers (84.44 / calmar 4.79) into the
   README and the champion annotation; a worker's control mismatch (84.70 / 4.80)
