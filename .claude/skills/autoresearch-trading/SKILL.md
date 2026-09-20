@@ -215,7 +215,11 @@ Promotion: after all workers stop, replay the winners onto the main ledger
 one at a time, in ratchet order (each keep must sit within `--dd-slack` of
 the standing best at that moment), then re-read `best.json` and compare with
 what was written — if it changed underneath (a concurrent writer slipped in),
-re-run instead of accepting a stale verdict. `results_validate.tsv` /
+re-run instead of accepting a stale verdict. Do not submit knife-edge
+candidates: a train gain that collapses within ±1% of a discretisation
+parameter (Loop-12: `clv_scale` 0.66 / 0.67 / 0.675 → 83.85 / 85.43 / 84.37)
+is a rank-ordering artifact, not a new best — record it in the worker's
+ledger and the report, and leave the main ledger alone. `results_validate.tsv` /
 `best_validate.json` holds the un-fitted-universe verdict and follows the
 same single-writer rule.
 
