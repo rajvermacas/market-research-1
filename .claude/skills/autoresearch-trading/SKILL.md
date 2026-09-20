@@ -245,6 +245,10 @@ process):
    A dead worker is a queued action, not a reason to pause: relaunch first,
    close out only at the wall-clock stop. The test of the orchestrator is
    whether the loop keeps producing rows after a worker dies.
+5. Rate-limited models: retry ONCE at most, then switch models or report the
+   outage. Loop-12's audit retry burned a second attempt on a persistently
+   throttled free-tier model (three failures in one session) — the review was
+   delivered on an available model instead, and the outage was reported.
 
 The orchestrator owns worker liveness: check `ps` and ledger mtimes
 periodically and redeploy without waiting for an error notification.
