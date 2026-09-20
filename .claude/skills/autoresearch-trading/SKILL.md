@@ -322,6 +322,17 @@ rule, ledger paths, stop time, report format. Hard-won rules:
   mechanisms were screened against a superseded base and their falsifications
   are scoped to it. Re-base surviving terms onto the champion chain before
   believing a negative.
+- State the run convention in every brief: candidate, `--top`, `--universe
+  nse_all`, `--cost-bps 25`, the full params JSON, and the isolated ledger paths.
+  A wrong universe silently produces rows incomparable to the champion —
+  Loop-13: a worker's first batch ran nifty500 by its own choice and had to be
+  rerun before any number meant anything.
+- Imported defaults leak into re-based files: when a mechanism file composes a
+  term from an existing file, the source file's internal defaults activate
+  unless overridden (Loop-13: gatefail's `gf_w=0.05`, printclose's
+  `clv_scale=0.8` both broke the off-switch until the designer set its own
+  neutral defaults). The designer must set neutral defaults first, and the
+  worker's first row must be the off-switch identity check.
 - Dedupe before a batch: grep the ledger for the candidate name and param
   signature and skip any (candidate, params) row that already exists —
   identical reruns are noise, not evidence. A retest is legitimate only on a
@@ -358,15 +369,20 @@ to wait for them.
    `best_validate.json` (nifty500), `.cache/auto_research/best*.json`, plus the
    tails of the results files for the frontier and the dead lines. `best.json`
    alone is enough to resume.
-4. State at Loop-12 close (re-verify, do not trust): champion
-   `strat_floorhighrankpersist`, top 15, base params + `pers_lb 6 / pers_w -0.16
-   / max_hold 4` → train +83.93% / DD -19.96% / calmar 4.20, forward +49.89%,
-   full-window DD -22.66%. Frontier: `pers_lb 22 / pers_w -0.40`
-   (+81.23/-18.39/4.42, fwd +58.53) and the cap line `tier_mid .999 / cap_weak
-   11 / max_hold 9` (+80.94/-18.11/4.47, fwd +57.58). Dead lines: ramps,
-   hysteresis, positive persistence, rank smoothing/skip/blending, sector
+4. State at Loop-13 close (re-verify, do not trust): champion
+   `strat_l13a_concwobble`, top 15 — the `floorhightiershapeconc` chain
+   (tier_lo/tier_mid 0.9999, cap_weak 11, cap_full 20, max_hold 3) plus
+   `gw_w 0.12 / gf_lb 12` → train +86.62% / DD -17.34% / calmar 5.00, forward
+   +47.69%, full DD -25.79%. The gain is train-side: the un-tilted conc champion
+   (+85.23% / -17.49% / 4.87, fwd +53.76%) is the forward-preserving alternative
+   and stays on the ledger. Out-of-sample: the wobble discards on nifty500
+   (+39.10/-26.23, fwd DD worse than bench). Frontier: calmar crown `rankpersist
+   top 13 / mh2 / pers_lb 4 / pers_w -0.18` (80.88/-15.05/5.37, fwd +54.11),
+   forward crown `pers_lb 5` (fwd +62.47), champion costed at 50bps 83.07/4.56.
+   Dead lines: ramps, hysteresis, positive persistence, freshness/drought/CLV
+   re-based onto the capped champion, rank smoothing/skip/blending, sector
    (80%-null industry), volume gates, vol targeting, index-DD veto, book-health
-   floors, path exits, retention bonus.
+   floors, path exits, retention bonus, top-13 DD repair.
 5. Ask the user for the designer and worker models (Step 0 of the playbook),
    then open the round. At close: commit with setup + verdict, `git add -f` the
    tracked ledgers if `.cache` is ignored, and push the workstream branch — the

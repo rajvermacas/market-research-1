@@ -341,3 +341,8 @@ mistake recurs.
   changed same-params numbers mid-ledger (newhigh 15/0.1/6 read 28.26/28.42 under the
   old harness, 30.02/9.89 under the new one), and a stale row nearly crowned a false
   best. Never rank across a harness change — re-run the contenders fresh first.
+- Imported defaults leak. When a new mechanism file composes a term from an existing
+  file, the source file's internal defaults silently activate unless overridden
+  (Loop-13: gatefail's `gf_w=0.05` and printclose's `clv_scale=0.8` would have broken
+  the off-switch identity). Set your own neutral default first, and require the
+  off-switch to reproduce the champion exactly before any variant is believed.
