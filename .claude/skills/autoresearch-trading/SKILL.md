@@ -127,7 +127,10 @@ one mechanism per worker handoff, one shared wall-clock stop.**
 - **Orchestrator (main session) — owns the STRATEGY loop and its BUDGET.**
   The main agent gets the loop's wall-clock budget (default: 50 min for a
   "one hour" loop, leaving slack for close-out) and sets every worker's stop
-  condition INSIDE it, as an absolute UTC time — never a queue length. It
+  condition INSIDE it, as an absolute wall-clock time in **IST (Asia/Kolkata)**
+  — never a queue length, never UTC. All briefs, reports and timestamps the
+  user sees are IST; workers verify the clock with `TZ=Asia/Kolkata date`.
+  (The harness's own ledger timestamps stay UTC — do not conflate the two.) It
   designs new mechanisms (`strat_*` files: rank + regime + book-size logic),
   writes each worker brief (its mechanism, baseline params, exact literal
   trial list, isolated ledger paths, ONE wall-clock stop, report format),
@@ -147,6 +150,41 @@ one mechanism per worker handoff, one shared wall-clock stop.**
   workers died on a free model's rate limit while the parent model was never
   throttled, leaving the loop with no numbers and forcing the orchestrator to
   run the queues itself.
+- **Designer (background subagent, strongest reasoning model) — owns IDEAS.**
+  Runs on the strongest reasoning model in the session (standing preference:
+  GLM 5.3 Flash at max effort; fall back to another strong model if it is
+  unavailable). It reads the skill, the champion files and the LIVE ledger
+  tails, then writes 2–3 new mechanism files with documented SPACE variants,
+  smoke-tests them on isolated ledgers, and reports each hypothesis, its
+  falsification test, and the ideas it rejected. It never runs trial
+  campaigns, never edits existing files, never touches the main ledger.
+  Designer files are namespaced by loop and designer:
+  `strat_l<loop><designer>_<idea>.py` (e.g. `strat_l12b_printclose.py`), so
+  parallel designers cannot collide.
+
+### The round (standard playbook)
+
+**Step 0 — ask the user about models before spawning anything.** Which model
+for the DESIGNERS and which model for the TRIAL WORKERS. Sensible defaults to
+offer: designers = the strongest reasoning model available in the session
+(GLM 5.3 Flash at max effort was the standing choice), workers = the parent
+session's model. Record the answers in every brief; never assume a model
+silently.
+
+A 1-hour loop = a 50-minute orchestrator budget; workers stop ~12 min before
+it ends. The proven shape:
+
+| Minute | Orchestrator | Designers | Trial workers |
+| --- | --- | --- | --- |
+| 0–5 | brief designers; start 2 workers on existing frontier lines | start | start |
+| 5–20 | smoke-check delivered files; one screen worker per file | write + smoke 2–3 files | batched screens |
+| 20–38 | supervise, dedupe, redeploy dead workers, re-plan | second round from live ledger tails | deepen winners only |
+| 38–40 | stop trials | stop | stop |
+| 40–50 | promote in ratchet order, nifty500 validation, commit, push, report | — | — |
+
+Roles are decoupled: designers need ledger DATA, not free workers; the only
+dependency is file-before-screen. Keep pool size = number of unscreened
+files, and re-task a designer (with the live tails) before any worker idles.
 
 ### Ledger isolation (mutual exclusion)
 
@@ -159,6 +197,12 @@ worker its own pair and make it pass them in EVERY command:
 The main ledger (`.cache/strategy_lab/results.tsv` / `best.json`) stays
 single-writer. With one worker running it may own the main ledger directly;
 with several, nobody touches it until the orchestrator's promotion pass.
+**Namespace every worker ledger by loop** — `w<loop>_<worker>_results.tsv` /
+`w<loop>_<worker>_best.json` (e.g. `l12_wA_*`). Reusing a name across loops
+mixes eras: Loop-12's worker B appended to a Loop-10 ledger and only escaped
+stale-best verdicts because every new config dominated the old best. A stale
+best that is *higher* than everything new would silently suppress every keep.
+Split mixed-era files by timestamp before trusting their best column.
 Promotion: after all workers stop, replay the winners onto the main ledger
 one at a time, in ratchet order (each keep must sit within `--dd-slack` of
 the standing best at that moment), then re-read `best.json` and compare with
@@ -205,17 +249,40 @@ its stop, it tests additional one-key variants of the best of its handed
 mechanisms, rotating — never a deep grid on a single one — unless the
 orchestrator briefed that one mechanism as the live line worth depth.
 
+### Throughput: screen then deepen (matching design pace)
+
+Designers can produce a smoke-tested mechanism file every few minutes; a
+worker that runs one trial per model turn cannot consume them fast enough and
+the design queue becomes the workflow bottleneck. Two rules fix the pacing:
+
+- **Batch the screen.** A worker's first pass over a new file runs the
+  designer's documented SPACE variants as ONE bounded shell batch: one literal
+  `python scripts/strategy_lab.py …` line per variant (full literal JSON,
+  never shell-variable assembly), strictly sequential, all output appended to
+  a log file, and a verification tail printing the TRAIN-line count (must
+  equal the variant count) plus Traceback/FAILED counts before the last
+  lines. A batch that prints no TRAIN per variant is a failed batch: read the
+  log, never re-run blind. This lifts throughput from ~1–3 trials/min
+  (one command per model turn) to ~8+ trials/min.
+- **Screen shallow, deepen only winners.** Pass 1 = the documented variants
+  (3–6 trials per file). Pass 2 = a deeper grid only for files whose screen
+  beats or approaches the incumbent. Never grind a grid on a file that failed
+  its screen.
+- Keep the worker pool equal to the current design batch (one file per
+  worker) so every artifact is screened within minutes of delivery.
+
 ### Briefing rules (the worker channel is one-shot)
 
 A background worker cannot be re-briefed mid-flight, so its brief carries the
 whole round: baseline command, exact literal trial list, rotation/fallback
 rule, ledger paths, stop time, report format. Hard-won rules:
 
-- One trial per shell command; never suppress stderr and never grep-filter the
-  command output; a trial printing no TRAIN line is FAILED — stop, read the
-  raw error, never re-run blind. Build `--params-json` as full literal JSON;
-  never assemble it from shell variables. (This applies to the orchestrator's
-  own probe commands too.)
+- One trial per command LINE, never two at once; batches are allowed only as a
+  written script of full literal command lines with a verification tail (see
+  Throughput) — never a shell loop that assembles JSON. Never suppress stderr
+  and never grep-filter the command output; a trial printing no TRAIN line is
+  FAILED — stop, read the raw error, never re-run blind. (This applies to the
+  orchestrator's own probe commands too.)
 - Trials are strictly SEQUENTIAL, one process at a time per ledger. Never issue
   parallel tool calls that run `strategy_lab.py` against the same
   `--results`/`--best-json` pair: concurrent runs can lose a keep in a
@@ -230,6 +297,15 @@ rule, ledger paths, stop time, report format. Hard-won rules:
   brief should say which base changed and why.
 - New mechanisms go into NEW files; never edit an existing `strat_*` file to
   change its meaning, or past ledger rows stop meaning what they meant.
+- FREEZE delivered files. Once a designer file is handed to a trial worker it
+  must not be renamed, edited, or "evolved" — a new idea gets a NEW file.
+  Loop-12: a designer renamed its own delivered file mid-run
+  (`strat_l12a_pathexit.py` → `strat_l12a_pathhold.py`), breaking the worker's
+  candidate import and wasting the rest of its window. If a candidate file
+  disappears mid-run, that worker stops its line and reports; it never
+  silently switches to a different file. The orchestrator also watches for
+  parallel sessions/external writers (`git status`, the scripts directory)
+  before close-out.
 - Report format: stop-time confirmation, trial count, every KEEP, the full
   `w<ID>_best.json`, a compact trial table, raw errors for any failure.
 
@@ -243,12 +319,23 @@ to wait for them.
 
 ## Fresh-session bootstrap
 
-1. `git log --oneline -5`, `git status --short` — find the workstream branch.
-2. Read `.cache/auto_research/best*.json` and `results*.tsv` tails for current best.
-3. Read `.cache/strategy_lab/results.tsv` for mechanism history.
-4. Continue the loop from current best; commit new `strat_*`/harness files with
-   messages stating setup + verdict.
-5. End of loop: `git add` any changed `best*.json` ledgers plus new files,
-   commit, and `git push origin <workstream-branch>` — the next fresh
-   session (or clone) must find the latest best on git, never restart
-   from scratch.
+1. Read this skill end-to-end first — the loop assumes the playbook above.
+2. `git log --oneline -5`, `git status --short` — find the workstream branch
+   and check for external/parallel changes.
+3. Read the tracked ledgers: `.cache/strategy_lab/best.json` (main, nse_all),
+   `best_validate.json` (nifty500), `.cache/auto_research/best*.json`, plus the
+   tails of the results files for the frontier and the dead lines. `best.json`
+   alone is enough to resume.
+4. State at Loop-12 close (re-verify, do not trust): champion
+   `strat_floorhighrankpersist`, top 15, base params + `pers_lb 6 / pers_w -0.16
+   / max_hold 4` → train +83.93% / DD -19.96% / calmar 4.20, forward +49.89%,
+   full-window DD -22.66%. Frontier: `pers_lb 22 / pers_w -0.40`
+   (+81.23/-18.39/4.42, fwd +58.53) and the cap line `tier_mid .999 / cap_weak
+   11 / max_hold 9` (+80.94/-18.11/4.47, fwd +57.58). Dead lines: ramps,
+   hysteresis, positive persistence, rank smoothing/skip/blending, sector
+   (80%-null industry), volume gates, vol targeting, index-DD veto, book-health
+   floors, path exits, retention bonus.
+5. Ask the user for the designer and worker models (Step 0 of the playbook),
+   then open the round. At close: commit with setup + verdict, `git add -f` the
+   tracked ledgers if `.cache` is ignored, and push the workstream branch — the
+   next fresh session must find the latest best on git, never restart.
