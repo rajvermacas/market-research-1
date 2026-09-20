@@ -1,33 +1,36 @@
 {
-  "candidate": "strat_floorhightier",
+  "candidate": "strat_floorhighsustaincond",
   "params": {
     "b_hi": 0.65,
     "b_lo": 0.45,
     "b_mid": 0.55,
-    "floor_lb": 18,
-    "lookback": 15,
-    "max_dist": 0.05,
-    "regime_ma": 18
+    "floor_lb": 19,
+    "lookback": 16,
+    "max_dist": 0.055,
+    "regime_ma": 18,
+    "fast_ma": 6,
+    "sustain_lo": 6,
+    "sustain_hi": 2
   },
   "top": 25,
   "select": "cagr",
   "risk": {},
   "metrics": {
-    "cagr": 0.4127681822178848,
-    "maxdd": -0.16865662416874505,
-    "ret_dd": 2.447387905765861,
-    "h1_cagr": 0.2939349786581207,
-    "h2_cagr": 0.5362240002024015,
+    "cagr": 0.4798658274894039,
+    "maxdd": -0.16383696162337746,
+    "ret_dd": 2.9289228922134325,
+    "h1_cagr": 0.35952397379496515,
+    "h2_cagr": 0.6045177852895955,
     "bench_cagr": 0.19837608390238493,
     "bench_dd": -0.6268214578534694,
     "invested": 0.5547619047619048,
     "months": 84,
-    "fwd_cagr": 0.3739844613185983,
-    "fwd_dd": -0.17865341841756532,
+    "fwd_cagr": 0.3223270730880128,
+    "fwd_dd": -0.13506468924154447,
     "fwd_bench_cagr": 0.14717322411740064,
     "fwd_bench_dd": -0.27883049819405814,
     "fwd_months": 55,
-    "full_cagr": 0.3972929080189742,
-    "full_dd": -0.24274741847689152
+    "full_cagr": 0.41540253346014255,
+    "full_dd": -0.2311134497096341
   }
 }

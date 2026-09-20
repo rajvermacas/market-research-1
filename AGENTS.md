@@ -284,6 +284,14 @@ mistake recurs.
   cannot be classified, fail loudly and keep the checkpoints rather than publishing the gap.
 - Sanity-check a "missing data" list before trusting it. Contiguous alphabetical runs, or the
   presence of household names, mean a failed request batch, not absent data.
+- Batch trial shells must keep stderr visible (no `2>/dev/null`) and build
+  `--params-json` as full literal strings, never by appending keys to a shell
+  variable that already ends in `}`. Loop-9 lost trials to exactly this: a wrong
+  universe flag crashed silently under stderr suppression, then `"$F,...}"` with
+  F already brace-closed produced invalid JSON across two batches — every run
+  "completed" printing nothing while logging nothing. A batch that prints no
+  TRAIN/KEEP/DISCARD line per trial is a failed batch: stop and read the error,
+  never re-run blind.
 - Checkpoint long downloads to disk per batch. A run over thousands of symbols will get
   interrupted; writing results only at the end throws away hours of completed work.
 - Back off for minutes, not seconds, on a 429. Retrying hard through a rate limit extends the
