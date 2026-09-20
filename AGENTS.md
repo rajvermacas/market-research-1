@@ -6,6 +6,8 @@ Guidance for AI agents (and humans) working in this repository.
 
 Whenever I point out or you catch yourself repeating same mistakes again, before continuing add it as a rule in #LESSONS below to avoid it in future
 
+**MANDATORY — time-boxed autonomous loops: the brief must state ONE explicit wall-clock stop condition (e.g. "stop only after 60 min elapsed"), and the agent must keep generating fresh trials until it is met. A finished trial queue is NEVER the stop signal — Loop-8 exited after ~15 min of a 1-hour brief because the brief listed work but defined no stop condition, and queue-exhaustion was read as completion.**
+
 ## Project
 
 A **backtesting playground for the Indian equity market (NSE)** — not the repository of a single
