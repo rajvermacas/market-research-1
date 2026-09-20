@@ -72,6 +72,14 @@ bars with `date < months[m]` and closes through `px[m]`. HTF RSIs need a
 warm-up guard (Wilder seeded at zero reads 100 on bar one and passes any
 regime filter for free — require ~42 months of history per name).
 
+**Book-state mechanisms need a causal replay.** The harness re-picks top-N
+every month with no incumbency memory, so any mechanism that depends on the
+held book (incumbency, attrition, hold clocks, retention bonuses) must replay
+the harness pick rule month by month inside the candidate, folding its own
+modification in before each pick. Validate the replay by reproducing the
+champion to the basis point with a no-op config (Loop-12's `strat_l12a_*`
+files did this; the replay is the reason those negatives are trustworthy).
+
 ```bash
 # 1. verify harness: must EXACTLY match auto_research on same params
 python scripts/strategy_lab.py --candidate strat_momentum \
