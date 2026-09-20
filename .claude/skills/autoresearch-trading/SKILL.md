@@ -18,6 +18,11 @@ The agent changes code each loop; a fixed harness keeps score.
   `momentum_rotation.performance`, `auto_research.load_monthly`.
 - Scratch goes to `.cache/` (gitignored). Never write to `data/`.
   Exception: the four `best*.json` ledgers are force-tracked in git
+- Harness quirk every audit should know: the pick at month t is masked by
+  `isfinite(px[t+1])` (a next-month-close availability mask). It is
+  conservative — it removes candidates, never adds them — and it is baked
+  into every recorded number; never "fix" it without re-running the whole
+  ledger under one harness version.
   (`.cache/strategy_lab/best.json`, `best_validate.json`,
   `.cache/auto_research/best.json`, `best_nse_all.json`) — both harnesses
   resume from `best.json` alone, so these files are all a fresh session

@@ -68,8 +68,9 @@ SPACE = {
 
 
 def _share(fin: np.ndarray, lb: int) -> np.ndarray:
-    """Row t: fraction of the last lb rows (ending t) that were finite.
-    Rows before the window read as share 0."""
+    """Row t: fraction of the AVAILABLE rows in the last lb rows (ending t)
+    that were finite — the divisor is min(lb, t + 1), not a fixed lb. Rows
+    with no finite history read 0 (0 / count)."""
     out = np.zeros(fin.shape)
     for t in range(fin.shape[0]):
         lo = max(0, t - lb + 1)
