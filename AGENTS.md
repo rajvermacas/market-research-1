@@ -8,6 +8,8 @@ Whenever I point out or you catch yourself repeating same mistakes again, before
 
 **MANDATORY — time-boxed autonomous loops: the brief must state ONE explicit wall-clock stop condition (e.g. "stop only after 60 min elapsed"), and the agent must keep generating fresh trials until it is met. A finished trial queue is NEVER the stop signal — Loop-8 exited after ~15 min of a 1-hour brief because the brief listed work but defined no stop condition, and queue-exhaustion was read as completion.**
 
+**MANDATORY — never rebuild a file from rendered/displayed content. A rendered copy (skill block, diff, chat text) is a lossy projection that silently drops what the renderer omitted: rebuilding the skill file from its skill block deleted the `name`/`description` frontmatter the loader needs. Use `edit` for existing files; use `write` only for files read from disk in this session or for brand-new files; after any full-file write, verify with a full `git diff <path>` (not `--stat`) or a first-lines diff against `git show HEAD:<path>`. The generalized rule: when a transformation is lossy or output was filtered, verify the invariant explicitly (frontmatter present, JSON parses, TRAIN line printed) — never infer it from a summary. Details in #LESSONS.**
+
 ## Project
 
 A **backtesting playground for the Indian equity market (NSE)** — not the repository of a single
@@ -292,6 +294,25 @@ mistake recurs.
   "completed" printing nothing while logging nothing. A batch that prints no
   TRAIN/KEEP/DISCARD line per trial is a failed batch: stop and read the error,
   never re-run blind.
+- The batch-shell rule covers the orchestrator's own probe commands too, not just
+  the worker's. Loop-10 lost six confirmation trials to a shell function that piped
+  `2>&1 | grep TRAIN`: the argparse error vanished, empty output read as "no
+  result", and the same six commands worked as plain literals. Any shorthand that
+  filters output is `2>/dev/null` by another name — run the first trial of a new
+  family as a plain literal command before wrapping it.
+- Never rebuild a file from rendered/displayed content: rendering strips metadata.
+  Rewriting `.claude/skills/autoresearch-trading/SKILL.md` from the skill-content
+  block silently deleted its `name`/`description` YAML frontmatter the loader
+  needs. Edit in place, or diff the first lines against `git show HEAD:<path>`
+  before overwriting.
+- Check the coverage of any reference column before building a mechanism on it.
+  The universe snapshot's `industry` is null for 2,059 of 2,558 symbols (~80%).
+  A sector-neutral rank silently became a no-op (subtracting one giant group's
+  mean preserves order), a "sector momentum" gate became a market-momentum veto,
+  and a per-industry concentration cap capped an "UNKNOWN" mega-group — all three
+  were read as sector evidence until `null_count()`/`n_unique()` was checked.
+  Coverage first, mechanism second, for every join key and attribute a strategy
+  depends on.
 - Checkpoint long downloads to disk per batch. A run over thousands of symbols will get
   interrupted; writing results only at the end throws away hours of completed work.
 - Back off for minutes, not seconds, on a 429. Retrying hard through a rate limit extends the

@@ -17,6 +17,12 @@ ordering within sector reuses the imported rank, never a new signal.
 PIT-safe: cap applies to the month-t cross-section only; industry mapping is
 static reference data.
 
+DATA CAVEAT (2026-09-20): `industry` is null for ~80% of the universe, so the
+cap mostly applied to a single "UNKNOWN" mega-group rather than to sectors —
+this file's ledger rows (max_per_ind 3/5 trailing the base) are NOT evidence
+about sector concentration or diversification. Re-run only with a populated
+industry field.
+
 SPACE = strat_floorhighfresh params + max_per_ind {3, 5}.
 """
 

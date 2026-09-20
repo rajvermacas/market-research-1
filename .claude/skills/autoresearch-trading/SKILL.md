@@ -22,6 +22,13 @@ The agent changes code each loop; a fixed harness keeps score.
   `.cache/auto_research/best.json`, `best_nse_all.json`) — both harnesses
   resume from `best.json` alone, so these files are all a fresh session
   needs to continue from the last best instead of from scratch.
+  Per-worker `w<ID>_best.json` ledgers are scratch: promote their winners
+  onto the tracked ledgers in the same loop, or the finding dies with the
+  session.
+- Reference columns can be near-empty: the universe snapshot's `industry` is
+  null for ~80% of symbols. Check `null_count()`/`n_unique()` before building
+  any mechanism on an attribute — an 80%-null industry silently turns a
+  "sector" rank into a no-op and a sector gate into a market gate.
 - Costs always charged (default 25 bps/side monthly). Years from month counts,
   never a bars-per-year constant. Equal-weight mean buy-hold bench, never median.
 - Universe is today's listing: survivorship flatters everything. Winners must be
@@ -110,35 +117,90 @@ third return value `risk={trail_k, max_hold}` (candidate wins on conflict):
 Run every command from the repo root (the folder containing scripts/ and data/),
 not from the skill directory.
 
-## Execution pattern (orchestrator + worker)
+## Execution pattern (orchestrator + parallel mechanism workers)
 
-Time-boxed loops run as TWO roles so the main session stays free to talk
-while trials execute in the background. Duties are strictly segregated:
+Time-boxed loops run as an orchestrator plus N background workers, so the main
+session stays free to talk and to design while the workers burn the clock on
+numbers. Three rules make the parallelism safe: **one writer per ledger file,
+one mechanism per worker handoff, one shared wall-clock stop.**
 
-- **Orchestrator (main session) — owns the STRATEGY loop:**
-  designs new mechanisms/ideas (`strat_*` concepts: rank + regime logic),
-  writes the worker brief (current best, forbidden repeats, ledger vs
-  validate files, keep rules, ONE wall-clock stop condition per the
-  AGENTS.md mandatory rule), and DYNAMICALLY budgets the worker's trials —
-  e.g. 1–2 confirmation trials per new mechanism, stop a grid once the
-  peak is confirmed, kill a line whose DD will never pass slack. Monitors
-  via side-channel only (`ps`, `results.tsv` tail, `git status` — never
-  interrupts the worker), verifies claims against `best.json`/ledger,
-  owns commit + push, reports to the user.
-- **Worker (background subagent) — owns the NUMBERS:**
-  implements the briefed mechanisms (import, never copy), runs
-  param fine-tuning trials, logs every row via the harness. It does NOT
-  invent strategy — new ideas come from the orchestrator's brief. It stops
-  only at the wall-clock stop condition, never at queue-exhaustion or
-  first keep. Prescribed config: model
+- **Orchestrator (main session) — owns the STRATEGY loop and its BUDGET.**
+  The main agent gets the loop's wall-clock budget (default: 50 min for a
+  "one hour" loop, leaving slack for close-out) and sets every worker's stop
+  condition INSIDE it, as an absolute UTC time — never a queue length. It
+  designs new mechanisms (`strat_*` files: rank + regime + book-size logic),
+  writes each worker brief (its mechanism, baseline params, exact literal
+  trial list, isolated ledger paths, ONE wall-clock stop, report format),
+  keeps the mechanism queue deep enough that nobody grinds or idles, and
+  re-plans dynamically from ledger tails. It monitors via side-channel only
+  (`ps`, ledger tails, `git status` — never interrupts), verifies claims
+  against `best.json`/ledger, promotes winners to the main ledger as the
+  single writer, owns commit + push, and reports to the user.
+- **Worker (background subagent) — owns the NUMBERS for its handoff.**
+  It does not invent strategy, does not edit files, does not run git. It runs
+  its pre-registered trials one at a time, logs every row through the harness,
+  and stops only at its wall-clock stop. Prescribed config: model
   `opencode/muse-spark-1.3-contributor-free#xhigh`.
 
-**"Run the loop for N minutes/hours" means:** the orchestrator runs the
-strategy loop for that duration — designing and feeding new ideas round
-by round — while the worker burns the time on numbers. The orchestrator
-plans and re-plans the worker's trial budget dynamically as results come
-in; an idle worker gets the next idea, a confirmed line gets its grid
-shut off.
+### Ledger isolation (mutual exclusion)
+
+Concurrent `strategy_lab.py` processes must never share a ledger. Give every
+worker its own pair and make it pass them in EVERY command:
+
+    --results .cache/strategy_lab/w<ID>_results.tsv \
+    --best-json .cache/strategy_lab/w<ID>_best.json
+
+The main ledger (`.cache/strategy_lab/results.tsv` / `best.json`) stays
+single-writer. With one worker running it may own the main ledger directly;
+with several, nobody touches it until the orchestrator's promotion pass.
+Promotion: after all workers stop, replay the winners onto the main ledger
+one at a time, in ratchet order (each keep must sit within `--dd-slack` of
+the standing best at that moment), then re-read `best.json` and compare with
+what was written — if it changed underneath (a concurrent writer slipped in),
+re-run instead of accepting a stale verdict. `results_validate.tsv` /
+`best_validate.json` holds the un-fitted-universe verdict and follows the
+same single-writer rule.
+
+### Worker rotation (breadth beats depth)
+
+A worker must not sit on one mechanism for long: cap each handoff at roughly
+8–10 trials or ~10 minutes, then rotate to the next mechanism. A trial costs
+~12 s of compute, so a worker can burn 30–60 trials an hour — the binding
+resource is the supply of distinct, well-posed mechanisms, not compute. The
+orchestrator therefore writes new `strat_*.py` files while workers run and
+keeps queue depth >= number of workers. If a worker's queue empties before
+its stop, it tests additional one-key variants of the best of its handed
+mechanisms, rotating — never a deep grid on a single one — unless the
+orchestrator briefed that one mechanism as the live line worth depth.
+
+### Briefing rules (the worker channel is one-shot)
+
+A background worker cannot be re-briefed mid-flight, so its brief carries the
+whole round: baseline command, exact literal trial list, rotation/fallback
+rule, ledger paths, stop time, report format. Hard-won rules:
+
+- One trial per shell command; never suppress stderr and never grep-filter the
+  command output; a trial printing no TRAIN line is FAILED — stop, read the
+  raw error, never re-run blind. Build `--params-json` as full literal JSON;
+  never assemble it from shell variables. (This applies to the orchestrator's
+  own probe commands too.)
+- Dedupe before a batch: grep the ledger for the candidate name and param
+  signature and skip any (candidate, params) row that already exists —
+  identical reruns are noise, not evidence. A retest is legitimate only on a
+  changed base mechanism (new exposure shape, new book composition), and the
+  brief should say which base changed and why.
+- New mechanisms go into NEW files; never edit an existing `strat_*` file to
+  change its meaning, or past ledger rows stop meaning what they meant.
+- Report format: stop-time confirmation, trial count, every KEEP, the full
+  `w<ID>_best.json`, a compact trial table, raw errors for any failure.
+
+**"Run the loop for N minutes" means:** the orchestrator runs its own clock
+(N = 50 min default; workers get stops well inside it), designs and feeds new
+mechanisms round by round, and closes out — promotion, validation, commit,
+push, report — inside its own budget. If workers are still running at the
+orchestrator's cutoff, that is a planning error to avoid next loop (brief
+worker stops early enough to leave 10+ min for close-out); it is not a reason
+to wait for them.
 
 ## Fresh-session bootstrap
 
