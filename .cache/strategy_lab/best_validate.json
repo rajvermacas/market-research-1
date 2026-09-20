@@ -1,0 +1,31 @@
+{
+  "candidate": "strat_floorhigh",
+  "params": {
+    "floor_lb": 24,
+    "lookback": 15,
+    "max_dist": 0.1,
+    "regime_ma": 6,
+    "weak_exp": 0.4
+  },
+  "top": 25,
+  "select": "cagr",
+  "risk": {},
+  "metrics": {
+    "cagr": 0.3428052853859904,
+    "maxdd": -0.3463191359233694,
+    "ret_dd": 0.9898537211118578,
+    "h1_cagr": 0.24405195763866439,
+    "h2_cagr": 0.4442572753409888,
+    "bench_cagr": 0.2110654502514704,
+    "bench_dd": -0.4147870638969946,
+    "invested": 0.8285714285714286,
+    "months": 84,
+    "fwd_cagr": 0.32455627948915233,
+    "fwd_dd": -0.2241806375854527,
+    "fwd_bench_cagr": 0.19527988715861322,
+    "fwd_bench_dd": -0.2244176116909703,
+    "fwd_months": 55,
+    "full_cagr": 0.33555458671659255,
+    "full_dd": -0.3463191359233694
+  }
+}
