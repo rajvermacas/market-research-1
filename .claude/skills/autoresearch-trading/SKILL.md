@@ -199,12 +199,19 @@ same signal is NOT a new mechanism and will be rejected at the novelty gate.
   dead on the conc chain); `cap_weak`/`max_hold`/`b_hi`/`regime_ma` are
   sharp peaks — their local neighbourhood is closed to tuning, but changing
   their *mechanism* is not.
-- **OPEN AXES (start here):** score-weighted position sizing (every test so
-  far is equal-weight top-N); staggered/overlapping rebalance dates;
-  intraday Kite panel in selection (`60minute_kite_clean` is under-used by
-  strategy_lab); liquidity / market-cap conditioning; breadth *change*
-  rather than level; relative strength or beta vs index; recency-weighted
-  wobble (the L13 term's shape family); book turnover budgets.
+- **OPEN AXES (start here — all expressible in a candidate under the current
+  harness):** breadth *change* rather than level (regime from the derivative
+  of breadth); relative strength vs the panel's own mean (no index series
+  needed); volatility-scaled rank (score divided by realized vol);
+  recency-weighted wobble (the L13 term's shape family); a replacement hurdle
+  for incumbents (PARTIAL — adjacent to the dead retention line; the novelty
+  statement must justify what changed).
+- **NOT expressible without a harness change (do not attempt in a
+  candidate):** position sizing (the backtest equal-weights top-N); intraday
+  or `60minute_kite_clean` inputs (`panels` carries month-end px + optional
+  daily only); staggered/overlapping rebalances (single monthly book);
+  market-cap conditioning (no cached cap snapshot; a live fetch inside
+  `score()` is not reproducible).
 
 ### The round (standard playbook)
 
