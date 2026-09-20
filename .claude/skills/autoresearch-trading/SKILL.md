@@ -208,10 +208,13 @@ same signal is NOT a new mechanism and will be rejected at the novelty gate.
   volatility-scaled rank, positive side (harmful at `v_w 0.25`, DD worsens);
   recency-weighted wobble (every blend trails ~1pp — the flat share's long
   memory is part of the edge). **PARTIAL from Loop-14:** market-relative
-  strength vs the panel mean — forward-positive, train-negative
-  (`rs_w 0.2-0.5 / rs_lb 6`: fwd +57.6% → +64.0% at train −11 → −16pp;
-  forward-calmar ≈3.2-3.3, not better than the champion's 3.30). It cannot
-  pass a train ratchet and needs a separate forward-line decision.
+  strength vs the panel mean — forward-positive, train-negative, and it
+  STACKS with the forward geometry: `rs_w 0.2 / rs_lb 6` + `cap_full 15 /
+  max_hold 6` → fwd +63.2% / −14.4% (forward-calmar 4.38 vs the champion's
+  3.30; the geometry alone is 3.93). Train 68.9 cannot pass the cagr ratchet —
+  it is the best forward-risk-adjusted line found, kept as a documented
+  forward alternative, never promoted. Vol-tilt (negative `v_w`) does not
+  stack with the geometry (fwd DD blows out to −24 to −25).
 - **NOT expressible without a harness change (do not attempt in a
   candidate):** position sizing (the backtest equal-weights top-N); intraday
   or `60minute_kite_clean` inputs (`panels` carries month-end px + optional
