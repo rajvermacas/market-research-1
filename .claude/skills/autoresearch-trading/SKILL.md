@@ -110,6 +110,24 @@ third return value `risk={trail_k, max_hold}` (candidate wins on conflict):
 Run every command from the repo root (the folder containing scripts/ and data/),
 not from the skill directory.
 
+## Execution pattern (orchestrator + worker)
+
+Time-boxed loops run as TWO roles so the main session stays free to talk
+while trials execute in the background:
+
+- **Orchestrator (main session):** owns the loop — writes the worker brief
+  (current best, forbidden repeats, ledger vs validate files, keep rules,
+  ONE wall-clock stop condition per AGENTS.md mandatory rule), monitors via
+  side-channel only (`ps` for the harness process, `results.tsv` tail, `git
+  status` — never interrupts the worker), verifies the worker's claims
+  against `best.json`/ledger before reporting, owns commit + push.
+- **Worker (background subagent):** executes trials continuously until the
+  wall-clock stop condition — never stops at queue-exhaustion or first keep.
+  Prescribed config: model
+  `opencode/muse-spark-1.3-contributor-free#xhigh`. The worker logs every
+  row via the harness, writes new `strat_*.py` files (import, never copy),
+  and on time expiry commits + pushes before reporting its table.
+
 ## Fresh-session bootstrap
 
 1. `git log --oneline -5`, `git status --short` — find the workstream branch.
