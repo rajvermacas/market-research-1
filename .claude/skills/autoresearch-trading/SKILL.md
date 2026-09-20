@@ -311,7 +311,13 @@ rule, ledger paths, stop time, report format. Hard-won rules:
   rankpersist) and to sweep `pers_*` keys the file never consumed — the worker
   caught both, but part of its window was wasted. Designer deliverables must
   therefore state their import chain, their flat-base metric, and the exact
-  keys they consume.
+  keys they consume. **Designer files must compose the CURRENT champion chain**
+  (state it explicitly in the brief: file + params + top), not a historical
+  base — Loop-12's designer files were built on the Loop-10 `tiershape` chain
+  while the champion had moved to `tiershape + cap_weak + max_hold 3`, so two
+  mechanisms were screened against a superseded base and their falsifications
+  are scoped to it. Re-base surviving terms onto the champion chain before
+  believing a negative.
 - Dedupe before a batch: grep the ledger for the candidate name and param
   signature and skip any (candidate, params) row that already exists —
   identical reruns are noise, not evidence. A retest is legitimate only on a
