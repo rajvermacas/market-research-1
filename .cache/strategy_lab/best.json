@@ -1,5 +1,5 @@
 {
-  "candidate": "strat_floorhightiershape",
+  "candidate": "strat_floorhighrankpersist",
   "params": {
     "b_hi": 0.69,
     "b_lo": 0.45,
@@ -12,27 +12,32 @@
     "sustain_hi": 2,
     "sustain_lo": 3,
     "tier_lo": 1.0,
-    "tier_mid": 1.0
+    "tier_mid": 1.0,
+    "pers_lb": 6,
+    "pers_w": -0.16,
+    "max_hold": 4
   },
   "top": 15,
   "select": "cagr",
-  "risk": {},
+  "risk": {
+    "max_hold": 4
+  },
   "metrics": {
-    "cagr": 0.7786543709223399,
-    "maxdd": -0.18973110093263523,
-    "ret_dd": 4.103989104025724,
-    "h1_cagr": 0.7021947998376157,
-    "h2_cagr": 0.8547540130510232,
+    "cagr": 0.8393329054797256,
+    "maxdd": -0.19963086635556782,
+    "ret_dd": 4.204424500090921,
+    "h1_cagr": 0.6998632551717594,
+    "h2_cagr": 0.9829594850317147,
     "bench_cagr": 0.19837608390238493,
     "bench_dd": -0.6268214578534694,
     "invested": 0.6547619047619048,
     "months": 84,
-    "fwd_cagr": 0.49955426326718677,
-    "fwd_dd": -0.1437404298959014,
+    "fwd_cagr": 0.49889082341725,
+    "fwd_dd": -0.16387840441726353,
     "fwd_bench_cagr": 0.14717322411740064,
     "fwd_bench_dd": -0.27883049819405814,
     "fwd_months": 55,
-    "full_cagr": 0.6624928862327066,
-    "full_dd": -0.25776673095589686
+    "full_cagr": 0.6962423571511624,
+    "full_dd": -0.2266350787751663
   }
 }

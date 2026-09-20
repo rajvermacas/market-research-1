@@ -216,6 +216,13 @@ rule, ledger paths, stop time, report format. Hard-won rules:
   raw error, never re-run blind. Build `--params-json` as full literal JSON;
   never assemble it from shell variables. (This applies to the orchestrator's
   own probe commands too.)
+- Trials are strictly SEQUENTIAL, one process at a time per ledger. Never issue
+  parallel tool calls that run `strategy_lab.py` against the same
+  `--results`/`--best-json` pair: concurrent runs can lose a keep in a
+  best.json read-modify-write race. Loop-11 caught a worker running five
+  trials at once on one ledger; the rows survived (atomic appends at this
+  line size) but the ledger best could silently lag. If parallel trials are
+  wanted, give each process its own ledger pair and merge afterwards.
 - Dedupe before a batch: grep the ledger for the candidate name and param
   signature and skip any (candidate, params) row that already exists —
   identical reruns are noise, not evidence. A retest is legitimate only on a
