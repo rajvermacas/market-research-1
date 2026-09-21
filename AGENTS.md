@@ -368,3 +368,11 @@ mistake recurs.
   queue empties early, the next action is a new design round (or a new designer) —
   never the report. Estimated elapsed time drifts and will read hours ahead of the
   real clock; only the shell's date is authoritative.
+- A train gain from a book-composition mechanism must be traced to its firing
+  events before it is promoted. Loop-16's incumbency hurdle kept a +0.60pp train
+  "improvement" (DD and forward identical) that turned out to be a single swap
+  in one month out of 139 — one name-month. Count the months in which the
+  candidate's picks actually differ from the base's; a gain sourced from a
+  handful of name-months is a sample of a handful, not an edge. The harness's
+  own keep rule cannot see this: it scores returns, not the mechanism's
+  footprint.

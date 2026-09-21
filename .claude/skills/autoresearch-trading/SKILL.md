@@ -208,14 +208,27 @@ same signal is NOT a new mechanism and will be rejected at the novelty gate.
   (`cap_full` inert for values >= top); close-location tilt; drought-shape
   tilts; freshness/drought/CLV re-based onto the capped champion; the
   gate-failure share `gf_w`; top-13 DD repair via hold/cap levers.
+- **DEAD (Loop-16, bit-exact off-switch identities, every active direction
+  train-destructive):** the per-name daily-tape axis on the ids champion —
+  continuous range compression re-based onto the ids chain (69.5–75.8 train),
+  same-calendar-month seasonality (66.4–86.5), intramonth path shape /
+  front-vs-back-loaded month (62.8–76.3), daily-return skewness (74.4–78.0),
+  cross-sectional outrank percentile of own trailing return (84.8–94.4). The
+  ids term has saturated this channel: more tape re-ranking double-counts it.
+  Also DEAD: the incumbency-protection family is now complete — retention
+  bonus (L13), replacement budget (L15), boundary-conditional hurdle (L16,
+  knife-edge: `hur_m` 0.005 flat / 0.0075–0.010 +0.4–0.6pp / 0.015+ below
+  base, gain traced to a single 2017-07 swap).
 - **PARTIAL:** negative persistence premium (live on the rankpersist line,
   dead on the conc chain); `cap_weak`/`max_hold`/`b_hi`/`regime_ma` are
   sharp peaks — their local neighbourhood is closed to tuning, but changing
   their *mechanism* is not.
-- **OPEN AXES (start here — expressible under the current harness):** a
-  replacement hurdle for incumbents (PARTIAL — adjacent to the dead retention
-  line; the novelty statement must justify what changed). Anything else must
-  come from a NEW signal, not a re-shape of the tried ones — see CLOSED below.
+- **OPEN AXES (start here — expressible under the current harness):** none
+  open at the ids champion base — Loop-16 tested the last one (the replacement
+  hurdle for incumbents) and it is now DEAD: +0.6pp train only at `hur_m 0.01`
+  (no fire at 0.005, collapse at 0.015+), one 2017-07 swap, zero h2/forward/DD
+  effect. A new loop must bring a NEW signal or a changed base — not a re-shape
+  of the tried ones (see DEAD/CLOSED).
 - **CLOSED (Loop-14, off-switch identities bit-exact):** breadth
   *change*/derivative regime (one-sided harm; grows with the shift);
   volatility-scaled rank, positive side (harmful at `v_w 0.25`, DD worsens);
@@ -284,7 +297,14 @@ re-run instead of accepting a stale verdict. Do not submit knife-edge
 candidates: a train gain that collapses within ±1% of a discretisation
 parameter (Loop-12: `clv_scale` 0.66 / 0.67 / 0.675 → 83.85 / 85.43 / 84.37)
 is a rank-ordering artifact, not a new best — record it in the worker's
-ledger and the report, and leave the main ledger alone. `results_validate.tsv` /
+ledger and the report, and leave the main ledger alone. For a book-composition
+mechanism (one that changes the held book, not the score scale), also COUNT THE
+FIRING EVENTS
+before promoting: diff the candidate's picks against the base's month by month
+and count the months that actually differ. Loop-16's hurdle keep (+0.60pp
+train, DD and fwd identical) traced to a single 2017-07 swap — one name-month
+out of 139. A gain sourced from a handful of name-months is a sample of a
+handful, not an edge. `results_validate.tsv` /
 `best_validate.json` holds the un-fitted-universe verdict and follows the
 same single-writer rule.
 
@@ -496,6 +516,22 @@ to wait for them.
    smoothing/skip/blending, sector (80%-null industry), volume gates, vol
    targeting, index-DD veto, book-health floors, path exits, retention bonus,
    top-13 DD repair.
+   State at Loop-16 close (2026-09-21): champion UNCHANGED — nothing promoted.
+   Six families screened on the champion base, every active direction
+   train-destructive with bit-exact off-switch identities: range compression
+   re-based onto the ids chain (69.5–75.8), seasonal momentum (66.4–86.5),
+   intramonth path shape (62.8–76.3), daily skewness (74.4–78.0),
+   cross-sectional outrank (84.8–94.4), incumbency hurdle (96.1–97.5; the single
+   KEEP at `hur_m 0.01 / hur_n 2` reads +97.48/-17.03/calmar 5.72, h1 +99.5,
+   h2 +95.5, fwd identical — NOT promoted: narrow `hur_m` window, one 2017-07
+   swap (ADANIENSOL over STARPAPER), no h2/fwd/DD effect). Conclusions: the
+   per-name daily-tape axis is saturated by the ids term; the incumbency family
+   (bonus/budget/hurdle) is fully dead; the next loop needs a NEW channel, not
+   another tape re-ranking. Operational: the session/VM can be suspended
+   mid-loop (L16: a 20-min watcher returned after ~90 min of wall time, all
+   processes and the clock frozen together) — re-read `TZ=Asia/Kolkata date`
+   whenever a watcher fires and re-plan the remaining budget from the real
+   clock, never from an elapsed-time estimate.
 5. Ask the user for the designer and worker models (Step 0 of the playbook),
    then open the round. At close: commit with setup + verdict, `git add -f` the
    tracked ledgers if `.cache` is ignored, and push the workstream branch — the
