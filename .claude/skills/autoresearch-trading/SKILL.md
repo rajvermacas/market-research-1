@@ -692,6 +692,24 @@ to wait for them.
    statements caught one base-composition error (crowd composed the pre-ids
    chain, 87.00 = champion-minus-ids) and one honest novelty re-framing
    (flowdir = a changed-base retest of the legacy accum gate, declared).
+   State at Loop-19 close (2026-09-21): NEW CHAMPION —
+   `strat_l19a_balanced` (la_w 0.5 / or_w -0.1 on the ids champion chain),
+   promoted on the main CAGR ratchet: train +98.68% / DD -15.51% / calmar
+   6.36 (h1 +95.3 / h2 +102.0), fwd +53.15% / -10.40%, full decade
+   +79.24% / -20.73% (calmar 3.82 vs the L15 line's 2.82), worst complete
+   year -14.9%, yearly stdev 159 (2021 +461%). The file composes two Loop-17
+   tilts — listing age (la_w, favours old listings) x cross-sectional
+   outrank (or_w -0.1, favours panel laggards) — with bit-exact faithfulness
+   checks against both sources (la_w 0.4 -> 92.38/-15.51; or_w -0.15 ->
+   94.16/-16.53) and an exact off-switch identity. Balanced-sprint findings:
+   the smoothest single lines are calreg cr_w 0.70 (calmar 6.21, worst year
+   -14.0, stdev 131, but 6pp less train CAGR) and listage la_w 0.5 (6.18,
+   worst year -14.9); exposure smoothing via partial tiers and bigger books
+   are both worse; the `--year-floor` guard killed the highest-calmar
+   composition cell (la_w 0.4/or_w -0.15, 6.43) for a -15.4% worst year.
+   Nifty 500 transfer: +38.98/-23.87 train, fwd +21.68/-31.37 — no
+   index-universe transfer, same as the prior champion; the edge lives in
+   small/non-index names.
 5. Ask the user for the designer and worker models (Step 0 of the playbook),
    then open the round. At close: commit with setup + verdict, `git add -f` the
    tracked ledgers if `.cache` is ignored, and push the workstream branch — the
