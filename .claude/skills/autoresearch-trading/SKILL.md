@@ -455,7 +455,11 @@ to wait for them.
    +52.91), forward-lean gw 0.00/ids -0.25 (89.33/-18.55/4.81, fwd
    +62.17/-13.92). Cost slopes: 50bps 94.58/5.52 (fwd +47.16), 100bps
    90.04/5.00 (fwd +43.58). Diagnostics: inside-day coverage ~100%, turnover
-   unchanged vs base (5.0 replacements/month). NOTE the file's docstring
+   unchanged vs base (5.0 replacements/month). Independent audit (L15):
+   reproducible to the printed precision, PIT-clean, independent inside-day
+   recomputation exact; the +9.9pp train lift is entirely the ids term (gw 0.15
+   alone = 87.00/-17.34) and is train-side only (fwd 48.97 vs 49.29 untilted);
+   ids_lb 3 is load-bearing (lb 6 -> 86.44/-21.80). NOTE the file's docstring
    hypothesis is inverted vs its code — the tested/winning direction rewards
    FEWER inside days (expanding tape), not the coil story. Caveats: the train-DD
    edge over the L13 chain flips at other splits (2020/2021 starts: +10.5-10.7pp
