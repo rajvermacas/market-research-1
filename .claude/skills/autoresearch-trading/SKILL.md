@@ -460,8 +460,10 @@ to wait for them.
    (dead at both bases), up-streak (dead), replacement budget/fill (dominated),
    rank-band pick buffer, weak-month cap grandfather (risk-efficient only:
    85.5-86.1 train at -16.05 DD, calmar 5.33-5.37 — documented, not
-   ratchet-eligible), positive inside-day direction, pers re-based onto the
-   wobble chain. Dead lines (carried from L14): ramps, hysteresis, positive
+   ratchet-eligible), dualshield and ids×grandfather stacks (sub-additive: one
+   book-composition channel, not two — ids(-0.15)+grand(4) reads 86.34/-19.26/
+   4.48, worse than either single), positive inside-day direction, pers re-based
+   onto the wobble chain. Dead lines (carried from L14): ramps, hysteresis, positive
    persistence, freshness/drought/CLV re-based onto the capped champion, rank
    smoothing/skip/blending, sector (80%-null industry), volume gates, vol
    targeting, index-DD veto, book-health floors, path exits, retention bonus,
