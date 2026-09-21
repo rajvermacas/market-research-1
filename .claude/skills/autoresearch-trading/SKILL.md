@@ -470,7 +470,9 @@ to wait for them.
    ratchet-eligible), dualshield and ids×grandfather stacks (sub-additive: one
    book-composition channel, not two — ids(-0.15)+grand(4) reads 86.34/-19.26/
    4.48, worse than either single), positive inside-day direction, pers re-based
-   onto the wobble chain. Dead lines (carried from L14): ramps, hysteresis, positive
+   onto the wobble chain, serial-dependence (sign-persistence) tilt (dead on
+   train; its choppy arm is the best forward print on the champion base, fwd
+   +69.55/-16.13 at train +72.65/-24.49). Dead lines (carried from L14): ramps, hysteresis, positive
    persistence, freshness/drought/CLV re-based onto the capped champion, rank
    smoothing/skip/blending, sector (80%-null industry), volume gates, vol
    targeting, index-DD veto, book-health floors, path exits, retention bonus,
