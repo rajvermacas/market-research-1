@@ -383,7 +383,11 @@ rule, ledger paths, stop time, report format. Hard-won rules:
   nse_all`, `--cost-bps 25`, the full params JSON, and the isolated ledger paths.
   A wrong universe silently produces rows incomparable to the champion —
   Loop-13: a worker's first batch ran nifty500 by its own choice and had to be
-  rerun before any number meant anything.
+  rerun before any number meant anything. Ledgers are also blind to `--start`:
+  best.json stores candidate+params+top+metrics but no window, so a
+  `--start 2017` row can overwrite a full-window best in an isolated ledger
+  (Loop-15 worker B) — run window variants on a throwaway ledger or check the
+  `months` field before trusting a worker-ledger best.
 - Imported defaults leak into re-based files: when a mechanism file composes a
   term from an existing file, the source file's internal defaults activate
   unless overridden (Loop-13: gatefail's `gf_w=0.05`, printclose's
