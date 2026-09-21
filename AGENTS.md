@@ -71,6 +71,10 @@ scripts/                                  the playground
     rsi_stop_lab.py                       do the filters stack, and is the stop the real problem
     rsi_combo_search.py                   every subset of the optional filters, scored
     rsi_slots_sweep.py                    slot count vs return, drawdown and capital deployed
+
+research/                                 persistent research records (committed)
+  tested_mechanisms.tsv                   every mechanism ever tested, with verdicts
+  README.md                               how the registry is maintained and read
 ```
 
 ## Conventions

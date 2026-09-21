@@ -198,11 +198,24 @@ one mechanism per worker handoff, one shared wall-clock stop.**
 
 ### Mechanism inventory (the anti-repeat ledger)
 
-Designers MUST read this before writing a file, and every deliverable must
-name its closest prior art here plus the one thing that changed. A family
-marked DEAD may only be retested when the base it was falsified on has
-changed (say which base and why) — a new filename, shape, or weight on the
-same signal is NOT a new mechanism and will be rejected at the novelty gate.
+**Exhaustive tested-mechanism registry (committed): `research/tested_mechanisms.tsv`.**
+One row per `scripts/strat_*.py` file ever written — era, family, status
+(PROMOTED / LIVE / KEEP-not-promoted / PARTIAL / DEAD / SUPERSEDED /
+SCREENING), key numbers and the verdict note. It is the anti-repeat source of
+truth across sessions and days; the curated families below are its summary.
+Designers MUST grep it before writing a file (by family, by signal name, and
+by the prior art they intend to cite) and MUST cite the closest registry rows
+in the file's novelty statement. A `DEAD` family may only be retested when the
+base changed — say which base and why. The per-loop manifest in `.cache/` is
+scratch; the registry is permanent, and the orchestrator appends/updates its
+rows at every close-out.
+
+Designers MUST also read this inventory before writing a file, and every
+deliverable must name its closest prior art here plus the one thing that
+changed. A family marked DEAD may only be retested when the base it was
+falsified on has changed (say which base and why) — a new filename, shape,
+or weight on the same signal is NOT a new mechanism and will be rejected at
+the novelty gate.
 
 - **LIVE:** floor-lift fresh-print rank + tier-shape exposure + breadth tiers
   (the base chain); regime-conditional weak-month cap (`cap_weak`/`cap_full`);
@@ -538,8 +551,11 @@ to wait for them.
    wrong characterization would have shipped.
 4. **Write the outcome down.** A row in the README's results ledger (setup,
    window, universe, costs, CAGR + DD + calmar for train and forward against
-   the bench, verdict); the mechanism file(s); any new measurement rule into
-   AGENTS.md LESSONS; any new closure into the mechanism inventory above.
+   the bench, verdict); the mechanism file(s); **append every new mechanism
+   to `research/tested_mechanisms.tsv` and update the statuses/numbers of the
+   loop's screens there** (the persistent anti-repeat record); any new
+   measurement rule into AGENTS.md LESSONS; any new closure into the
+   mechanism inventory above.
 5. **Update this skill's bootstrap state.** Append/replace a "State at
    Loop-N close" paragraph (champion + params + metrics, closures, artifact
    verdicts, operational notes). This is the loop's handoff artifact — the
@@ -557,7 +573,9 @@ to wait for them.
 3. Read the tracked ledgers: `.cache/strategy_lab/best.json` (main, nse_all),
    `best_validate.json` (nifty500), `.cache/auto_research/best*.json`, plus the
    tails of the results files for the frontier and the dead lines. `best.json`
-   alone is enough to resume.
+   alone is enough to resume. Also read the committed anti-repeat registry
+   `research/tested_mechanisms.tsv` (every mechanism ever tested, with
+   verdicts) — it is what stops a fresh session re-designing dead signals.
 4. State at Loop-15 close (re-verify, do not trust): champion
    `strat_l15b_insideday` (gw_w 0.15 / ids_lb 3 / ids_w -0.13), top 15 — the
    `strat_l13a_concwobble` chain (floor-lift fresh-print rank + gates +

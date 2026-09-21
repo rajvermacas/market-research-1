@@ -1,0 +1,129 @@
+file	era	family	status	key_numbers	note
+strat_accel.py	legacy	acceleration/velocity	DEAD	-	
+strat_breakrec.py	legacy	recency/base duration	DEAD	-	breakout recency, base duration, trend consistency
+strat_combo.py	legacy	pre-loop strategy families	SUPERSEDED	-	older momentum/RSI-pullback lines; see README results ledger
+strat_concsectorneutral.py	legacy	sector/industry	DEAD	-	80%-null industry silently degraded these (skill inventory)
+strat_concvolgate.py	legacy	vol targeting/scaling	DEAD	-	exposure or rank scaled by volatility (skill inventory)
+strat_concvoltarget.py	legacy	vol targeting/scaling	DEAD	-	exposure or rank scaled by volatility (skill inventory)
+strat_flooraccel.py	legacy	acceleration/velocity	DEAD	-	
+strat_floorbreadth.py	legacy	live-chain ancestors	SUPERSEDED	-	ancestors/imports of the live champion chain (floor-lift, gates, tiers, tier-shape)
+strat_floorbreak.py	legacy	recency/base duration	DEAD	-	breakout recency, base duration, trend consistency
+strat_floorhigh.py	legacy	live-chain ancestors	SUPERSEDED	-	ancestors/imports of the live champion chain (floor-lift, gates, tiers, tier-shape)
+strat_floorhighabsveto.py	legacy	index veto	DEAD	-	index-drawdown / absolute-momentum veto
+strat_floorhighaccum.py	legacy	liquidity/volume/sponsorship	DEAD	-	volume/liquidity gates and participation variants (skill inventory)
+strat_floorhighblend.py	legacy	rank transforms	DEAD	-	skip/smooth/borda/blend/tail-trim/entrant-priority (skill inventory)
+strat_floorhighborda.py	legacy	rank transforms	DEAD	-	skip/smooth/borda/blend/tail-trim/entrant-priority (skill inventory)
+strat_floorhighbreadthlin.py	legacy	breadth regime variants	DEAD	-	ramps/hysteresis/regime switches (skill inventory)
+strat_floorhighcomp.py	legacy	rank transforms	DEAD	-	skip/smooth/borda/blend/tail-trim/entrant-priority (skill inventory)
+strat_floorhighdiverse.py	legacy	sector/industry	DEAD	-	80%-null industry silently degraded these (skill inventory)
+strat_floorhighentrant.py	legacy	rank transforms	DEAD	-	skip/smooth/borda/blend/tail-trim/entrant-priority (skill inventory)
+strat_floorhighfastgate.py	legacy	live-chain ancestors	SUPERSEDED	-	ancestors/imports of the live champion chain (floor-lift, gates, tiers, tier-shape)
+strat_floorhighfirstprint.py	legacy	print-quality/coil gates	DEAD	-	print strength/count, coil and compression gates
+strat_floorhighfresh.py	legacy	live-chain ancestors	SUPERSEDED	-	ancestors/imports of the live champion chain (floor-lift, gates, tiers, tier-shape)
+strat_floorhighfreshpart.py	legacy	liquidity/volume/sponsorship	DEAD	-	volume/liquidity gates and participation variants (skill inventory)
+strat_floorhighheatgate.py	legacy	print-quality/coil gates	DEAD	-	print strength/count, coil and compression gates
+strat_floorhighhotprint.py	legacy	print-quality/coil gates	DEAD	-	print strength/count, coil and compression gates
+strat_floorhighhyst.py	legacy	breadth regime variants	DEAD	-	ramps/hysteresis/regime switches (skill inventory)
+strat_floorhighidxdd.py	legacy	index veto	DEAD	-	index-drawdown / absolute-momentum veto
+strat_floorhighliftmom.py	legacy	acceleration/velocity	DEAD	-	
+strat_floorhighliq.py	legacy	liquidity/volume/sponsorship	DEAD	-	volume/liquidity gates and participation variants (skill inventory)
+strat_floorhighliqw.py	legacy	liquidity/volume/sponsorship	DEAD	-	volume/liquidity gates and participation variants (skill inventory)
+strat_floorhighnotail.py	legacy	rank transforms	DEAD	-	skip/smooth/borda/blend/tail-trim/entrant-priority (skill inventory)
+strat_floorhighpart.py	legacy	liquidity/volume/sponsorship	DEAD	-	volume/liquidity gates and participation variants (skill inventory)
+strat_floorhighpartmult.py	legacy	liquidity/volume/sponsorship	DEAD	-	volume/liquidity gates and participation variants (skill inventory)
+strat_floorhighpartrank.py	legacy	liquidity/volume/sponsorship	DEAD	-	volume/liquidity gates and participation variants (skill inventory)
+strat_floorhighprintcount.py	legacy	print-quality/coil gates	DEAD	-	print strength/count, coil and compression gates
+strat_floorhighrankpersist.py	legacy	persistence premium	PARTIAL	-	live on the rankpersist line, dead on the conc chain
+strat_floorhighregimeswitch.py	legacy	breadth regime variants	DEAD	-	ramps/hysteresis/regime switches (skill inventory)
+strat_floorhighsector.py	legacy	sector/industry	DEAD	-	80%-null industry silently degraded these (skill inventory)
+strat_floorhighskip.py	legacy	rank transforms	DEAD	-	skip/smooth/borda/blend/tail-trim/entrant-priority (skill inventory)
+strat_floorhighskiptier.py	legacy	rank transforms	DEAD	-	skip/smooth/borda/blend/tail-trim/entrant-priority (skill inventory)
+strat_floorhighsmooth.py	legacy	rank transforms	DEAD	-	skip/smooth/borda/blend/tail-trim/entrant-priority (skill inventory)
+strat_floorhighspons.py	legacy	liquidity/volume/sponsorship	DEAD	-	volume/liquidity gates and participation variants (skill inventory)
+strat_floorhighsq.py	legacy	print-quality/coil gates	DEAD	-	print strength/count, coil and compression gates
+strat_floorhighsteadyprint.py	legacy	print-quality/coil gates	DEAD	-	print strength/count, coil and compression gates
+strat_floorhighsustain2.py	legacy	live-chain ancestors	SUPERSEDED	-	ancestors/imports of the live champion chain (floor-lift, gates, tiers, tier-shape)
+strat_floorhighsustaincond.py	legacy	live-chain ancestors	SUPERSEDED	-	ancestors/imports of the live champion chain (floor-lift, gates, tiers, tier-shape)
+strat_floorhighsustaincondplain.py	legacy	live-chain ancestors	SUPERSEDED	-	ancestors/imports of the live champion chain (floor-lift, gates, tiers, tier-shape)
+strat_floorhighsustainplain.py	legacy	live-chain ancestors	SUPERSEDED	-	ancestors/imports of the live champion chain (floor-lift, gates, tiers, tier-shape)
+strat_floorhighsustainprint.py	legacy	live-chain ancestors	SUPERSEDED	-	ancestors/imports of the live champion chain (floor-lift, gates, tiers, tier-shape)
+strat_floorhightier.py	legacy	live-chain ancestors	SUPERSEDED	-	ancestors/imports of the live champion chain (floor-lift, gates, tiers, tier-shape)
+strat_floorhightiercontra.py	legacy	breadth regime variants	DEAD	-	ramps/hysteresis/regime switches (skill inventory)
+strat_floorhightierdual.py	legacy	breadth regime variants	DEAD	-	ramps/hysteresis/regime switches (skill inventory)
+strat_floorhightierhold.py	legacy	hold clock variants	DEAD	-	holding-duration caps
+strat_floorhightiermom.py	legacy	breadth regime variants	DEAD	-	ramps/hysteresis/regime switches (skill inventory)
+strat_floorhightieror.py	legacy	breadth regime variants	DEAD	-	ramps/hysteresis/regime switches (skill inventory)
+strat_floorhightiershape.py	legacy	live-chain ancestors	SUPERSEDED	-	ancestors/imports of the live champion chain (floor-lift, gates, tiers, tier-shape)
+strat_floorhightiershapeconc.py	legacy	live-chain ancestors	SUPERSEDED	-	ancestors/imports of the live champion chain (floor-lift, gates, tiers, tier-shape)
+strat_floorhightiershapegate.py	legacy	live-chain ancestors	SUPERSEDED	-	ancestors/imports of the live champion chain (floor-lift, gates, tiers, tier-shape)
+strat_floorhightiersoft.py	legacy	breadth regime variants	DEAD	-	ramps/hysteresis/regime switches (skill inventory)
+strat_floorhightiervol.py	legacy	vol targeting/scaling	DEAD	-	exposure or rank scaled by volatility (skill inventory)
+strat_floorhighvolconf.py	legacy	liquidity/volume/sponsorship	DEAD	-	volume/liquidity gates and participation variants (skill inventory)
+strat_floorhighvoltarget.py	legacy	vol targeting/scaling	DEAD	-	exposure or rank scaled by volatility (skill inventory)
+strat_floorlift.py	legacy	live-chain ancestors	SUPERSEDED	-	ancestors/imports of the live champion chain (floor-lift, gates, tiers, tier-shape)
+strat_floorliq.py	legacy	liquidity/volume/sponsorship	DEAD	-	volume/liquidity gates and participation variants (skill inventory)
+strat_floorsqueeze.py	legacy	print-quality/coil gates	DEAD	-	print strength/count, coil and compression gates
+strat_floortrendq.py	legacy	recency/base duration	DEAD	-	breakout recency, base duration, trend consistency
+strat_highbase.py	legacy	recency/base duration	DEAD	-	breakout recency, base duration, trend consistency
+strat_highliq.py	legacy	liquidity/volume/sponsorship	DEAD	-	volume/liquidity gates and participation variants (skill inventory)
+strat_highsqueeze.py	legacy	print-quality/coil gates	DEAD	-	print strength/count, coil and compression gates
+strat_liqtrend.py	legacy	liquidity/volume/sponsorship	DEAD	-	volume/liquidity gates and participation variants (skill inventory)
+strat_momentum.py	legacy	pre-loop strategy families	SUPERSEDED	-	older momentum/RSI-pullback lines; see README results ledger
+strat_newhigh.py	legacy	live-chain ancestors	SUPERSEDED	-	ancestors/imports of the live champion chain (floor-lift, gates, tiers, tier-shape)
+strat_newhigh_tier.py	legacy	live-chain ancestors	SUPERSEDED	-	ancestors/imports of the live champion chain (floor-lift, gates, tiers, tier-shape)
+strat_pullback_trend.py	legacy	pre-loop strategy families	SUPERSEDED	-	older momentum/RSI-pullback lines; see README results ledger
+strat_rsi_pullback.py	legacy	pre-loop strategy families	SUPERSEDED	-	older momentum/RSI-pullback lines; see README results ledger
+strat_softcombo.py	legacy	pre-loop strategy families	SUPERSEDED	-	older momentum/RSI-pullback lines; see README results ledger
+strat_softnewhigh.py	legacy	pre-loop strategy families	SUPERSEDED	-	older momentum/RSI-pullback lines; see README results ledger
+strat_volfloor.py	legacy	vol targeting/scaling	DEAD	-	exposure or rank scaled by volatility (skill inventory)
+strat_volmom.py	legacy	vol targeting/scaling	DEAD	-	exposure or rank scaled by volatility (skill inventory)
+strat_volnewhigh.py	legacy	vol targeting/scaling	DEAD	-	exposure or rank scaled by volatility (skill inventory)
+strat_volsqueeze.py	legacy	print-quality/coil gates	DEAD	-	print strength/count, coil and compression gates
+strat_w50k30b.py	legacy	pre-loop strategy families	SUPERSEDED	-	older momentum/RSI-pullback lines; see README results ledger
+strat_l12a_bookhealth.py	l12	book-health floors	DEAD	-	exposure conditioned on book health
+strat_l12a_incbonus.py	l12	retention bonus / grandfather	DEAD	-	incumbency retention bonus + grandfathered exits; family closed L16 (bonus/budget/hurdle)
+strat_l12a_pathhold.py	l12	path exits / hold clocks	DEAD	-	path-conditional hold clock
+strat_l12b2_bandfresh.py	l12	band-conditional freshness	DEAD	-	
+strat_l12b2_symcap.py	l12	symmetric count caps	DEAD	-	cap_full inert for values >= top
+strat_l12b_droughtshape.py	l12	drought shape	DEAD	-	
+strat_l12b_gatefail.py	l12	gate-failure share	DEAD (base import)	-	gf_w mechanism DEAD; file is the live chain's import base (floor-lift + gates + wobble + tiers)
+strat_l12b_printclose.py	l12	close location	DEAD	-	
+strat_l13a_concclv.py	l13	close location	DEAD	-	CLV re-based on the champion chain
+strat_l13a_concwobble.py	l13	eligibility wobble	LIVE (champion chain)	gw_w 0.15 in champion	the wobble term of the live champion
+strat_l13b_concdrought.py	l13	drought shape	DEAD	-	
+strat_l13b_concpers.py	l13	persistence premium	DEAD	-	persistence on the conc chain; PARTIAL on rankpersist line
+strat_l14a_breadthdelta.py	l14	breadth change/derivative	DEAD	-	one-sided harm, grows with the shift
+strat_l14a_volrank.py	l14	vol-scaled rank	DEAD	-	harmful at v_w 0.25, DD worsens
+strat_l14b_relstrength.py	l14	market-relative strength (rs)	PARTIAL	train 68.9 w/ geometry	forward-positive/train-negative; best forward line with the geometry (fwd +63.2/-14.4); never promoted
+strat_l14b_woblerecency.py	l14	recency-weighted wobble	DEAD	-	every blend trails ~1pp
+strat_l15a_capgrand.py	l15	weak-month cap grandfather	KEEP-not-promoted	train 85.5-86.1 / DD -16.05	risk-efficient only; not ratchet-eligible
+strat_l15a_dualshield.py	l15	dual incumbency shield	DEAD	-	sub-additive
+strat_l15a_idsgrand.py	l15	ids + cap grandfather	DEAD	86.34 / -19.26 / 4.48	sub-additive with the ids term
+strat_l15a_pickband.py	l15	rank-space replacement band	DEAD	-	
+strat_l15a_repbudget.py	l15	monthly replacement budget	DEAD	-	dominated
+strat_l15b_fwdstack.py	l15	rs + ids on forward geometry	KEEP-not-promoted	fwd +68.03 / -15.97	forward line; train cannot pass the ratchet
+strat_l15b_insideday.py	l15	inside-day pause share	PROMOTED (CHAMPION)	train +96.88 / -17.03 / 5.69; fwd +48.97 / -12.31	gw_w 0.15 / ids_lb 3 / ids_w -0.13 on the concwobble chain; ids_lb 3 load-bearing
+strat_l15b_overnight.py	l15	overnight-vs-intraday	DEAD	-	dead at both bases
+strat_l15b_rngcomp.py	l15	range compression (level)	DEAD on ids base / fwd crown on geometry	ids base 69.5-75.8; geometry fwd +63.71 / -11.61	continuous self-normalised range ratio; train-negative
+strat_l15b_serpers.py	l15	serial dependence (sign persistence)	DEAD on train / best forward arm	train +72.65 / -24.49; fwd +69.55 / -16.13	choppy arm is the best forward print on the champion base
+strat_l15b_upstreak.py	l15	up-streak into the print	DEAD	-	
+strat_l15o_concwobblepers.py	l15	persistence re-based on champion	DEAD	-	
+strat_l16a_dskew.py	l16	daily skewness	DEAD	74.4-78.0	both tilt signs harmful; off-switch bit-exact
+strat_l16a_idsrng.py	l16	range compression re-based on ids	DEAD	69.5-75.8	rngcomp does not stack with ids; ids saturates the tape axis
+strat_l16a_monpath.py	l16	intramonth path shape	DEAD	62.8-76.3	front/back-loaded month; both signs harmful
+strat_l16a_seasmom.py	l16	seasonal momentum	DEAD	66.4-86.5	same-calendar-month returns; both signs harmful
+strat_l16b_hurdle.py	l16	replacement hurdle	KEEP-not-promoted	97.48 / -17.03 / 5.72 at hur_m 0.01 only	knife-edge: no fire 0.005, collapse 0.015+; one 2017-07 firing -> 3 H1 months; zero fwd/DD effect
+strat_l16b_outrank.py	l16	cross-sectional outrank	DEAD	84.8-94.4	percentile of own trailing return; monotone in rs ordering
+strat_l16c_volpart.py	l16	volume participation	DEAD	58.0-81.5	self-relative participation expansion; all signs/windows harmful
+strat_l17a_rev36.py	l17	long-horizon reversal	PENDING SCREEN	-	24-36m reversal vs rs 6-12m
+strat_l17a_timesince.py	l17	time-under-water	SCREENING	first cell 74.6	daily-path integral below peak vs dead drought/freshness
+strat_l17b_beta.py	l17	rolling beta	DEAD	62.9-66.9	corr * rel-vol ratio
+strat_l17b_corrtrend.py	l17	correlation trend	PENDING SCREEN	-	corr trend vs crowd level
+strat_l17b_crowd.py	l17	panel comovement (correlation)	DEAD	79.6-82.9	corr of return path vs rs level/outrank/sector
+strat_l17b_idvol.py	l17	idiosyncratic vol share	DEAD	69.0-84.5	1-R^2 vs panel
+strat_l17b_updown.py	l17	down/up comovement asymmetry	PENDING SCREEN	-	asymmetric beta vs symmetric beta
+strat_l17b_volmom.py	l17	relative vol momentum	DEAD	58.1-68.8	change in relative vol vs vol level
+strat_l17c_idxflag.py	l17	index membership	PENDING SCREEN	-	static index flag; survivorship caveat
+strat_l17c_listage.py	l17	listing age	DEAD	92.4 at +0.4 (best); age gates 57-64	la_w +0.4: DD -15.51/calmar 5.96/fwd +53.5/-10.1 - risk-adjusted but not ratchet-eligible; young-listing gates harmful
+strat_l17c_pxlevel.py	l17	price-level band	PENDING SCREEN	-	low- vs high-priced names; crude retail/tick-size proxy
+strat_l17o_consist.py	l17	monthly hit rate	DEAD	68.6-84.7	hit rate vs rs level / serpers sign-AC; cs_w -0.15 least-bad at 84.7; off-switch dominates
