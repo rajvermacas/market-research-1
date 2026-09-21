@@ -213,8 +213,11 @@ same signal is NOT a new mechanism and will be rejected at the novelty gate.
   continuous range compression re-based onto the ids chain (69.5–75.8 train),
   same-calendar-month seasonality (66.4–86.5), intramonth path shape /
   front-vs-back-loaded month (62.8–76.3), daily-return skewness (74.4–78.0),
-  cross-sectional outrank percentile of own trailing return (84.8–94.4). The
-  ids term has saturated this channel: more tape re-ranking double-counts it.
+  cross-sectional outrank percentile of own trailing return (84.8–94.4),
+  volume-participation expansion/contraction vs the name's own baseline
+  (58.0–81.5; binary volume gates were already dead — the continuous tilt is
+  too). The ids term has saturated this channel: more tape re-ranking
+  double-counts it.
   Also DEAD: the incumbency-protection family is now complete — retention
   bonus (L13), replacement budget (L15), boundary-conditional hurdle (L16,
   knife-edge: `hur_m` 0.005 flat / 0.0075–0.010 +0.4–0.6pp / 0.015+ below
@@ -517,11 +520,12 @@ to wait for them.
    targeting, index-DD veto, book-health floors, path exits, retention bonus,
    top-13 DD repair.
    State at Loop-16 close (2026-09-21): champion UNCHANGED — nothing promoted.
-   Six families screened on the champion base, every active direction
+   Seven families screened on the champion base, every active direction
    train-destructive with bit-exact off-switch identities: range compression
    re-based onto the ids chain (69.5–75.8), seasonal momentum (66.4–86.5),
    intramonth path shape (62.8–76.3), daily skewness (74.4–78.0),
-   cross-sectional outrank (84.8–94.4), incumbency hurdle (96.1–97.5; the single
+   cross-sectional outrank (84.8–94.4), volume participation (58.0–81.5),
+   incumbency hurdle (96.1–97.5; the single
    KEEP at `hur_m 0.01 / hur_n 2` reads +97.48/-17.03/calmar 5.72, h1 +99.5,
    h2 +95.5, fwd identical — NOT promoted: narrow `hur_m` window, one 2017-07
    swap (ADANIENSOL over STARPAPER), no h2/fwd/DD effect). Conclusions: the
