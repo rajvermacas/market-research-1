@@ -221,7 +221,8 @@ same signal is NOT a new mechanism and will be rejected at the novelty gate.
   Also DEAD: the incumbency-protection family is now complete — retention
   bonus (L13), replacement budget (L15), boundary-conditional hurdle (L16,
   knife-edge: `hur_m` 0.005 flat / 0.0075–0.010 +0.4–0.6pp / 0.015+ below
-  base, gain traced to a single 2017-07 swap).
+  base, gain traced to ONE 2017-07 firing — AVANTIFEED reinstated over
+  STARPAPER — that propagates into 3 H1 decision months; forward untouched).
 - **PARTIAL:** negative persistence premium (live on the rankpersist line,
   dead on the conc chain); `cap_weak`/`max_hold`/`b_hi`/`regime_ma` are
   sharp peaks — their local neighbourhood is closed to tuning, but changing
@@ -229,8 +230,8 @@ same signal is NOT a new mechanism and will be rejected at the novelty gate.
 - **OPEN AXES (start here — expressible under the current harness):** none
   open at the ids champion base — Loop-16 tested the last one (the replacement
   hurdle for incumbents) and it is now DEAD: +0.6pp train only at `hur_m 0.01`
-  (no fire at 0.005, collapse at 0.015+), one 2017-07 swap, zero h2/forward/DD
-  effect. A new loop must bring a NEW signal or a changed base — not a re-shape
+  (no fire at 0.005, collapse at 0.015+), one 2017-07 firing propagating into
+  3 H1 decision months, zero forward/DD effect. A new loop must bring a NEW signal or a changed base — not a re-shape
   of the tried ones (see DEAD/CLOSED).
 - **CLOSED (Loop-14, off-switch identities bit-exact):** breadth
   *change*/derivative regime (one-sided harm; grows with the shift);
@@ -305,7 +306,8 @@ mechanism (one that changes the held book, not the score scale), also COUNT THE
 FIRING EVENTS
 before promoting: diff the candidate's picks against the base's month by month
 and count the months that actually differ. Loop-16's hurdle keep (+0.60pp
-train, DD and fwd identical) traced to a single 2017-07 swap — one name-month
+train, DD and fwd identical) traced to ONE firing event (2017-07) that
+propagates through the path-dependent held set into 3 differing decision months
 out of 139. A gain sourced from a handful of name-months is a sample of a
 handful, not an edge. `results_validate.tsv` /
 `best_validate.json` holds the un-fitted-universe verdict and follows the
@@ -528,7 +530,10 @@ to wait for them.
    incumbency hurdle (96.1–97.5; the single
    KEEP at `hur_m 0.01 / hur_n 2` reads +97.48/-17.03/calmar 5.72, h1 +99.5,
    h2 +95.5, fwd identical — NOT promoted: narrow `hur_m` window, one 2017-07
-   swap (ADANIENSOL over STARPAPER), no h2/fwd/DD effect). Conclusions: the
+   firing (AVANTIFEED reinstated over STARPAPER) propagating into 3 H1 decision
+   months, no forward/DD effect; the orchestrator's first diagnostic mis-read it
+   as a single ADANIENSOL swap and the independent audit's harness-validated
+   replay (1e-9) corrected it). Conclusions: the
    per-name daily-tape axis is saturated by the ids term; the incumbency family
    (bonus/budget/hurdle) is fully dead; the next loop needs a NEW channel, not
    another tape re-ranking. Operational: the session/VM can be suspended

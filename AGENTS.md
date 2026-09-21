@@ -370,8 +370,9 @@ mistake recurs.
   real clock; only the shell's date is authoritative.
 - A train gain from a book-composition mechanism must be traced to its firing
   events before it is promoted. Loop-16's incumbency hurdle kept a +0.60pp train
-  "improvement" (DD and forward identical) that turned out to be a single swap
-  in one month out of 139 — one name-month. Count the months in which the
+  "improvement" (DD and forward identical) that turned out to rest on ONE
+  firing event propagating through the path-dependent held set into just 3
+  differing decision months out of 139. Count the months in which the
   candidate's picks actually differ from the base's; a gain sourced from a
   handful of name-months is a sample of a handful, not an edge. The harness's
   own keep rule cannot see this: it scores returns, not the mechanism's
