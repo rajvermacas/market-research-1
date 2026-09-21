@@ -148,7 +148,15 @@ one mechanism per worker handoff, one shared wall-clock stop.**
   writes each worker brief (its mechanism, baseline params, exact literal
   trial list, isolated ledger paths, ONE wall-clock stop, report format),
   keeps the mechanism queue deep enough that nobody grinds or idles, and
-  re-plans dynamically from ledger tails. It monitors via side-channel only
+  re-plans dynamically from ledger tails. **The queue is never the stop
+  signal:** it runs `TZ=Asia/Kolkata date` at every phase transition (start,
+  each design round, before close-out) because estimated elapsed time drifts
+  hours ahead of reality — Loop-15 began close-out 60 minutes into a
+  120-minute brief and reported ~1 h early, the design pipeline having simply
+  drained with nothing refilled. When the queue empties before the stop, the
+  next action is a new design round (re-task the designers with fresh ledger
+  tails, spawn another designer, or write the files yourself) — never
+  close-out. It monitors via side-channel only
   (`ps`, ledger tails, `git status` — never interrupts), verifies claims
   against `best.json`/ledger, promotes winners to the main ledger as the
   single writer, owns commit + push, and reports to the user.
@@ -428,7 +436,12 @@ rule, ledger paths, stop time, report format. Hard-won rules:
 **"Run the loop for N minutes" means:** the orchestrator runs its own clock
 (N = 50 min default; workers get stops well inside it), designs and feeds new
 mechanisms round by round, and closes out — promotion, validation, commit,
-push, report — inside its own budget. If workers are still running at the
+push, report — inside its own budget. Close-out is a FIXED window: the last
+15–20 minutes before the stop, never the reward for finishing the checklist.
+A loop whose queue empties at minute 60 of 120 keeps designing and screening
+for another 45 minutes; if the orchestrator's last fresh trials are ~1 h old
+at the cutoff, the loop ended early (Loop-15: closed out 60 min into a
+120-min brief — see AGENTS.md LESSONS). If workers are still running at the
 orchestrator's cutoff, that is a planning error to avoid next loop (brief
 worker stops early enough to leave 10+ min for close-out); it is not a reason
 to wait for them.
