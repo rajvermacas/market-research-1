@@ -89,6 +89,38 @@ def monthly_lows(daily: pl.DataFrame, months, cols: list[str]) -> np.ndarray:
     return out
 
 
+def _yearly_returns(curve: np.ndarray, labels) -> dict:
+    """Calendar-year returns and month counts from an equity curve. curve[0] is
+    the start value; labels[j-1] is the holding month of the step into curve[j]."""
+    buckets: dict = {}
+    for j in range(1, len(curve)):
+        y = labels[j - 1].year
+        buckets.setdefault(y, []).append(curve[j] / curve[j - 1] - 1.0)
+    return {y: (float(np.prod([1.0 + r for r in rs]) - 1.0), len(rs))
+            for y, rs in buckets.items()}
+
+
+def _consistency(yrs: dict) -> dict:
+    """Consistency of a yearly return series. The metrics (worst year,
+    dispersion, positive years, best-year share of the window's log-return) are
+    computed on COMPLETE calendar years (>= 12 monthly steps) so window-edge
+    partial years cannot fake a bad year; every year is still listed in
+    `years`."""
+    full = {y: v for y, (v, n) in yrs.items() if n >= 12}
+    use = full if full else {y: v for y, (v, n) in yrs.items()}
+    vals = list(use.values())
+    if not vals:
+        return {"year_min": 0.0, "year_max": 0.0, "year_std": 0.0,
+                "year_pos": 0, "year_n": 0, "best_share": 0.0, "years": {}}
+    logs = [float(np.log1p(v)) for v in vals if 1.0 + v > 0]
+    best_share = (max(logs) / sum(logs)) if logs and sum(logs) > 0 else 0.0
+    return {"year_min": float(min(vals)), "year_max": float(max(vals)),
+            "year_std": float(np.std(vals)),
+            "year_pos": int(sum(1 for v in vals if v > 0)), "year_n": len(vals),
+            "best_share": float(best_share),
+            "years": {int(y): float(v) for y, (v, n) in sorted(yrs.items())}}
+
+
 def backtest_scores(scores: np.ndarray, regime: np.ndarray, px: np.ndarray,
                     months, start_i: int, split_i: int | None,
                     cost: float, top: int, cols=None,
@@ -157,6 +189,12 @@ def backtest_scores(scores: np.ndarray, regime: np.ndarray, px: np.ndarray,
 
     curve = np.array(eq)
     flags = np.array(flags)
+    labels = [months[start_i + j] for j in range(1, len(curve))]
+    if split_i is None:
+        cons = _consistency(_yearly_returns(curve, labels))
+    else:
+        k0 = split_i - start_i
+        cons = _consistency(_yearly_returns(curve[:k0 + 1], labels[:k0]))
     # equal-weight bench of names alive at the test start
     alive = ~np.isnan(px[start_i])
     idx = np.nanmean(px[:, alive] / px[start_i, alive], axis=1)
@@ -174,7 +212,7 @@ def backtest_scores(scores: np.ndarray, regime: np.ndarray, px: np.ndarray,
         h1, _ = seg(curve[:mid])
         h2, _ = seg(curve[mid - 1:])
         rdd = abs(full_cagr / full_dd) if full_dd else 0.0
-        return {"cagr": float(full_cagr), "maxdd": float(full_dd), "ret_dd": float(rdd),
+        return {**cons, "cagr": float(full_cagr), "maxdd": float(full_dd), "ret_dd": float(rdd),
                 "h1_cagr": float(h1), "h2_cagr": float(h2),
                 "bench_cagr": float(bench_cagr), "bench_dd": float(bench_dd),
                 "invested": float(flags.mean()) if len(flags) else 0.0,
@@ -193,7 +231,7 @@ def backtest_scores(scores: np.ndarray, regime: np.ndarray, px: np.ndarray,
     h1, _ = seg(train[:mid])
     h2, _ = seg(train[mid - 1:])
     rdd = abs(train_cagr / train_dd) if train_dd else 0.0
-    return {"cagr": float(train_cagr), "maxdd": float(train_dd), "ret_dd": float(rdd),
+    return {**cons, "cagr": float(train_cagr), "maxdd": float(train_dd), "ret_dd": float(rdd),
             "h1_cagr": float(h1), "h2_cagr": float(h2),
             "bench_cagr": float(btrain_cagr), "bench_dd": float(btrain_dd),
             "invested": float(flags[:k].mean()) if k else 0.0, "months": len(train) - 1,
@@ -223,6 +261,12 @@ def main() -> int:
     ap.add_argument("--cagr-guard", type=float, default=0.5,
                     help="calmar mode only: reject if train CAGR trails best by "
                          "more than Xpp (stops cash-like winners)")
+    ap.add_argument("--year-floor", type=float, default=None,
+                    help="consistency guard: reject a keep whose WORST calendar-year "
+                         "train return is below X percent (e.g. 0 = no losing years).")
+    ap.add_argument("--year-std-max", type=float, default=None,
+                    help="consistency guard: reject a keep whose calendar-year train "
+                         "return stdev exceeds X percent.")
     ap.add_argument("--trail-k", type=float, default=None,
                     help="default trailing-stop fraction, overridden per trial by "
                          "params-json trail_k or the candidate's risk dict")
@@ -278,6 +322,9 @@ def main() -> int:
           f"H1 {m['h1_cagr']*100:+.1f}% H2 {m['h2_cagr']*100:+.1f}% inv {m['invested']*100:.0f}% "
           f"| FWD {m['fwd_cagr']*100:+.2f}% DD {m['fwd_dd']*100:.2f}% "
           f"(train bench {m['bench_cagr']*100:+.2f}% | fwd bench {m['fwd_bench_cagr']*100:+.2f}%)")
+    print("YEARS " + " ".join(f"{y}:{v*100:+.0f}%" for y, v in sorted(m["years"].items()))
+          + f" | min {m['year_min']*100:+.1f}% std {m['year_std']*100:.1f}% "
+          + f"pos {m['year_pos']}/{m['year_n']} best-share {m['best_share']*100:.0f}%")
 
     status, note = "baseline", "first entry"
     ruler = "ret_dd" if args.select == "calmar" else "cagr"
@@ -292,7 +339,14 @@ def main() -> int:
             guard_ok = m["cagr"] >= b["cagr"] - args.cagr_guard / 100
         dd_ok = m["maxdd"] >= floor and m["maxdd"] >= b["maxdd"] - args.dd_slack / 100
         robust = m["h1_cagr"] > 0 and m["h2_cagr"] > 0
-        if lead_ok and guard_ok and dd_ok and robust:
+        year_ok, year_why = True, ""
+        if args.year_floor is not None and m["year_min"] < args.year_floor / 100:
+            year_ok, year_why = False, (f"worst year {m['year_min']*100:+.1f}% < "
+                                        f"floor {args.year_floor:g}%")
+        elif args.year_std_max is not None and m["year_std"] > args.year_std_max / 100:
+            year_ok, year_why = False, (f"year std {m['year_std']*100:.1f}% > "
+                                        f"{args.year_std_max:g}%")
+        if lead_ok and guard_ok and dd_ok and robust and year_ok:
             status, note = "keep", f"beats best on {args.select}"
         else:
             if not robust:
@@ -302,6 +356,8 @@ def main() -> int:
                         f"best {b[ruler]*100:.2f}{unit} [{args.select}]")
             elif not guard_ok:
                 note = f"CAGR {m['cagr']*100:.2f}% trails best by >{args.cagr_guard:g}pp"
+            elif not year_ok:
+                note = year_why
             else:
                 note = f"DD {m['maxdd']*100:.1f}% breaches floor/slack"
             status = "discard"
@@ -320,7 +376,8 @@ def main() -> int:
                 f"{args.top}\t{m['cagr']*100:.3f}\t{m['maxdd']*100:.3f}\t{m['ret_dd']:.3f}\t"
                 f"{m['h1_cagr']*100:.3f}\t{m['h2_cagr']*100:.3f}\t{m['fwd_cagr']*100:.3f}\t"
                 f"{m['fwd_dd']*100:.3f}\t{m['fwd_bench_cagr']*100:.3f}\t"
-                f"{note} [risk:{risk_note.strip()} select:{args.select}]\n")
+                f"{note} [risk:{risk_note.strip()} select:{args.select} "
+                f"minyr={m['year_min']*100:.1f} ystd={m['year_std']*100:.1f}]\n")
     print(f"{status.upper()}: {note} | forward {'PASSES' if m['fwd_cagr'] > 0 else 'FAILS'} "
           f"(never drove selection)")
     dd_flag = "" if m['fwd_dd'] >= m['fwd_bench_dd'] else " [WARN fwd DD worse than bench]"

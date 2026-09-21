@@ -126,6 +126,17 @@ third return value `risk={trail_k, max_hold}` (candidate wins on conflict):
 - Gates that cut DD but leave the book <30% invested usually just buy cash-like
   returns — check `invested` before celebrating `ret/DD`.
 - Negative results are findings: keep the file, log the row, say so.
+- **Yearly consistency is first-class.** Every trial prints a `YEARS` line
+  (calendar-year returns of the TRAIN window) plus the worst complete year,
+  yearly stdev, positive years and the best-year share of the window's
+  log-return (a high share = one spike carried the decade). Two guards extend
+  the keep rule: `--year-floor X` rejects a keep whose worst complete year is
+  below X% (e.g. `--year-floor 0` = no losing years) and `--year-std-max X`
+  rejects yearly stdev above X%. Metrics use complete calendar years only, so
+  window-edge partial years cannot fake a bad year. Run consistency-targeted
+  searches on a DEDICATED ledger — the ruler stays `--select cagr` with the
+  guard; the champion's own spiky profile (worst year -16%, yearly stdev 150,
+  best-year share 43%) is the baseline to beat on smoothness.
 
 Run every command from the repo root (the folder containing scripts/ and data/),
 not from the skill directory.
