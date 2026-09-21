@@ -441,23 +441,26 @@ to wait for them.
    tails of the results files for the frontier and the dead lines. `best.json`
    alone is enough to resume.
 4. State at Loop-15 close (re-verify, do not trust): champion
-   `strat_l15b_insideday` (ids_lb 3 / ids_w -0.13), top 15 — the
+   `strat_l15b_insideday` (gw_w 0.15 / ids_lb 3 / ids_w -0.13), top 15 — the
    `strat_l13a_concwobble` chain (floor-lift fresh-print rank + gates +
-   weak-month cap 11/20 + max_hold 3 + gw_w 0.13) carrying the inside-day
-   pause-share tilt applied pre-cap → train +94.58% / DD -18.86% / calmar 5.01,
-   fwd +54.40% / -12.31%, full DD -27.11%. First mechanism to beat the L13 chain
-   on BOTH train CAGR and train DD; promoted twice in one loop (-0.15 then
-   -0.13). Smooth ridge, not a spike (half-step grid at lb 3): -0.10 92.24,
-   -0.12 93.21, -0.13 94.58, -0.15 93.43, -0.17 91.67, -0.18 93.29, -0.20 88.14,
-   -0.25 90.43 — all inside the DD slack except -0.05 (83.10) and lb2 (82.36).
-   Documented siblings: risk-lean -0.15 (93.43/-17.03, calmar 5.49, fwd
-   +52.91/-12.31) and forward-lean -0.25 (90.43/-18.55, fwd +61.78/-12.17).
-   Cost slopes: 50bps 92.29/4.83 (fwd +52.52), 100bps 87.78/4.47 (fwd +48.83)
-   (L13 chain at 100bps: 81.64/4.48). NOTE the file's docstring hypothesis is
-   inverted vs its code — the tested/winning direction rewards FEWER inside days
-   (expanding tape), not the coil story. Full-board survivorship applies; no
-   transfer to index universes (Nifty 500 +35.67/-24.91, fwd DD -28.98 worse
-   than bench). Forward frontier:
+   weak-month cap 11/20 + max_hold 3) carrying the inside-day pause-share tilt
+   applied pre-cap and a retuned wobble → train +96.88% / DD -17.03% /
+   calmar 5.69, fwd +48.97% / -12.31%, full DD -27.11%; beats the L13 chain on
+   CAGR (+8.7pp), DD (0.3pp) and calmar (5.69 vs 5.08). Promoted three times in
+   one loop (-0.15, then -0.13 at gw 0.13, then gw 0.15). Both axes are
+   plateaus, not spikes: ids_w -0.10..-0.18 → 91.7-94.6 at gw 0.13; gw_w
+   0.10..0.20 → 94.3-96.9 at ids -0.13 (0.15/0.16 tie the peak). Documented
+   frontier siblings: balanced gw 0.13/ids -0.13 (94.58/-18.86/5.01, fwd
+   +54.40/-12.31), risk-lean ids -0.15/gw 0.13 (93.43/-17.03/5.49, fwd
+   +52.91), forward-lean gw 0.00/ids -0.25 (89.33/-18.55/4.81, fwd
+   +62.17/-13.92). Cost slopes: 50bps 94.58/5.52 (fwd +47.16), 100bps
+   90.04/5.00 (fwd +43.58). Diagnostics: inside-day coverage ~100%, turnover
+   unchanged vs base (5.0 replacements/month). NOTE the file's docstring
+   hypothesis is inverted vs its code — the tested/winning direction rewards
+   FEWER inside days (expanding tape), not the coil story. Caveats: the train-DD
+   edge over the L13 chain flips at other splits (2020/2021 starts: +10.5-10.7pp
+   train but DD 1.5pp worse) and nothing transfers to index universes (Nifty 500
+   +35.91/-25.09, fwd DD -28.98 worse than bench). Forward frontier:
    geometry+rngcomp (6,-0.4) fwd +63.71/-11.61 (fwd-calmar 5.49) at train +73.97;
    geometry+rs fwd +63.18/-14.44; rs+ids on the geometry adds on returns (fwd
    +68.03/-15.97) but not on fwd-calmar. Loop-15 closures: overnight-vs-intraday
