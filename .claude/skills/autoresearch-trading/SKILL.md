@@ -387,7 +387,9 @@ rule, ledger paths, stop time, report format. Hard-won rules:
   best.json stores candidate+params+top+metrics but no window, so a
   `--start 2017` row can overwrite a full-window best in an isolated ledger
   (Loop-15 worker B) — run window variants on a throwaway ledger or check the
-  `months` field before trusting a worker-ledger best.
+  `months` field before trusting a worker-ledger best. They are blind to
+  `--cost-bps` too: three rows with identical params in one ledger are the
+  25/50/100bps runs, not divergent source states (Loop-15 audit).
 - Imported defaults leak into re-based files: when a mechanism file composes a
   term from an existing file, the source file's internal defaults activate
   unless overridden (Loop-13: gatefail's `gf_w=0.05`, printclose's
