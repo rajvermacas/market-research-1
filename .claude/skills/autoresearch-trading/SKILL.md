@@ -436,20 +436,32 @@ to wait for them.
    `best_validate.json` (nifty500), `.cache/auto_research/best*.json`, plus the
    tails of the results files for the frontier and the dead lines. `best.json`
    alone is enough to resume.
-4. State at Loop-13 close (re-verify, do not trust): champion
-   `strat_l13a_concwobble`, top 15 — the `floorhightiershapeconc` chain
-   (tier_lo/tier_mid 0.9999, cap_weak 11, cap_full 20, max_hold 3) plus
-   `gw_w 0.12 / gf_lb 12` → train +86.62% / DD -17.34% / calmar 5.00, forward
-   +47.69%, full DD -25.79%. The gain is train-side: the un-tilted conc champion
-   (+85.23% / -17.49% / 4.87, fwd +53.76%) is the forward-preserving alternative
-   and stays on the ledger. Out-of-sample: the wobble discards on nifty500
-   (+39.10/-26.23, fwd DD worse than bench). Frontier: calmar crown `rankpersist
-   top 13 / mh2 / pers_lb 4 / pers_w -0.18` (80.88/-15.05/5.37, fwd +54.11),
-   forward crown `pers_lb 5` (fwd +62.47), champion costed at 50bps 83.07/4.56.
-   Dead lines: ramps, hysteresis, positive persistence, freshness/drought/CLV
-   re-based onto the capped champion, rank smoothing/skip/blending, sector
-   (80%-null industry), volume gates, vol targeting, index-DD veto, book-health
-   floors, path exits, retention bonus, top-13 DD repair.
+4. State at Loop-15 close (re-verify, do not trust): champion
+   `strat_l15b_insideday` (ids_lb 3 / ids_w -0.15), top 15 — the
+   `strat_l13a_concwobble` chain (floor-lift fresh-print rank + gates +
+   weak-month cap 11/20 + max_hold 3 + gw_w 0.13) carrying the inside-day
+   pause-share tilt applied pre-cap → train +93.43% / DD -17.03% / calmar 5.49,
+   fwd +52.91% / -12.31%, full DD -27.11%. First mechanism to beat the L13 chain
+   on BOTH train CAGR and train DD. Plateau, not a spike: ids_w -0.10 / -0.25 and
+   lb4/-0.20 all clear the keep bar; -0.05 and lb2 fall off; forward-leaning
+   sibling -0.25 gives fwd +61.78/-12.17 at train +90.43. Cost slopes: 50bps
+   91.15/5.32, 100bps 86.66/4.83 (L13 chain at 100bps: 81.64/4.48). NOTE the
+   file's docstring hypothesis is inverted vs its code — the tested/winning
+   direction rewards FEWER inside days (expanding tape), not the coil story.
+   Full-board survivorship applies; no transfer to index universes (Nifty 500
+   +35.44/-25.01, fwd DD -30.26 worse than bench). Forward frontier:
+   geometry+rngcomp (6,-0.4) fwd +63.71/-11.61 (fwd-calmar 5.49) at train +73.97;
+   geometry+rs fwd +63.18/-14.44; rs+ids on the geometry adds on returns (fwd
+   +68.03/-15.97) but not on fwd-calmar. Loop-15 closures: overnight-vs-intraday
+   (dead at both bases), up-streak (dead), replacement budget/fill (dominated),
+   rank-band pick buffer, weak-month cap grandfather (risk-efficient only:
+   85.5-86.1 train at -16.05 DD, calmar 5.33-5.37 — documented, not
+   ratchet-eligible), positive inside-day direction, pers re-based onto the
+   wobble chain. Dead lines (carried from L14): ramps, hysteresis, positive
+   persistence, freshness/drought/CLV re-based onto the capped champion, rank
+   smoothing/skip/blending, sector (80%-null industry), volume gates, vol
+   targeting, index-DD veto, book-health floors, path exits, retention bonus,
+   top-13 DD repair.
 5. Ask the user for the designer and worker models (Step 0 of the playbook),
    then open the round. At close: commit with setup + verdict, `git add -f` the
    tracked ledgers if `.cache` is ignored, and push the workstream branch — the
