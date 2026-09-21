@@ -131,7 +131,7 @@ strat_l17c_eqstate.py	l17	equity-curve state	DEAD	83.6-90.7	equity-curve replay;
 strat_l17c_faceval.py	l17	face-value attribute	DEAD	87.4-93.7 (best +0.4 93.71)	nominal face value as split-history proxy; both signs cost 7-9pp
 strat_l17c_idxflag.py	l17	index membership	DEAD	94.5-96.5; gate -0.32	membership gate collapses the book to -0.32% (invested 4%) - the champion book is essentially NON-index members; train gains carry membership look-ahead
 strat_l17c_listage.py	l17	listing age	DEAD	92.4 at +0.4 (best); age gates 57-64	la_w +0.4: DD -15.51/calmar 5.96/fwd +53.5/-10.1 (fwd-calmar 5.29) - risk/forward sibling, not ratchet; +0.2 fires 47/139 months (broad, not knife-edge)
-strat_l17c_pxlevel.py	l17	price-level band	KEEP-not-promoted	97.46 at pxfv +0.3 (train-only); DD -18.67 calmar 5.22 fwd 38.0/-20.8	price/face-value level tilt; mechanical train keep but worse calmar + forward collapse - not promoted
+strat_l17c_pxlevel.py	l17	price-level band	KEEP-not-promoted	97.46 at pxfv +0.3 (train-only); DD -18.67 calmar 5.22 fwd 38.0/-20.8	price/face-value level tilt; mechanical train keep but worse calmar + forward collapse - not promoted; pick-diff 49/139 months (broad footprint, not a knife-edge)
 strat_l17c_seriesgate.py	l17	trading-series attribute	DEAD	75.6-95.4 (best EQ+0.2 95.40)	EQ/BE/BZ series; EQ-only gate -21pp (BE/BZ tail load-bearing); tilt saturates (order-preserving band)
 strat_l17d_flowdir.py	l17	signed volume flow	DEAD	71.1-86.6 (best 6/-0.1 86.63)	signed volume split - changed-base retest of the legacy accum gate; both signs; +0.2 fwd +62.1
 strat_l17d_jumpcount.py	l17	jump/exceedance count	DEAD	57.4-86.3 (best 6/-0.2 86.25)	large-up-day count vs dskew/up-streak; both signs destructive; +0.2 fwd +69.9 forward-heavy
