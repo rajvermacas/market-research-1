@@ -356,3 +356,15 @@ mistake recurs.
   exposed it. Every auxiliary figure (cost stress, window splits, transfer) is valid
   only for the exact params it was measured on — re-run it on promotion, or label it
   with the params it belongs to.
+- The loop stops at the clock, never at queue exhaustion. Loop-15 was briefed for
+  2 hours (stop ~15:33 IST); it ran its champion, all screens and two audits, then
+  began close-out at ~14:35 and reported ~14:36 — 60 minutes into a 120-minute brief.
+  The queue was empty because the orchestrator let the design pipeline drain: both
+  designers were allowed to finish at their briefed stops without being re-tasked and
+  no checkpoint noticed the hour that remained. The missing mechanism is an
+  ORCHESTRATOR clock: run `TZ=Asia/Kolkata date` at every phase transition (start,
+  each design round, before close-out) and treat close-out as a fixed window before
+  the stop (last 15-20 min), not as the reward for finishing the checklist. If the
+  queue empties early, the next action is a new design round (or a new designer) —
+  never the report. Estimated elapsed time drifts and will read hours ahead of the
+  real clock; only the shell's date is authoritative.
