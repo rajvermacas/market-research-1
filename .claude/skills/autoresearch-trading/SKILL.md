@@ -137,6 +137,20 @@ third return value `risk={trail_k, max_hold}` (candidate wins on conflict):
   searches on a DEDICATED ledger — the ruler stays `--select cagr` with the
   guard; the champion's own spiky profile (worst year -16%, yearly stdev 150,
   best-year share 43%) is the baseline to beat on smoothness.
+  **Loop-18 consistency-search findings** (56 configs on the champion base):
+  exposure smoothing via partial tiers is strictly WORSE (lower CAGR, same
+  worst year, higher best-year share — the spikes live in the return
+  distribution, not the exposure); bigger books are catastrophic (top > the
+  regime cap dilutes to train ~24 with best-share 89-93%); the useful trades
+  are per-name tilts — `listage la_w +0.4` (full decade +75.9%/-20.7% vs the
+  champion's +76.3/-27.1, yearly stdev 122 vs 150, best-share 40 vs 43%,
+  fwd +53.5/-10.1, train 92.4), `outrank or_w -0.15` (train 94.2, worst year
+  -13.7, stdev 124, fwd 46.2), `gw_w 0 / ids_w -0.1` (worst year -12.8,
+  stdev 114), `cap_weak 15` (worst year -10.0, train 81.4), and
+  `serpers ac_w -0.3` (flattest post-2021 profile: stdev 75, best-share 35%,
+  fwd +67.8, but worst year -18 and train 77.7). NO config has a positive
+  worst year: 2018 is a loss and 2019 is cash for every variant — consistency
+  here means smoother, not lossless.
 
 Run every command from the repo root (the folder containing scripts/ and data/),
 not from the skill directory.
