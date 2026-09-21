@@ -160,6 +160,14 @@ one mechanism per worker handoff, one shared wall-clock stop.**
   (`ps`, ledger tails, `git status` — never interrupts), verifies claims
   against `best.json`/ledger, promotes winners to the main ledger as the
   single writer, owns commit + push, and reports to the user.
+  **Wake on file events, never poll:** arm a background shell watcher (a
+  `while` loop checking for a designer's smoke ledger or a new `strat_*.py`,
+  with a deadline) so the session resumes the moment a file is delivered;
+  never busy-wait on a subagent. A watcher's relative deadline is not wall
+  time — the environment can suspend the whole session and freeze every
+  process (Loop-16: a 20-minute watcher returned after ~90 minutes). Re-read
+  `TZ=Asia/Kolkata date` whenever a watcher fires and re-plan the remaining
+  budget from the real clock.
 - **Worker (background subagent) — owns the NUMBERS for its handoff.**
   It does not invent strategy, does not edit files, does not run git. It runs
   its pre-registered trials one at a time, logs every row through the harness,
@@ -175,7 +183,8 @@ one mechanism per worker handoff, one shared wall-clock stop.**
   Runs on the strongest reasoning model in the session (standing preference:
   GLM 5.3 Flash at max effort; fall back to another strong model if it is
   unavailable). It reads the skill, the champion files and the LIVE ledger
-  tails, then writes 2–3 new mechanism files with documented SPACE variants,
+  tails, then writes 2–3 new mechanism files per round (4–6 when the brief
+  names a mechanism-count target) with documented SPACE variants,
   smoke-tests them on isolated ledgers, and reports each hypothesis, its
   falsification test, and the ideas it rejected. Every deliverable must carry
   a **novelty statement**: its closest prior art from the mechanism inventory
@@ -259,7 +268,11 @@ for the DESIGNERS and which model for the TRIAL WORKERS. Sensible defaults to
 offer: designers = the strongest reasoning model available in the session
 (GLM 5.3 Flash at max effort was the standing choice), workers = the parent
 session's model. Record the answers in every brief; never assume a model
-silently.
+silently. If the user settled the pairing in a previous loop and does not
+re-answer (an aborted question counts as no answer — say so), or says "keep
+going", reuse the standing pairing, state it explicitly in the briefs, and
+proceed — never downgrade and never leave the loop unstarted waiting on a
+question the user has already answered once.
 
 A 1-hour loop = a 50-minute orchestrator budget; workers stop ~12 min before
 it ends. The proven shape:
@@ -275,6 +288,22 @@ it ends. The proven shape:
 Roles are decoupled: designers need ledger DATA, not free workers; the only
 dependency is file-before-screen. Keep pool size = number of unscreened
 files, and re-task a designer (with the live tails) before any worker idles.
+
+**Longer loops repeat the round.** A 2–3 hour loop is the same shape scaled:
+each designer delivers one file every ~20–30 minutes once warm; workers
+screen each file within minutes of delivery; the orchestrator re-tasks
+designers from live ledger tails at every round boundary. Stops scale with
+the budget: designers stop ~30–40 min before the orchestrator's stop,
+workers ~20 min before, and the last 15–20 min are the fixed close-out.
+Three designers with distinct axes is the proven pool for a count target.
+
+**Mechanism-count briefs.** When the brief names a target ("test at least N
+mechanisms"), size the designer pool to cover it (3 designers × 4–6 files),
+track every mechanism in a per-loop manifest (`.cache/l<loop>_manifest.tsv`:
+file, axis, designer, delivered, screened, train range, verdict), and count
+only files that pass the novelty gate AND whose off-switch identity
+reproduced the champion exactly — a variant of an already-counted file does
+not add to the count. Report the final count with per-file verdicts.
 
 ### Ledger isolation (mutual exclusion)
 
@@ -302,14 +331,16 @@ candidates: a train gain that collapses within ±1% of a discretisation
 parameter (Loop-12: `clv_scale` 0.66 / 0.67 / 0.675 → 83.85 / 85.43 / 84.37)
 is a rank-ordering artifact, not a new best — record it in the worker's
 ledger and the report, and leave the main ledger alone. For a book-composition
-mechanism (one that changes the held book, not the score scale), also COUNT THE
-FIRING EVENTS
-before promoting: diff the candidate's picks against the base's month by month
-and count the months that actually differ. Loop-16's hurdle keep (+0.60pp
-train, DD and fwd identical) traced to ONE firing event (2017-07) that
-propagates through the path-dependent held set into 3 differing decision months
-out of 139. A gain sourced from a handful of name-months is a sample of a
-handful, not an edge. `results_validate.tsv` /
+mechanism (one that changes the held book, not the score scale), also COUNT
+THE FIRING EVENTS before promoting: replay the harness pick rule (a stateless
+score diff is NOT a book diff) and count the months where the picks actually
+differ. Loop-16's hurdle keep (+0.60pp train, DD and fwd identical) traced to
+ONE firing event (2017-07) that propagates through the path-dependent held
+set into 3 differing decision months out of 139; the orchestrator's first
+stateless diff said "1 month / ADANIENSOL" and the independent audit's
+harness-faithful replay corrected it — have the audit reproduce any
+diagnostic before it enters the record. A gain sourced from a handful of
+name-months is a sample of a handful, not an edge. `results_validate.tsv` /
 `best_validate.json` holds the un-fitted-universe verdict and follows the
 same single-writer rule.
 
@@ -454,7 +485,24 @@ rule, ledger paths, stop time, report format. Hard-won rules:
   disappears mid-run, that worker stops its line and reports; it never
   silently switches to a different file. The orchestrator also watches for
   parallel sessions/external writers (`git status`, the scripts directory)
-  before close-out.
+  before close-out. Designers do edit their own delivered files mid-loop
+  (Loop-16: seasmom and monpath changed while a screen was running; Loop-17:
+  crowd was fixed after its first smoke). Record each file's md5 at handoff;
+  a screen that spans an edit is mixed-version — re-run the affected cells on
+  the frozen final hash before trusting the verdict, or clear a doc-only edit
+  by re-running one cell and matching the recorded number (Loop-16 seasmom
+  re-check: identical).
+- **Identity failure on delivery.** The orchestrator's smoke duty is to run
+  each delivered file's off-switch BEFORE handing it to a worker. If it does
+  not reproduce the champion bit-exactly, do not screen it on the champion
+  target: either (a) it composes a legitimately different base — then the
+  brief sets the file's OWN base as the comparison target and says which base
+  changed, or (b) the composition is broken — hold the file, and either fix
+  the composition yourself (and record that you did) or return it to the
+  designer via post-loop session continuation. Loop-17:
+  `strat_l17b_crowd.py` silently omitted the live ids term and its off-switch
+  read 87.00/-17.34 = exactly champion-minus-ids; caught before any worker
+  window was spent.
 - Report format: stop-time confirmation, trial count, every KEEP, the full
   `w<ID>_best.json`, a compact trial table, raw errors for any failure.
 
@@ -470,6 +518,36 @@ at the cutoff, the loop ended early (Loop-15: closed out 60 min into a
 orchestrator's cutoff, that is a planning error to avoid next loop (brief
 worker stops early enough to leave 10+ min for close-out); it is not a reason
 to wait for them.
+
+### Close-out (the fixed window — a checklist, not just a commit)
+
+1. **Promotion.** Replay the winners onto the main ledger in ratchet order
+   (see Ledger isolation), re-read `best.json`, and if nothing beat the
+   champion, say so and leave the main ledger alone. A no-promotion loop
+   still closes out — the negatives are the finding.
+2. **Validation.** Run the promoted config (or the standing champion, if
+   nothing changed) on the un-fitted universe and write
+   `results_validate.tsv` / `best_validate.json`.
+3. **Independent audit.** Spawn a clean-room audit on a DIFFERENT model from
+   the trial workers, with a stop inside the window: re-run the promoted row
+   (or the headline claims plus one dead-line control when nothing promoted)
+   and reproduce any diagnostic the record will cite (book diffs, firing
+   counts). Loop-16's audit re-ran the champion identity and the single keep
+   to the printed precision AND corrected the orchestrator's stateless
+   book-diff (1 month / ADANIENSOL → 3 months / AVANTIFEED); without it the
+   wrong characterization would have shipped.
+4. **Write the outcome down.** A row in the README's results ledger (setup,
+   window, universe, costs, CAGR + DD + calmar for train and forward against
+   the bench, verdict); the mechanism file(s); any new measurement rule into
+   AGENTS.md LESSONS; any new closure into the mechanism inventory above.
+5. **Update this skill's bootstrap state.** Append/replace a "State at
+   Loop-N close" paragraph (champion + params + metrics, closures, artifact
+   verdicts, operational notes). This is the loop's handoff artifact — the
+   next fresh session resumes from git, not from a stale paragraph.
+6. **Commit + push** on the workstream branch (`git add -f` the tracked
+   ledgers if `.cache` is ignored), then report: train and forward CAGR/DD/
+   calmar for strategy and bench, costs, the mechanism count when one was
+   briefed, and the honest caveats.
 
 ## Fresh-session bootstrap
 
