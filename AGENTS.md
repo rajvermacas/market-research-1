@@ -381,3 +381,10 @@ mistake recurs.
   handful of name-months is a sample of a handful, not an edge. The harness's
   own keep rule cannot see this: it scores returns, not the mechanism's
   footprint.
+- A mechanical keep is not automatically a better strategy: check calmar and
+  the forward window before promoting. Loop-17's `pxlevel` keep raised train
+  CAGR by +0.58pp but widened drawdown by 1.64pp (calmar 5.22 vs 5.69) and
+  collapsed forward to +38.0%/−20.8% from +49.0%/−12.3% — left unpromoted.
+  The user weighs CAGR and drawdown equally, and the forward window is the
+  judge; a train gain paid for with risk and forward performance is an
+  artifact, not an upgrade.

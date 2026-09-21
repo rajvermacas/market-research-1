@@ -115,15 +115,25 @@ strat_l16a_seasmom.py	l16	seasonal momentum	DEAD	66.4-86.5	same-calendar-month r
 strat_l16b_hurdle.py	l16	replacement hurdle	KEEP-not-promoted	97.48 / -17.03 / 5.72 at hur_m 0.01 only	knife-edge: no fire 0.005, collapse 0.015+; one 2017-07 firing -> 3 H1 months; zero fwd/DD effect
 strat_l16b_outrank.py	l16	cross-sectional outrank	DEAD	84.8-94.4	percentile of own trailing return; monotone in rs ordering
 strat_l16c_volpart.py	l16	volume participation	DEAD	58.0-81.5	self-relative participation expansion; all signs/windows harmful
-strat_l17a_rev36.py	l17	long-horizon reversal	PENDING SCREEN	-	24-36m reversal vs rs 6-12m
-strat_l17a_timesince.py	l17	time-under-water	SCREENING	first cell 74.6	daily-path integral below peak vs dead drought/freshness
+strat_l17a_last5.py	l17	turn-of-month persistence	DEAD	68.5-79.1	turn-of-month persistence vs monpath halves; +0.2 fwd +63.8/-17.2 forward-heavy
+strat_l17a_rangeac.py	l17	range serial dependence	DEAD	68.2-91.2 (best 6/-0.1 91.17)	range autocorrelation vs rngcomp LEVEL/ids count; +0.2 fwd +64.4/-12.6 forward-heavy
+strat_l17a_rev36.py	l17	long-horizon reversal	DEAD	80.9-95.5 (best 24/+0.2 95.49)	24-36m reversal vs rs 6-12m; near-miss +0.2 interpolates to base
+strat_l17a_semi.py	l17	semi-deviation asymmetry	DEAD	72.8-93.0 (best 6/+0.2 92.95)	down/up variance split vs dskew; both signs harmful; -0.2 fwd +64.4/-16.9 forward-heavy
+strat_l17a_timesince.py	l17	time-under-water	DEAD	74.6-86.2 (best lb6/depth/+0.2 86.18)	daily-path integral below peak vs dead drought/freshness; off-switch dominates
 strat_l17b_beta.py	l17	rolling beta	DEAD	62.9-66.9	corr * rel-vol ratio
-strat_l17b_corrtrend.py	l17	correlation trend	PENDING SCREEN	-	corr trend vs crowd level
+strat_l17b_corrtrend.py	l17	correlation trend	DEAD	72.2-87.5 (best 6/-0.15 87.52)	corr trend vs crowd level; +0.15 fwd +67.8 but train 82.2
 strat_l17b_crowd.py	l17	panel comovement (correlation)	DEAD	79.6-82.9	corr of return path vs rs level/outrank/sector
 strat_l17b_idvol.py	l17	idiosyncratic vol share	DEAD	69.0-84.5	1-R^2 vs panel
-strat_l17b_updown.py	l17	down/up comovement asymmetry	PENDING SCREEN	-	asymmetric beta vs symmetric beta
+strat_l17b_updown.py	l17	down/up comovement asymmetry	DEAD	66.7-91.2 (best 12/+0.15 91.17)	sign-split comovement; both signs/windows trail
 strat_l17b_volmom.py	l17	relative vol momentum	DEAD	58.1-68.8	change in relative vol vs vol level
-strat_l17c_idxflag.py	l17	index membership	PENDING SCREEN	-	static index flag; survivorship caveat
-strat_l17c_listage.py	l17	listing age	DEAD	92.4 at +0.4 (best); age gates 57-64	la_w +0.4: DD -15.51/calmar 5.96/fwd +53.5/-10.1 - risk-adjusted but not ratchet-eligible; young-listing gates harmful
-strat_l17c_pxlevel.py	l17	price-level band	PENDING SCREEN	-	low- vs high-priced names; crude retail/tick-size proxy
+strat_l17c_calreg.py	l17	calendar-month exposure	DEAD	92.2-94.9 (best 94.88; calmar 6.04 at +0.5)	calendar-month exposure; cr_w +0.5 = best train-calmar print of the loop (6.04) but train below ratchet; invested 63-64% (not mostly an exposure cut)
+strat_l17c_eqstate.py	l17	equity-curve state	DEAD	83.6-90.7	equity-curve replay; es_w monotonically harmful; replay boundary bug in strat_l12a_incbonus.replay_book found + handled locally (held_mat[T-1] unfilled)
+strat_l17c_faceval.py	l17	face-value attribute	DEAD	87.4-93.7 (best +0.4 93.71)	nominal face value as split-history proxy; both signs cost 7-9pp
+strat_l17c_idxflag.py	l17	index membership	DEAD	94.5-96.5; gate -0.32	membership gate collapses the book to -0.32% (invested 4%) - the champion book is essentially NON-index members; train gains carry membership look-ahead
+strat_l17c_listage.py	l17	listing age	DEAD	92.4 at +0.4 (best); age gates 57-64	la_w +0.4: DD -15.51/calmar 5.96/fwd +53.5/-10.1 (fwd-calmar 5.29) - risk/forward sibling, not ratchet; +0.2 fires 47/139 months (broad, not knife-edge)
+strat_l17c_pxlevel.py	l17	price-level band	KEEP-not-promoted	97.46 at pxfv +0.3 (train-only); DD -18.67 calmar 5.22 fwd 38.0/-20.8	price/face-value level tilt; mechanical train keep but worse calmar + forward collapse - not promoted
+strat_l17c_seriesgate.py	l17	trading-series attribute	DEAD	75.6-95.4 (best EQ+0.2 95.40)	EQ/BE/BZ series; EQ-only gate -21pp (BE/BZ tail load-bearing); tilt saturates (order-preserving band)
+strat_l17d_flowdir.py	l17	signed volume flow	DEAD	71.1-86.6 (best 6/-0.1 86.63)	signed volume split - changed-base retest of the legacy accum gate; both signs; +0.2 fwd +62.1
+strat_l17d_jumpcount.py	l17	jump/exceedance count	DEAD	57.4-86.3 (best 6/-0.2 86.25)	large-up-day count vs dskew/up-streak; both signs destructive; +0.2 fwd +69.9 forward-heavy
+strat_l17d_reldd.py	l17	panel-relative max drawdown	DEAD	63.4-86.7 (best 6/-0.1 86.65)	max-dd depth vs timesince integral; both path-stress functionals closed; +0.2 fwd +54.3 at worse fwd DD
 strat_l17o_consist.py	l17	monthly hit rate	DEAD	68.6-84.7	hit rate vs rs level / serpers sign-AC; cs_w -0.15 least-bad at 84.7; off-switch dominates

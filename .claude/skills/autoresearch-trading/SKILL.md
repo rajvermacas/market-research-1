@@ -245,6 +245,23 @@ the novelty gate.
   knife-edge: `hur_m` 0.005 flat / 0.0075–0.010 +0.4–0.6pp / 0.015+ below
   base, gain traced to ONE 2017-07 firing — AVANTIFEED reinstated over
   STARPAPER — that propagates into 3 H1 decision months; forward untouched).
+- **DEAD (Loop-17, bit-exact off-switch identities, every active direction
+  train-destructive on the ids champion):** the panel-structure axis (crowd
+  79.6–82.9, idvol 69.0–84.5, beta 62.9–66.9, volmom 58.1–68.8, corrtrend
+  72.2–87.5, updown 66.7–91.2), the path-structure axis (timesince 74.6–86.2,
+  rev36 80.9–95.5, rangeac 68.2–91.2, last5 68.5–79.1, semi 72.8–93.0,
+  jumpcount 57.4–86.3, reldd 63.4–86.7, flowdir 71.1–86.6), the attribute axis
+  (listage 92.4 best with age gates 57–64; idxflag 94.5–96.5 and its
+  membership GATE collapses the book to −0.32%; seriesgate EQ-only 75.6;
+  faceval 89.2–94.5), and the regime/state axis (calreg 92.2–94.9, eqstate
+  83.6–90.7, consist 68.6–84.7). One mechanical keep, `pxlevel` (pxfv +0.3 →
+  train +97.46), was NOT promoted: DD −18.67 (calmar 5.22 vs 5.69) and fwd
+  +38.0/−20.8 vs +49.0/−12.3 — a train artifact. Structural findings: the
+  champion book is essentially NON-index members (an index-membership gate
+  collapses it) and its BE/BZ-series tail is load-bearing (EQ-only costs
+  21pp). Recurring signature: forward-heavy arms (rangeac +0.2, last5 +0.2,
+  semi −0.2, rev36 −0.2, idvol +0.3, jumpcount +0.2, flowdir +0.2) post fwd
+  +58.8–69.9 at train 57–87 — forward alternatives, never ratchet-eligible.
 - **PARTIAL:** negative persistence premium (live on the rankpersist line,
   dead on the conc chain); `cap_weak`/`max_hold`/`b_hi`/`regime_ma` are
   sharp peaks — their local neighbourhood is closed to tuning, but changing
@@ -637,6 +654,19 @@ to wait for them.
    processes and the clock frozen together) — re-read `TZ=Asia/Kolkata date`
    whenever a watcher fires and re-plan the remaining budget from the real
    clock, never from an elapsed-time estimate.
+   State at Loop-17 close (2026-09-21): champion UNCHANGED — nothing promoted.
+   22 mechanisms screened (designers A/B/C + round-2 designer D + an
+   orchestrator buffer), every one with a bit-exact off-switch identity; 21
+   DEAD, one mechanical keep (`strat_l17c_pxlevel`, pxfv +0.3, train +97.46)
+   left unpromoted as a train artifact (calmar 5.22, fwd 38.0/-20.8 vs the
+   champion's 5.69 / 49.0/-12.3). Axes closed: panel structure, path
+   structure, non-price attributes, calendar/equity-state regimes. The
+   committed registry `research/tested_mechanisms.tsv` (138 rows) carries all
+   of it — designers must grep it before writing, and the close-out appends.
+   Operational: the environment ran stably this loop; the registry + novelty
+   statements caught one base-composition error (crowd composed the pre-ids
+   chain, 87.00 = champion-minus-ids) and one honest novelty re-framing
+   (flowdir = a changed-base retest of the legacy accum gate, declared).
 5. Ask the user for the designer and worker models (Step 0 of the playbook),
    then open the round. At close: commit with setup + verdict, `git add -f` the
    tracked ledgers if `.cache` is ignored, and push the workstream branch — the
