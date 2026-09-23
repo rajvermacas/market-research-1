@@ -710,6 +710,49 @@ to wait for them.
    Nifty 500 transfer: +38.98/-23.87 train, fwd +21.68/-31.37 — no
    index-universe transfer, same as the prior champion; the edge lives in
    small/non-index names.
+   State at Loop-20 close (2026-09-23): NEW CHAMPION —
+   `strat_l20b_spread` (sp_lb 4 / sp_w -0.05 / sp_frac 0.5 on the L19 balanced
+   chain), promoted on the main CAGR ratchet: train +102.99% / DD -15.51% /
+   calmar 6.64 (h1 +100.2 / h2 +105.7), fwd +54.06% / -10.38% (fwd calmar
+   5.21), full decade +82.00% / -20.73%, worst complete year -15.0%, yearly
+   stdev 172 (2021 +499%). Signal: Corwin-Schultz two-day high-low spread
+   proxy (negatives floored at 0, 1-7 day gap guard), trailing 4-month mean,
+   cross-sectional percentile tilt POST-chain (positive weight favours
+   tight-spread names). The promoted cell is the risk-clean HALF dose: it
+   improves all four headline dimensions vs the L19 line; the full dose
+   (4/-0.1) is mechanically higher (103.83/-15.00/calmar 6.92) but pays
+   2.68pp of forward DD (-13.08), and the break trips already at -0.075 —
+   declined per the Loop-17 forward-judge rule. lb neighbourhood is a flat
+   hump (3:103.1, 4:103.8, 5:103.5, 6:103.3, 8:101.2); footprint 23/139
+   decision months (independently re-derived by the clean-room audit; note the
+   promoted cell is outside the file's documented SPACE - it comes from the
+   close-out dose sweep). Cost slopes on the promoted point: 50bps
+   100.59/6.30 (fwd +52.18), 100bps 95.87/5.63 (fwd +48.48); start-2018
+   train 84.6/-12.4 (H1 -6.7), start-2020 264.0/-11.8, forward 54.06/-10.38
+   in every split run. Independent audit at close re-ran the promoted
+   row and the parents, audited PIT of the spread estimator, and re-derived
+   the pick-diff count (see the loop's commit). Frontier siblings (isolated
+   ledgers, not promoted): `strat_l20b_illiq` il 12/+0.1 102.35/-15.98/6.41
+   (fwd +54.41/-10.40, footprint 30/139; dominates illiq-spread combos which
+   INTERFERE — best 102.14); `strat_l20a2_divcombo` (dividend size x timing,
+   super-additive 103.62/-16.56/6.26, fwd +55.67, footprint 39/139 but a
+   weight spike and calmar-negative); `strat_l20b_spread` 4/-0.1 above;
+   L19-key neighbourhood: la_w 0.6 -> 99.26, or_lb 8 -> 99.11 (both interior
+   optima, below the new champion). Closures this loop: tilt-vs-cap placement
+   (pre-cap train-destructive, 74.9-97.2); score-concentration cap
+   (monotone both signs, 64.1-85.8); market tape-microstructure regime (all
+   arms trail; DD gains are exposure dilution); down-day-only Amihud
+   (refuted at the parent's winning window); trailing stops re-falsified on
+   this base (49.6-65.5); dividend minimum-payer gates (inv 7-24%); sector
+   axis STOPPED at the coverage gate (company-name keywords 56.0% < 70%,
+   agreement 77.6% vs 15.5% chance; needs an external sector map — data
+   backlog, not a mechanism). New tool: `.cache/l20_pickdiff.py` (scratch,
+   harness-mirrored pick-diff counter; self-test 0/139, designed by L20
+   designer C, verified by the audit). Operational: free-tier designers and
+   workers ran clean this loop (no throttling); an independent reproduction
+   caught a transcription slip in one designer report (the ledger row was
+   correct, the quoted halves were not) — trust ledger rows over report
+   tables; worker ledgers are the record.
 5. Ask the user for the designer and worker models (Step 0 of the playbook),
    then open the round. At close: commit with setup + verdict, `git add -f` the
    tracked ledgers if `.cache` is ignored, and push the workstream branch — the

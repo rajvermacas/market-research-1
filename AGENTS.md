@@ -388,3 +388,34 @@ mistake recurs.
   The user weighs CAGR and drawdown equally, and the forward window is the
   judge; a train gain paid for with risk and forward performance is an
   artifact, not an upgrade.
+- A signal's holdout risk can be DOSE-DEPENDENT with a sharp threshold:
+  screen the dose neighbourhood, not just the window/weight axis, and prefer
+  the risk-clean dose when the full dose's extra train is paid on the forward
+  window. Loop-20's CS-spread tilt at w −0.05 holds champion-level forward DD
+  (−10.4%) at every window (lb 4/6/12), while −0.075 and all larger doses trip
+  a 2.68pp forward-DD break (−13.1%) for only +0.8pp of train; promotion took
+  the −0.05 cell and declined the mechanically-higher −0.1 keep
+  (103.83/−15.0/calmar 6.92 but fwd +52.5/−13.1).
+- Know which months a tilt can act in before believing its gain or its
+  negative. The champion's age/outrank tilts sit AFTER the book cap; when the
+  cap binds below book size (cap_weak 11 < top 15) every capped name is held
+  and the tilts are inert — they only pick names in full-breadth months
+  (cap_full 20 > 15). Moving them pre-cap makes them act in every invested
+  month and is train-destructive (74.9–97.2 vs 98.7, Loop-20
+  `strat_l20o_tiltorder`): placement is a mechanism, and a composition must
+  preserve the screened order.
+- Two tilts on the same underlying axis interfere; different transforms of
+  one NEW channel can be super-additive. Loop-20: illiquidity × spread (both
+  load on turnover-adjusted price movement) — best combo 102.1, below both
+  parents (102.4 and 103.8), avg form below base; dividend-factor size ×
+  timing — 103.6 vs an additive prediction of 101.1 (+2.5pp beyond
+  additivity, footprint 39/139) though it pays DD. Compose across channels,
+  not within one, and measure the composition instead of assuming it.
+- A new join key needs a coverage audit with a pre-registered floor before a
+  mechanism is built on it. Loop-20's sector attempt built a company-name
+  keyword classifier (agreement 77.6% vs 15.5% chance where labels exist) but
+  it covered only 56.0% of the panel (< the 70% gate) and its union with the
+  20%-populated industry column tops out at 64.2% — the sector family stays
+  untestable from committed data; the fix is an external sector map, not
+  another mechanism. Measure coverage, then build; stop when the gate fails
+  rather than filling gaps with generic words that fake coverage.
