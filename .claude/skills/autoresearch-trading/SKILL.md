@@ -729,7 +729,11 @@ to wait for them.
    close-out dose sweep). Cost slopes on the promoted point: 50bps
    100.59/6.30 (fwd +52.18), 100bps 95.87/5.63 (fwd +48.48); start-2018
    train 84.6/-12.4 (H1 -6.7), start-2020 264.0/-11.8, forward 54.06/-10.38
-   in every split run. Independent audit at close re-ran the promoted
+   in every split run. Post-commit robustness: the lb-4 dose curve is monotone
+   (-0.025:102.05, -0.05:102.99, -0.075:103.00, -0.1:103.83) with no cliff
+   below the promoted point, so -0.05 is exactly the highest risk-clean dose;
+   the coverage guard is inert at 0.3/0.5/0.7; half-dose illiq still
+   interferes (102.61 with the forward-DD break). Independent audit at close re-ran the promoted
    row and the parents, audited PIT of the spread estimator, and re-derived
    the pick-diff count (see the loop's commit). Frontier siblings (isolated
    ledgers, not promoted): `strat_l20b_illiq` il 12/+0.1 102.35/-15.98/6.41
