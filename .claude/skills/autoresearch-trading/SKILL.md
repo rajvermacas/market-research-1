@@ -739,7 +739,13 @@ to wait for them.
    +56.04, loop-best, at champion-level fwd DD) - recorded as a frontier
    sibling in `strat_l20a3_divspread.py`, not promoted; a start-2021
    diagnostic reads train 390.97/-11.81 (2021 +457%) with fwd unchanged
-   54.06/-10.38, confirming the decade profile is 2021-heavy. Independent audit at close re-ran the promoted
+   54.06/-10.38, confirming the decade profile is 2021-heavy. Post-close leak
+   test (scratch `.cache/l20_leak_test.py`): erasing ALL daily bars and monthly
+   closes after each of 4 cutoffs (2018-12/2021-06/2024-06/2026-03) leaves
+   2,801,010 pre-cutoff score cells BIT-IDENTICAL (0 differing cells, max abs
+   diff 0.0), and the harness's next-month availability mask
+   (`isfinite(px[t+1])`) is empirically inert for this strategy (0 of 1,702
+   top-15 pick slots dropped). Independent audit at close re-ran the promoted
    row and the parents, audited PIT of the spread estimator, and re-derived
    the pick-diff count (see the loop's commit). Frontier siblings (isolated
    ledgers, not promoted): `strat_l20b_illiq` il 12/+0.1 102.35/-15.98/6.41
