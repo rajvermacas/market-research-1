@@ -733,7 +733,13 @@ to wait for them.
    (-0.025:102.05, -0.05:102.99, -0.075:103.00, -0.1:103.83) with no cliff
    below the promoted point, so -0.05 is exactly the highest risk-clean dose;
    the coverage guard is inert at 0.3/0.5/0.7; half-dose illiq still
-   interferes (102.61 with the forward-DD break). Independent audit at close re-ran the promoted
+   interferes (102.61 with the forward-DD break). Final-round screens: the
+   cross-channel dividend-combo x spread composition interferes on train
+   (101.88, below both parents) while adding on the forward window (fwd
+   +56.04, loop-best, at champion-level fwd DD) - recorded as a frontier
+   sibling in `strat_l20a3_divspread.py`, not promoted; a start-2021
+   diagnostic reads train 390.97/-11.81 (2021 +457%) with fwd unchanged
+   54.06/-10.38, confirming the decade profile is 2021-heavy. Independent audit at close re-ran the promoted
    row and the parents, audited PIT of the spread estimator, and re-derived
    the pick-diff count (see the loop's commit). Frontier siblings (isolated
    ledgers, not promoted): `strat_l20b_illiq` il 12/+0.1 102.35/-15.98/6.41
