@@ -769,6 +769,44 @@ to wait for them.
    caught a transcription slip in one designer report (the ledger row was
    correct, the quoted halves were not) — trust ledger rows over report
    tables; worker ledgers are the record.
+   State at Loop-21 close (2026-09-24): NEW CHAMPION —
+   `strat_l21b_spreadz` (sz_lb 24 / sz_mode `z` / sz_w -0.05 / sz_frac 0.5 on
+   the L20 spread champion chain), promoted on the main CAGR ratchet: train
+   +104.45% / DD -14.96% / calmar 6.98 (H1 +104.0 / H2 +104.9), fwd +55.00% /
+   -10.98%, full decade +83.23% / -21.49% (calmar 3.87 vs the L20 line's
+   3.96), worst complete year -15.0%, yearly stdev 170. Signal: the name's
+   spread LEVEL (the champion's own CS trailing mean) z-scored against its
+   OWN trailing 24-month history (mean/std over strictly prior decision rows,
+   ddof 0; flat histories earn no z; ownpct mode = the same level as a
+   percentile of its own past); direction favours abnormally-TIGHT-for-self
+   names. The promoted cell is INSIDE the file's documented SPACE. Plateau:
+   lb flat (12:103.71, 18:104.41, 24:104.45, 30:104.49, 36:104.49); weight a
+   smooth hump whose whole -0.035..-0.065 neighbourhood beats the champion
+   (103.38/104.35/104.45/103.64/103.54) — the coarse 0.025-step grid first
+   read as a spike and the fine 0.005-step grid cleared it. Trade-off
+   recorded: forward +0.94pp CAGR at a +0.60pp fwd-DD cost (fwd calmar 5.01
+   vs 5.21) and full DD 0.76pp deeper — a return-lean upgrade, not risk-clean;
+   footprint 22/139 decision months (broad). Sibling findings: spread CHANGE
+   (first difference, `strat_l21b_spreadchg`) peaked at lb 12 (103.85/-14.88)
+   but the interior lb grid exposed an oscillation (10:102.65, 14:102.25) —
+   declined as a knife-edge (the two-point 4-vs-12 check looked monotone);
+   spreadnorm rel/-0.05 is numerically the same cell (fwd 53.69/-10.40);
+   spread dispersion trails both signs. Closures: illiquidity x dividend
+   composition interferes on train (101.80 < both parents; forward-additive
+   +56.96); print-coverage (availability) adds train at identical DD but
+   breaks fwd DD 2.70pp at both lags; corporate-action class recency
+   (105.55 train) gives back 2.48pp fwd CAGR = artifact; the book-state churn
+   family closes — lockout monotonically destroys (K1 91.6 -> K6 56.1),
+   seasoning/exit-memory gains sit on 9 and 7-13 of 139 decision months and
+   die by their own pre-registered footprint falsifiers. Nifty 500 transfer
+   fails as always (+37.3/-23.9 train, fwd +19.8/-31.4). Operational: two
+   server restarts suspended the environment ~14 h mid-loop; the briefed
+   stops were met by the clock, designers stopped honestly without resuming
+   trials, and close-out ran after waking (re-read the clock first; check
+   `ps` for pre-restart orphan processes before relaunching a batch — one
+   survived and double-wrote a grid ledger). Worker ledgers:
+   `.cache/strategy_lab/l21_w1_results.tsv` (18 rows), `l21_w2_results.tsv`
+   (19 rows); grids `l21_orch*`; manifest `.cache/l21_manifest.tsv`.
 5. Ask the user for the designer and worker models (Step 0 of the playbook),
    then open the round. At close: commit with setup + verdict, `git add -f` the
    tracked ledgers if `.cache` is ignored, and push the workstream branch — the

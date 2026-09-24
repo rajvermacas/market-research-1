@@ -419,3 +419,23 @@ mistake recurs.
   untestable from committed data; the fix is an external sector map, not
   another mechanism. Measure coverage, then build; stop when the gate fails
   rather than filling gaps with generic words that fake coverage.
+- A two-point parameter check is not a neighbourhood. Loop-21's spread-change
+  term read 4:102.2 → 12:103.9 across its two documented lags and looked
+  monotone; the orchestrator's 8/10/14/16 grid exposed the oscillation
+  (8:102.8, 10:102.7, 12:103.9, 14:102.3, 16:103.2) — the peak was a
+  knife-edge, not a plateau, and the candidate was declined. Any window
+  parameter that decides a promotion needs at least two interior neighbours
+  measured on the SAME ledger before the cell is believed.
+- After an environment restart, check `ps` for surviving processes before
+  relaunching a batch. Loop-21's server restart cancelled the session but a
+  nohup'd grid script kept running; the relaunched copy then wrote the same
+  ledger concurrently (duplicate rows, double load). Kill orphans
+  (`ps -eo pid,ppid,cmd | grep <script>`) before relaunching, and expect the
+  pre-restart process to be reparented to init (ppid 1) rather than killed.
+- A suspension can last hours, not minutes. Loop-21's environment froze for
+  ~14 h across two restarts; when the session resumed, the briefed stop
+  (01:08/01:30 IST) was long past while the harness clock showed 15:00. On
+  waking: re-read `TZ=Asia/Kolkata date`, do NOT resume trial campaigns whose
+  stop has passed, and go straight to close-out — the durable ledgers and
+  delivered files are the record, and fresh trials 14 h later risk mixing
+  harness versions inside one ledger.
