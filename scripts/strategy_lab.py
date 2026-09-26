@@ -350,8 +350,8 @@ def backtest_scores(scores: np.ndarray, regime: np.ndarray, px: np.ndarray,
             if sym not in new_held:
                 del peaks[sym]
         held = new_held
-        if record_picks:
-            picks_log[t] = sorted(new_held)
+        if record_picks:  # (book, exposure): a regime change is a footprint too
+            picks_log[t] = (sorted(new_held), round(flags[-1], 6))
 
     curve = np.array(eq)
     flags = np.array(flags)

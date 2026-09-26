@@ -22,8 +22,9 @@ Checks (thresholds are fixed here, before any candidate is seen):
   5 margin      robust beats the reference (the standing champion, else the
                 bench's robust) by >= noise_sd x sqrt(2 ln N), N = trials in
                 the ledger — the expected best-of-N luck under that noise.
-  6 footprint   vs the standing champion, the held book differs in >= 10% of
-                invested decision months (skipped when there is no champion).
+  6 footprint   vs the standing champion, the held book OR its exposure differs
+                in >= 10% of invested decision months (skipped when there is no
+                champion).
   7 transfer    on Nifty 500 (not fitted), train CAGR beats that universe's bench.
   8 forward     (the single reveal) fwd CAGR > fwd bench, fwd DD no worse than
                 bench DD, and fwd calmar >= 0.9 x the champion's fwd calmar.
@@ -193,7 +194,7 @@ def main() -> int:
         cmod = importlib.import_module(champ["candidate"])
         cm = L.run_book(L.score_candidate(cmod, champ["params"], ctx), ctx, champ["top"],
                         cost, folds, record_picks=True)
-        inv = [t for t in m["picks"] if m["picks"][t] or cm["picks"].get(t)]
+        inv = [t for t in m["picks"] if m["picks"][t][0] or cm["picks"].get(t, ([], 0))[0]]
         diff = [t for t in inv if m["picks"][t] != cm["picks"].get(t)]
         share = len(diff) / max(len(inv), 1)
         checks["footprint"] = {"pass": share >= 0.10, "differing_months": len(diff),

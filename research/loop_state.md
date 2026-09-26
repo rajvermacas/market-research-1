@@ -48,18 +48,19 @@ through `scripts/promote_gate.py`. Nothing else crowns a champion.
 - **Harness**: `strategy_lab.py --exec realistic` (next-open fill, circuit-lock block,
   ₹50 lakh liquidity floor, 50 bps, robust fold ruler, noise margin, blind forward).
   Legacy ledgers (`results.tsv` / `best.json`) are an upper bound only.
-- **Reveals used**: 4 (`.cache/strategy_lab/reveals.tsv`). Each gate run spends one.
-- **Trials under the current scoring**: 112 across all realistic ledgers (the gate's
+- **Reveals used**: 5 (`.cache/strategy_lab/reveals.tsv`). Each gate run spends one.
+- **Trials under the current scoring**: 120 across all realistic ledgers (the gate's
   deflation counts them all).
 - **Loop counter**: last loop = 23. Next loop = 24.
 
 ## Lead queue (highest first)
 
-1. **liqconfirm, widen its footprint** (`strat_l23a_liqconfirm`, the nearest miss: fwd
-   20.41/−19.23 vs 20.63/−21.65, footprint 9/94 months). Its DD gain comes from moving
-   the bottom breadth tier to cash sooner. Look for a regime rule on the liquid cohort
-   that acts in more months (continuous exposure scaling instead of tier shifts),
-   without the 2018 DD cliff below a 500-name cohort.
+1. **Liquid-cohort regime + a forward-positive rank channel.** Both regime candidates
+   (`strat_l23a_liqconfirm` fwd 20.41/−19.23; `strat_l23o_liqramp` fwd 19.15/−19.06) beat
+   the champion's forward DD (−21.65) but give up 0.2–1.5pp of forward CAGR, so they fail
+   dominance alone. Pair the regime with a rank channel whose gain is NOT the
+   V-recovery axis (lead 2), and screen it blind before spending a reveal. liqramp
+   hi 0.65 (27.46/−16.75 train) is ungated.
 2. **Rank channels that are NOT the "less-extended / V-recovery" axis.** ddquality,
    trmom(−) and their compositions all lift train and lose forward — treat that axis as
    a train artifact on this base (DEAD for promotion purposes unless the base changes).
@@ -74,4 +75,6 @@ through `scripts/promote_gate.py`. Nothing else crowns a champion.
 
 - L22 (2026-09-26, 10 min): first realistic loop; 5 execution-aware tilts, none kept.
 - L23 (2026-09-26, 40 min): harness v2 (blind/robust/noise/gate); 8 mechanisms,
-  118 trials; 3 candidates gated, all failed forward dominance; champion unchanged.
+  126 trials; 4 candidates gated (ddquality, liqconfirm, liqdq, liqramp), all failed
+  forward dominance; champion unchanged. Gate fixes: deflation counts every ledger;
+  footprint counts exposure changes.
