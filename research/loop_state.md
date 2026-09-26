@@ -5,6 +5,9 @@ and from the committed ledgers below; it never restarts from scratch. The
 orchestrator rewrites the "Current state" and "Lead queue" sections at every loop
 close-out and commits them with the ledgers.
 
+**Workstream branch: `claude-routine`** — every loop (interactive or the scheduled night/morning
+routines) checks it out, commits to it and pushes to it; never to another branch.
+
 ## Goal
 
 Find an un-researched mechanism that beats the standing champion on **both CAGR

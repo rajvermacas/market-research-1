@@ -25,7 +25,7 @@ guidance below).
 The container is ephemeral: anything not pushed is lost with the session, and
 the next session resumes only from git. Commit AND push (`git add -f` the
 `.cache/strategy_lab/` ledgers, reveals log, champion file and gate reports)
-on the workstream branch:
+on the workstream branch **`claude-routine`** (`git push -u origin claude-routine`):
 - **at every loop close-out** — mechanism files, ledgers, registry rows,
   README row, `research/loop_state.md` — before reporting to the user;
 - **immediately after a crown** (`promote_gate.py --crown`) — a new champion
