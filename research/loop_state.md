@@ -80,6 +80,11 @@ through `scripts/promote_gate.py`. Nothing else crowns a champion.
    CAGR and loses forward CAGR. Amihud (35.11/−16.22) is the same axis; do not gate it on this
    evidence. Rank tilts on the 25-name book look exhausted for forward CAGR; exposure-side work
    (with strictly pre-2022 diagnostics) is where the forward DD improvements have come from.
+02. **Liquid-core rebound re-arm** (`strat_l27o_corerearm`, k3 / thr .12 / to 1.0): train 39.18 / −17.22
+   (+9.1pp at the same DD), a CAGR plateau over k 2–4, thr .12–.15, to .7–1.0, but the DD breaks
+   at thr ≤ .11 (−21.05) and the gain rests on 7 train firings, five of them the 2020-06..10
+   post-COVID V. The gate's footprint check (8% < 10%) would fail as is. Forward is unseen. Next
+   loop: attribute the gain without 2020, and only gate it if it survives that.
 
 0. **Loop-26 outcome** (no promotion): breakout magnitude (`strat_l26b_breakmag`, bm_w .2 /
    bm_lb 9) is the best forward-DD line found — fwd 18.25/−14.32, calmar 1.27 vs the champion's
@@ -99,8 +104,8 @@ through `scripts/promote_gate.py`. Nothing else crowns a champion.
 
 ## Loop log
 
-- L27 (2026-09-26 22:43–23:43 IST, 60 min, routine test fire): 3 designers + 1 short round, ~14 mechanisms,
-  ~130 trials; 2 gated: CS spread (fails fwd CAGR −3.23pp) and froth (passes all checks — crown REVOKED
+- L27 (2026-09-26 22:43–23:43 IST, 60 min, routine test fire): 3 designers + 1 short round + 3 orchestrator files, 15 mechanism files,
+  ~150 trials; 2 gated: CS spread (fails fwd CAGR −3.23pp) and froth (passes all checks — crown REVOKED
   for forward contamination, see lead 00); champion unchanged.
 
 - L22 (2026-09-26, 10 min): first realistic loop; 5 execution-aware tilts, none kept.
