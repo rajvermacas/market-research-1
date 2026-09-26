@@ -9,6 +9,42 @@ Repeatable autonomous research loops for NSE strategies. Two phases: first
 climb params on a fixed strategy, then evolve the strategy mechanism itself.
 The agent changes code each loop; a fixed harness keeps score.
 
+## MANDATORY — never repeat a tested strategy (do this before designing or running anything)
+
+Compute is for NEW ideas. The harness will happily re-run anything, so the
+duty to avoid repeats is the agent's, and it applies to the orchestrator, every
+designer and every worker. Everything tested is logged in git; read it first.
+
+1. **Read the closed list**: `research/loop_state.md` — the champion, the lead
+   queue, and what is CLOSED (e.g. stops on the fresh-print book, books under 25
+   names, the V-recovery / less-extended rank axis).
+2. **Search the mechanism registry by idea, not just filename**:
+   `grep -i -E "<signal words>|<family words>" research/tested_mechanisms.tsv`
+   (e.g. `spread|liquid|breadth|gap|drawdown|dividend|stop|weight`). A row with
+   status DEAD, KEEP-not-promoted or PARTIAL means the idea WAS tested — read
+   its numbers and verdict note. You may retest it only if the BASE changed
+   (new champion, new universe, new harness version); say which base changed
+   in the file's novelty statement. "Same signal with a new window/weight/shape"
+   is a repeat, not a new mechanism.
+3. **Search the trial ledgers before every trial or batch** — every realistic
+   row ever run, with its exact params, is in `.cache/strategy_lab/*results*.tsv`:
+   `grep -h "<candidate>" .cache/strategy_lab/*results*.tsv | grep -F '<"key": value fragment>'`
+   If an identical (candidate, params, --universe, --top) row exists, reuse its
+   printed result — do not re-run it. Batch scripts must be de-duplicated
+   against the ledgers before launch.
+4. **Never re-gate**: `ls research/promotions/` and read any report for the
+   same candidate + params. A report already exists = the forward window was
+   already revealed for it; re-gating spends another reveal for nothing.
+5. **Log every new thing** so the next session can see it: every new
+   `strat_*.py` gets a row in `research/tested_mechanisms.tsv` at close-out
+   (status + key numbers + verdict note), and the lead queue / closed list in
+   `research/loop_state.md` is rewritten.
+
+A brief to a designer or worker must repeat rules 2–4 and name the ledgers and
+registry rows relevant to its axis. A trial that duplicates a logged row, or a
+mechanism that repeats a registry row on an unchanged base, is a loop error —
+report it, do not count it.
+
 ## Repo facts (do not re-derive, verify only)
 
 - Data: `data/ohlcv/daily/year=*/data.parquet` (full NSE board, 2000→date),

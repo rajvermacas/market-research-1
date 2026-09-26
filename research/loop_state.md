@@ -16,9 +16,12 @@ through `scripts/promote_gate.py`. Nothing else crowns a champion.
 1. `TZ=Asia/Kolkata date` — set ONE wall-clock stop for the loop.
 2. Read `.cache/strategy_lab/champion_real.json` (the champion, its params and
    its revealed forward numbers) and the tail of `.cache/strategy_lab/results_real.tsv`.
-3. Pick an idea from the lead queue or design a new one. Grep
-   `research/tested_mechanisms.tsv` first; a DEAD family is only retested on a
-   changed base. New file = `scripts/strat_l<loop><designer>_<idea>.py`, composing
+3. Pick an idea from the lead queue or design a new one — **never repeat a tested
+   strategy** (the skill's MANDATORY no-repeat section): grep
+   `research/tested_mechanisms.tsv` by signal/family words (a tested family is only
+   retested on a changed base), grep `.cache/strategy_lab/*results*.tsv` for the exact
+   candidate + params before every trial, and check `research/promotions/` before any
+   gate. New file = `scripts/strat_l<loop><designer>_<idea>.py`, composing
    the champion by import, with an off-switch that reproduces it exactly.
 4. Screen on the blind realistic ledger (defaults — never override the profile
    inside the main ledger; isolated `--results/--best-json` per parallel worker):
