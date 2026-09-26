@@ -84,7 +84,11 @@ through `scripts/promote_gate.py`. Nothing else crowns a champion.
    (+9.1pp at the same DD), a CAGR plateau over k 2–4, thr .12–.15, to .7–1.0, but the DD breaks
    at thr ≤ .11 (−21.05) and the gain rests on 7 train firings, five of them the 2020-06..10
    post-COVID V. The gate's footprint check (8% < 10%) would fail as is. Forward is unseen. Next
-   loop: attribute the gain without 2020, and only gate it if it survives that.
+   Attribution (train, scratch `.cache/l27_rearm_attr.py`): the 2020 firings alone give 36.89 (+6.8pp);
+   the two 2016 firings alone give 32.27/−17.22. **Blindness caveat:** that scratch run printed the
+   harness's `full_cagr`/`full_dd` (train+forward): 32.01/−23.03 vs the base's 26.69/−23.03. The
+   orchestrator has seen a full-window aggregate, so a gate of corerearm is NOT a clean forward
+   test. Treat it like froth: it needs post-2026-09 data, or an owner decision.
 
 0. **Loop-26 outcome** (no promotion): breakout magnitude (`strat_l26b_breakmag`, bm_w .2 /
    bm_lb 9) is the best forward-DD line found — fwd 18.25/−14.32, calmar 1.27 vs the champion's

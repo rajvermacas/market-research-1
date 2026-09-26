@@ -337,6 +337,9 @@ mistake recurs.
   gain coming from that same firing, and the crown had to be revoked. Diagnostics that inform a
   design may only print months before the split. Remembered post-split market events ("the 2022
   small-cap unwind") are forward data as well.
+  The same loop's orchestrator broke this too: a scratch attribution printed `run_book`'s
+  `full_cagr`/`full_dd`, which include the forward window. Filter scratch metrics down to the
+  train keys before printing them, not after.
 - Sleep between retry attempts, not after the last one — a trailing back-off multiplies wasted time
   across thousands of symbols that will never resolve.
 - Best strategy means best FORWARD performer, not best train. Train selects candidates,
