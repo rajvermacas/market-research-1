@@ -78,6 +78,9 @@ through `scripts/promote_gate.py`. Nothing else crowns a champion.
      partial tiers after washouts; the one gated shows the forward cost is drawdown.
    - Ungated train leads: `strat_l28a_thrust` lo .45 / hi .60 / w21 (32.46/−17.22, 3 firings — fails footprint);
      `strat_l28d_runupdemote` 4d / .15 (32.45/−17.89, passes train trade-off, but 29.38/−18.52 at 100 bps — cost-sensitive).
+   - Clean-room audit (L28): champion, both gated rows, the upvolnz off-switch and a tvsurge no-fire control all
+     reproduce to printed precision; the up-value share is point-in-time (sessions strictly before months[t]).
+     Caveat it raised: the gated uv_hi .52 cell lies OUTSIDE upvolnz's documented SPACE {.56,.57} (count as extra trials).
    - Harness fact (designer D): refused entries (up-lock, low traded value) are NaN'd before the pick, so the slot goes to
      the next rank — there is no cash to convert by demoting fill-risk names.
 
@@ -124,7 +127,7 @@ through `scripts/promote_gate.py`. Nothing else crowns a champion.
 
 ## Loop log
 
-- L28 (2026-09-27 00:02–00:48 IST by `date`, routine manual test fire; close-out began at 45 elapsed min): 4 designers in 2 rounds
+- L28 (2026-09-27 00:02–00:52 IST by `date`, routine manual test fire; close-out began at 00:47:33, 45 elapsed min): 4 designers in 2 rounds
   (exposure A/C, book construction B, entry quality D) + 1 orchestrator file, 11 mechanism files, 146 trial rows; 2 gated:
   corrdiv (fwd −3.50pp CAGR) and upvolnz (fwd DD 6.01pp deeper); champion unchanged.
 - L27 (2026-09-26 22:43–23:43 IST, 60 min, routine test fire): 3 designers + 1 short round + 3 orchestrator files, 15 mechanism files,
