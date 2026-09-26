@@ -451,3 +451,10 @@ mistake recurs.
   audits never asked whether the trade could be executed. Model the fill
   (next session, locks, liquidity) in the harness before ranking anything,
   and stamp every ledger with the execution model it was measured under.
+- A train ranking that is noise-aware and fold-robust still cannot see the
+  forward window — only the gate can. Loop-23's three gated candidates beat
+  the champion's train CAGR and DD by 3–8pp, passed neighbours, cost, noise,
+  footprint and Nifty 500 transfer, and ALL THREE fell short of its forward
+  CAGR (16.9 / 20.4 / 17.1 vs 20.6). Never crown from the ledger; and count
+  the whole search when deflating a margin — the first gate runs counted one
+  ledger (2 rows) while 112 trials had been run across the loop's ledgers.

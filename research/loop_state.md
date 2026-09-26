@@ -35,7 +35,7 @@ through `scripts/promote_gate.py`. Nothing else crowns a champion.
    README results-ledger row, rewrite the two sections below, `git add -f` the
    ledgers, commit, push.
 
-## Current state (Loop-23 close, 2026-09-26)
+## Current state (Loop-23 close, 2026-09-26 14:30 IST)
 
 - **Champion** (`.cache/strategy_lab/champion_real.json`): `strat_floorhighfresh`, top 25,
   `{"b_hi": 0.65, "b_lo": 0.45, "b_mid": 0.55, "floor_lb": 19, "lookback": 16, "max_dist": 0.055, "regime_ma": 18}`.
@@ -43,13 +43,35 @@ through `scripts/promote_gate.py`. Nothing else crowns a champion.
   forward +20.63% / DD −21.65% (calmar 0.95) vs bench +14.53% / −27.88%. Nifty 500
   transfer +29.7% / −14.1% train vs bench +21.1%. Gate report:
   `research/promotions/2026-09-26T083708Z_strat_floorhighfresh.json`.
+- **To dethrone it** (gate check 9): train CAGR > 24.13% AND train DD ≥ −18.98% AND
+  forward CAGR > 20.63% AND forward DD ≥ −21.65%, plus checks 1–8.
 - **Harness**: `strategy_lab.py --exec realistic` (next-open fill, circuit-lock block,
   ₹50 lakh liquidity floor, 50 bps, robust fold ruler, noise margin, blind forward).
   Legacy ledgers (`results.tsv` / `best.json`) are an upper bound only.
-- **Reveals used**: see `.cache/strategy_lab/reveals.tsv` (keep it small — each reveal
-  spends the holdout).
+- **Reveals used**: 4 (`.cache/strategy_lab/reveals.tsv`). Each gate run spends one.
+- **Trials under the current scoring**: 112 across all realistic ledgers (the gate's
+  deflation counts them all).
 - **Loop counter**: last loop = 23. Next loop = 24.
 
-## Lead queue (unresearched or open, highest first)
+## Lead queue (highest first)
 
-See the Loop-23 section appended below by its close-out.
+1. **liqconfirm, widen its footprint** (`strat_l23a_liqconfirm`, the nearest miss: fwd
+   20.41/−19.23 vs 20.63/−21.65, footprint 9/94 months). Its DD gain comes from moving
+   the bottom breadth tier to cash sooner. Look for a regime rule on the liquid cohort
+   that acts in more months (continuous exposure scaling instead of tier shifts),
+   without the 2018 DD cliff below a 500-name cohort.
+2. **Rank channels that are NOT the "less-extended / V-recovery" axis.** ddquality,
+   trmom(−) and their compositions all lift train and lose forward — treat that axis as
+   a train artifact on this base (DEAD for promotion purposes unless the base changes).
+3. **gapdrift** (held high-volume gap-up): PARTIAL, about 1 noise sd over its placebo.
+   Worth one more design (stronger event definition), not a gate run yet.
+4. Untested on the realistic base: position sizing / portfolio DD stop (needs a harness
+   change), a top-N sweep (15/20/30/40) of the champion, and the one-month-stale daily
+   feature convention (using month t's bars is PIT-legal but needs its own stamp).
+5. Data backlog: NSE bhavcopy (survivorship) — every result here is inflated by it.
+
+## Loop log
+
+- L22 (2026-09-26, 10 min): first realistic loop; 5 execution-aware tilts, none kept.
+- L23 (2026-09-26, 40 min): harness v2 (blind/robust/noise/gate); 8 mechanisms,
+  118 trials; 3 candidates gated, all failed forward dominance; champion unchanged.

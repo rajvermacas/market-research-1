@@ -75,6 +75,19 @@ def neighbours(params: dict) -> list[tuple[str, dict]]:
     return out
 
 
+def count_trials() -> int:
+    """Every trial run under the CURRENT realistic scoring, across the main
+    ledger and all per-worker ledgers (rows tagged `select:robust` +
+    `exec:realistic`). Deflation must count the whole search, not the one
+    ledger the winner happened to be logged in."""
+    n = 0
+    for f in (REPO_ROOT / ".cache" / "strategy_lab").glob("*results*.tsv"):
+        for line in open(f):
+            if "select:robust" in line and "exec:realistic" in line:
+                n += 1
+    return n
+
+
 def fmt(m: dict) -> str:
     return (f"train {m['cagr']*100:+.2f}/{m['maxdd']*100:.2f} (calmar {m['ret_dd']:.2f}, "
             f"robust {m['robust']:.3f})")
@@ -168,7 +181,7 @@ def main() -> int:
     checks["noise"] = {"pass": p10 >= 0.5 * base, "sd": sd, "p10": p10}
 
     # 5 deflated margin
-    n_trials = max(2, sum(1 for _ in open(ledger)) - 1) if ledger.exists() else 2
+    n_trials = max(2, count_trials())
     ref = champ["metrics"]["robust"] if champ else m["bench_robust"]
     need = sd * math.sqrt(2 * math.log(n_trials))
     checks["margin"] = {"pass": base - ref >= need, "reference": ref,
