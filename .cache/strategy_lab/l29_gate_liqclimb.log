@@ -1,0 +1,55 @@
+gating strat_l29j_liqclimb top 25 {'b_hi': 0.65, 'b_lo': 0.45, 'b_mid': 0.55, 'floor_lb': 19, 'lookback': 16, 'max_dist': 0.055, 'regime_ma': 18, 'lq_min': 5000000.0, 'lq_days': 40, 'lq_shift': 0.05, 'lq_shift_hi': 0.05, 'lq_shift_lo': 0.075, 'lq_mode': 'strict', 'top': 25, 'weighting': 'invvol', 'lc_w': -0.2, 'lc_lb': 6, 'lc_days': 60}
+/home/user/market-research-1/scripts/strat_floorlift.py:58: RuntimeWarning: All-NaN slice encountered
+  lo = np.nanmin(w, axis=0)
+/home/user/market-research-1/scripts/strat_newhigh.py:42: RuntimeWarning: All-NaN slice encountered
+  hi[t] = np.nanmax(px[t - lb + 1:t + 1], axis=0)
+/home/user/market-research-1/scripts/strat_newhigh_tier.py:55: RuntimeWarning: Mean of empty slice
+  ma_px[t] = np.nanmean(px[t - ma + 1:t + 1], axis=0)
+/home/user/market-research-1/scripts/strat_l23a_liqconfirm.py:56: RuntimeWarning: Mean of empty slice
+  ma_px[t] = np.nanmean(px[t - ma + 1:t + 1], axis=0)
+base train +36.32/-15.21 (calmar 2.39, robust 2.961)
+  nb b_hi=0.585               robust 2.916
+  nb b_hi=0.715               robust 3.381
+  nb b_lo=0.405               robust 2.210
+  nb b_lo=0.495               robust 2.742
+  nb b_mid=0.495              robust 3.029
+  nb b_mid=0.605              robust 2.612
+  nb floor_lb=18              robust 2.804
+  nb floor_lb=20              robust 2.868
+  nb lookback=15              robust 2.938
+  nb lookback=17              robust 2.961
+  nb max_dist=0.0495          robust 2.961
+  nb max_dist=0.0605          robust 2.961
+  nb regime_ma=17             robust 2.663
+  nb regime_ma=19             robust 2.006
+  nb lq_min=4.5e+06           robust 2.930
+  nb lq_min=5.5e+06           robust 2.800
+  nb lq_days=39               robust 2.961
+  nb lq_days=41               robust 2.961
+  nb lq_shift=0.045           robust 2.961
+  nb lq_shift=0.055           robust 2.901
+  nb lq_shift_hi=0.045        robust 2.800
+  nb lq_shift_hi=0.055        robust 2.930
+  nb lq_shift_lo=0.0675       robust 2.195
+  nb lq_shift_lo=0.0825       robust 2.961
+  nb top=24                   robust 2.952
+  nb top=26                   robust 2.781
+  nb lc_w=-0.18               robust 2.784
+  nb lc_w=-0.22               robust 3.144
+  nb lc_lb=5                  robust 2.992
+  nb lc_lb=7                  robust 2.744
+  nb lc_days=59               robust 2.848
+  nb lc_days=61               robust 2.954
+
+PASS  folds      {"robust": 2.9609331255718394, "losing_folds": 0}
+PASS  neighbours {"n": 32, "kept_80pct": 29, "worst": 2.0063032970933454}
+PASS  cost       {"cost_bps": 100.0, "cagr": 0.3321213135467249, "dd": -0.16757970422101576, "bench_cagr": 0.19837608390238493}
+PASS  noise      {"sd": 0.24465462252768938, "p10": 2.3775300624329936}
+FAIL  margin     {"reference": 2.1211814504348245, "reference_is": "champion", "gain": 0.8397516751370149, "required": 0.8978919081602584, "n_trials": 841}
+PASS  footprint  {"differing_months": 88, "invested_months": 88, "share": 1.0}
+PASS  transfer   {"universe": "nifty500", "cagr": 0.26128857800199756, "dd": -0.11393827869416817, "bench_cagr": 0.2110654502514704, "fwd_cagr": 0.18759364803574274, "fwd_dd": -0.20691965310735938}
+PASS  forward    {"cagr": 0.1728128718300883, "dd": -0.19540783939574025, "calmar": 0.8843702093246496, "bench_cagr": 0.1453375588416428, "bench_dd": -0.27883049819405814, "champion_calmar": 1.054207453509337, "reveal_no": 16}
+FAIL  tradeoff   {"train_verdict": "dominates", "fwd_verdict": "CAGR -4.30pp vs champion", "train": [0.36320315361942845, -0.1520618539645946], "champ_train": [0.30089815804742925, -0.17219935815265586], "fwd": [0.1728128718300883, -0.19540783939574025], "champ_fwd": [0.21583566021726464, -0.2047373688155706]}
+
+FORWARD +17.28% DD -19.54% calmar 0.88 (bench +14.53% / -27.88%) — reveal #16
+GATE FAILED — report research/promotions/2026-09-26T210330Z_strat_l29j_liqclimb.json
