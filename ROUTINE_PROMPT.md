@@ -32,6 +32,21 @@ empty queue is never a stop signal. Re-read the clock at every phase transition.
 Kill orphan `strategy_lab` processes (`ps -eo pid,ppid,cmd | grep strategy_lab`)
 before launching anything.
 
+**Hard clock gate (mandatory).** At start, save the real start time:
+`TZ=Asia/Kolkata date +%s > .cache/loop_start` (also print it in IST).
+Close-out may NOT begin until at least 45 minutes have elapsed by the shell
+clock — check with
+`echo $(( ($(date +%s) - $(cat .cache/loop_start)) / 60 ))` minutes before
+starting close-out. If it reads under 45, launch a new design round or new trials
+instead. The loop test run of 2026-09-26 closed at ~35 min while its records
+claimed 60 — never again.
+
+**Record real times only.** The start/stop times and duration written to
+`research/loop_state.md`, the registry, the README ledger, commit messages and the
+final message must be the actual `TZ=Asia/Kolkata date` output read at that
+moment — never the planned STOP or an estimate. Run `date` immediately before
+writing any time.
+
 ## Procedure
 
 Invoke the `autoresearch-trading` skill and follow it, especially its MANDATORY

@@ -381,6 +381,10 @@ mistake recurs.
   queue empties early, the next action is a new design round (or a new designer) —
   never the report. Estimated elapsed time drifts and will read hours ahead of the
   real clock; only the shell's date is authoritative.
+  Repeated in the Loop-27 routine test fire: it closed out ~35 min into a 60-min
+  run and wrote "60 min, 22:43-23:43 IST" into loop_state from the planned STOP.
+  Save the start epoch to a file, refuse close-out before 45 elapsed minutes by
+  the shell clock, and write only times read from `date` at that moment.
 - A train gain from a book-composition mechanism must be traced to its firing
   events before it is promoted. Loop-16's incumbency hurdle kept a +0.60pp train
   "improvement" (DD and forward identical) that turned out to rest on ONE
