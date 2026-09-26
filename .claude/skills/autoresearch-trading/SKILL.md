@@ -9,6 +9,25 @@ Repeatable autonomous research loops for NSE strategies. Two phases: first
 climb params on a fixed strategy, then evolve the strategy mechanism itself.
 The agent changes code each loop; a fixed harness keeps score.
 
+## MANDATORY — commit and push: at loop end, and during the loop whenever state changes
+
+The container is ephemeral: anything not pushed is lost with the session, and
+the next session resumes only from git. Commit AND push (`git add -f` the
+`.cache/strategy_lab/` ledgers, reveals log, champion file and gate reports)
+on the workstream branch:
+- **at every loop close-out** — mechanism files, ledgers, registry rows,
+  README row, `research/loop_state.md` — before reporting to the user;
+- **immediately after a crown** (`promote_gate.py --crown`) — a new champion
+  must never exist only on local disk;
+- **after every gate run** (a reveal was spent — its report and the reveals
+  log must be durable);
+- **mid-loop whenever meaningful state accumulates** (a batch of screens
+  finished, a harness/skill fix, before a long wait or any step that could
+  outlast the session) — small checkpoint commits are fine.
+Verify the push landed (`git status -sb` shows no "ahead", or compare
+`git rev-parse HEAD` with the remote branch) — never report "pushed" from the
+command having run.
+
 ## MANDATORY — never repeat a tested strategy (do this before designing or running anything)
 
 Compute is for NEW ideas. The harness will happily re-run anything, so the
