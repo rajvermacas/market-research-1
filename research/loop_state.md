@@ -57,11 +57,16 @@ through `scripts/promote_gate.py`. Nothing else crowns a champion.
 - **Harness**: realistic execution + robust fold ruler + noise margin + blind forward;
   policy keys searchable (`top`, `weighting`, `max_weight`, `min_hold`, `max_hold`, `sl_pct`,
   `ts_pct`, `stop_cool`). Pass `--top 25` on the CLI; set the book size with the `top` key.
-- **Reveals used**: 10. **Trials under the current scoring**: ~260 across realistic ledgers.
-- **Loop counter**: last loop = 25. Next loop = 26.
+- **Reveals used**: 11. **Trials under the current scoring**: ~300 across realistic ledgers.
+- **Loop counter**: last loop = 26. Next loop = 27.
 
 ## Lead queue (highest first)
 
+0. **Loop-26 outcome** (no promotion): breakout magnitude (`strat_l26b_breakmag`, bm_w .2 /
+   bm_lb 9) is the best forward-DD line found — fwd 18.25/−14.32, calmar 1.27 vs the champion's
+   1.05 — but −3.3pp forward CAGR fails the CAGR-first rule. If the user ever weights DD more,
+   it is the ready alternative. Nifty 500 DD controls (corrspike, xuniconfirm) are dead; the
+   Nifty 500 book's forward DD gap (−25.7 vs −20.5) is still open.
 1. **Nifty 500 with a drawdown control**: the Nifty 500 regime_ma-24 cell has the forward
    CAGR (22.8%) but a −25.7% forward DD (worse than its bench). A regime or exposure rule that
    cuts that DD could make it pass the trade-off. Its ledger: `.cache/strategy_lab/l25_dA_results.tsv`.
@@ -87,3 +92,5 @@ through `scripts/promote_gate.py`. Nothing else crowns a champion.
   21.58/−20.47 vs 20.63/−21.65; train 30.09/−17.22); Nifty 500 searched (84 trials; best cell
   gated, fwd 22.82/−25.65 fails the trade-off); gap-drift dead on the new base; top-22 book
   gated, fwd 20.65/−18.74 fails; 4 gates, 1 pass.
+- L26 (2026-09-26, 30 min): 4 mechanisms (2 Nifty 500 DD controls, 2 rank tilts), 43 trials,
+  1 gated (breakout magnitude: fwd 18.25/−14.32, −3.3pp CAGR, fails); champion unchanged.
