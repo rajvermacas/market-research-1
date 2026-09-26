@@ -35,41 +35,41 @@ through `scripts/promote_gate.py`. Nothing else crowns a champion.
    README results-ledger row, rewrite the two sections below, `git add -f` the
    ledgers, commit, push.
 
-## Current state (Loop-23 close, 2026-09-26 14:30 IST)
+## Current state (Loop-24 close, 2026-09-26 15:00 IST)
 
 - **Champion** (`.cache/strategy_lab/champion_real.json`): `strat_floorhighfresh`, top 25,
+  equal weight, no stops,
   `{"b_hi": 0.65, "b_lo": 0.45, "b_mid": 0.55, "floor_lb": 19, "lookback": 16, "max_dist": 0.055, "regime_ma": 18}`.
-  Train +24.13% / DD −18.98% (calmar 1.27, robust 1.059, noise sd ~0.08) vs bench +19.84%;
-  forward +20.63% / DD −21.65% (calmar 0.95) vs bench +14.53% / −27.88%. Nifty 500
-  transfer +29.7% / −14.1% train vs bench +21.1%. Gate report:
-  `research/promotions/2026-09-26T083708Z_strat_floorhighfresh.json`.
+  Train +24.13% / DD −18.98% (calmar 1.27, robust 1.059) vs bench +19.84%;
+  forward +20.63% / DD −21.65% (calmar 0.95) vs bench +14.53% / −27.88%.
 - **To dethrone it** (gate check 9): train CAGR > 24.13% AND train DD ≥ −18.98% AND
   forward CAGR > 20.63% AND forward DD ≥ −21.65%, plus checks 1–8.
-- **Harness**: `strategy_lab.py --exec realistic` (next-open fill, circuit-lock block,
-  ₹50 lakh liquidity floor, 50 bps, robust fold ruler, noise margin, blind forward).
-  Legacy ledgers (`results.tsv` / `best.json`) are an upper bound only.
-- **Reveals used**: 5 (`.cache/strategy_lab/reveals.tsv`). Each gate run spends one.
-- **Trials under the current scoring**: 120 across all realistic ledgers (the gate's
-  deflation counts them all).
-- **Loop counter**: last loop = 23. Next loop = 24.
+- **Harness**: realistic execution + robust fold ruler + noise margin + blind forward.
+  **Policy is searchable** (params-json keys): `top`, `weighting` (equal/rank/invvol),
+  `max_weight`, `min_hold`, `max_hold`, `sl_pct`, `ts_pct`, `stop_cool`. Pass `--top 25`
+  on the CLI (the ledger stamp) and set the book size with the `top` key.
+- **Reveals used**: 7 (`.cache/strategy_lab/reveals.tsv`). Each gate run spends one —
+  gate only candidates whose train neighbourhood is already measured.
+- **Trials under the current scoring**: ~170 across all realistic ledgers.
+- **Loop counter**: last loop = 24. Next loop = 25.
 
 ## Lead queue (highest first)
 
-1. **Liquid-cohort regime + a forward-positive rank channel.** Both regime candidates
-   (`strat_l23a_liqconfirm` fwd 20.41/−19.23; `strat_l23o_liqramp` fwd 19.15/−19.06) beat
-   the champion's forward DD (−21.65) but give up 0.2–1.5pp of forward CAGR, so they fail
-   dominance alone. Pair the regime with a rank channel whose gain is NOT the
-   V-recovery axis (lead 2), and screen it blind before spending a reveal. liqramp
-   hi 0.65 (27.46/−16.75 train) is ungated.
-2. **Rank channels that are NOT the "less-extended / V-recovery" axis.** ddquality,
-   trmom(−) and their compositions all lift train and lose forward — treat that axis as
-   a train artifact on this base (DEAD for promotion purposes unless the base changes).
-3. **gapdrift** (held high-volume gap-up): PARTIAL, about 1 noise sd over its placebo.
-   Worth one more design (stronger event definition), not a gate run yet.
-4. Untested on the realistic base: position sizing / portfolio DD stop (needs a harness
-   change), a top-N sweep (15/20/30/40) of the champion, and the one-month-stale daily
-   feature convention (using month t's bars is PIT-legal but needs its own stamp).
-5. Data backlog: NSE bhavcopy (survivorship) — every result here is inflated by it.
+1. **Gate `strat_l23a_liqconfirm` + top 25 inverse-vol** (ungated; neighbourhood already
+   measured in `.cache/strategy_lab/l24_pol_results.tsv`: train 30.09/−17.22, every
+   neighbour 26.8–33.4 at DD −16.8…−18.4). It keeps the 25-name breadth that held
+   forward CAGR in every gate so far, and the liqconfirm regime that improved forward DD.
+   params: champion keys + `"lq_min": 5e6, "lq_days": 40, "lq_shift": 0.05,
+   "lq_shift_hi": 0.05, "lq_shift_lo": 0.075, "lq_mode": "strict", "top": 25,
+   "weighting": "invvol"`.
+2. **Concentration is a train artifact on this base**: 12–15-name books lifted train by
+   6–10pp and lost ~4.5pp of forward CAGR in both gates. Keep new mechanisms at the
+   champion's breadth (25) unless the base changes.
+3. **Stops are dead** on the fresh-print book (every sl/ts level lowers CAGR without
+   improving DD). Do not re-run without a changed base.
+4. Rank channels that are NOT the V-recovery axis (ddquality/trmom lost forward).
+5. gapdrift (held high-volume gap-up) — PARTIAL, needs a stronger event definition.
+6. Data backlog: NSE bhavcopy (survivorship) — every result here is inflated by it.
 
 ## Loop log
 
@@ -78,3 +78,6 @@ through `scripts/promote_gate.py`. Nothing else crowns a champion.
   126 trials; 4 candidates gated (ddquality, liqconfirm, liqdq, liqramp), all failed
   forward dominance; champion unchanged. Gate fixes: deflation counts every ledger;
   footprint counts exposure changes.
+- L24 (2026-09-26, 30 min): risk policy moved into training (book size, weights,
+  holds, daily-path stops); 33 trials; 2 gated (top-15 inverse-vol on the champion and on
+  liqconfirm), both lost forward CAGR; stops dead; champion unchanged.
