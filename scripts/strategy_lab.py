@@ -17,9 +17,14 @@ Candidate contract (`scripts/strat_<name>.py`):
         scores: months x stocks float array, NaN = ineligible, higher = better
         regime: exposure in [0,1] per month (bool still works: 0/1 cash-or-full,
                 so partial tiers like 0.4/0.7/1.0 are expressible per trial)
-        risk:   optional dict {trail_k, max_hold} — position exits THIS trial
-                tests. Risk settings are searched, never hardcoded doctrine:
-                pass them in --params-json or --trail-k/--max-hold flags.
+        risk:   optional dict of POLICY keys — the strategy's own buying,
+                sizing, holding and stop-loss decisions for THIS trial:
+                top, weighting (equal/rank/invvol), max_weight, min_hold,
+                max_hold, sl_pct, ts_pct (intramonth stops on the daily
+                path), stop_cool, trail_k (legacy month-end check). The same
+                keys may be passed in --params-json. Policy is searched like
+                any signal parameter; the harness only enforces the market's
+                rules (fills, locks, liquidity, costs) and the scoring.
 
 Point-in-time: a holding month starting at months[m] may only use daily bars
 with date < months[m] and month-end closes through px[m]. Costs are charged
@@ -207,6 +212,68 @@ def exec_panels(daily: pl.DataFrame, months, cols: list[str], fill: str) -> dict
             "lock_dn": nxt(mat("f_dn", 0.0), 0.0) > 0.5, "tv20": tv20}
 
 
+POLICY_KEYS = ("top", "weighting", "max_weight", "max_hold", "min_hold", "sl_pct",
+               "ts_pct", "stop_cool", "trail_k")
+
+
+def build_path(daily: pl.DataFrame, months, cols: list[str]) -> dict:
+    """Per-name daily arrays for intramonth stop simulation. `first[m, j]` is
+    the index of name j's first bar dated on/after months[m] (so the holding
+    window of decision t under a next-open fill is bars first[t+1] ..
+    first[t+2]-1, entered at the open of the first and exited at the open of
+    first[t+2])."""
+    base = date(1970, 1, 1).toordinal()
+    mo = np.array([m.toordinal() - base for m in months] + [10 ** 7])
+    ci = {c: j for j, c in enumerate(cols)}
+    first = np.zeros((len(mo), len(cols)), dtype=np.int64)
+    arrs: list = [None] * len(cols)
+    d = (daily.sort("symbol", "date")
+         .with_columns(pl.col("close").shift(1).over("symbol").alias("pc"),
+                       pl.col("date").cast(pl.Int32).alias("di")))
+    for sym, g in d.partition_by("symbol", as_dict=True).items():
+        sym = sym[0] if isinstance(sym, tuple) else sym
+        j = ci.get(sym)
+        if j is None:
+            continue
+        a = {k: g[k].cast(pl.Float64).fill_null(np.nan).to_numpy()
+             for k in ("open", "high", "low", "close", "pc", "volume")}
+        di = g["di"].to_numpy()
+        first[:, j] = np.searchsorted(di, mo)
+        arrs[j] = a
+    return {"first": first, "a": arrs}
+
+
+def _weights(n: int, E: float, scheme: str, max_w, vols=None) -> np.ndarray:
+    """Sleeve weights for n names in rank order (best first), summing to E
+    unless a max_weight cap leaves cash."""
+    if n == 0:
+        return np.zeros(0)
+    if scheme == "rank":
+        raw = np.arange(n, 0, -1, dtype=float)
+    elif scheme == "invvol":
+        v = np.asarray(vols, dtype=float)
+        v = np.where(np.isfinite(v) & (v > 0), v, np.nanmedian(v) if np.isfinite(v).any() else 1.0)
+        raw = 1.0 / np.maximum(v, 1e-4)
+    elif scheme == "equal":
+        raw = np.ones(n)
+    else:
+        raise ValueError(f"weighting must be equal/rank/invvol, got {scheme!r}")
+    w = raw / raw.sum()
+    if max_w:
+        cap = float(max_w)
+        for _ in range(n):
+            over = w > cap + 1e-12
+            if not over.any():
+                break
+            excess = float((w[over] - cap).sum())
+            w[over] = cap
+            free = ~over & (w < cap)
+            if not free.any():
+                break  # everything capped: the excess stays in cash
+            w[free] += excess * w[free] / w[free].sum()
+    return E * w
+
+
 def backtest_scores(scores: np.ndarray, regime: np.ndarray, px: np.ndarray,
                     months, start_i: int, split_i: int | None,
                     cost: float, top: int, cols=None,
@@ -222,6 +289,25 @@ def backtest_scores(scores: np.ndarray, regime: np.ndarray, px: np.ndarray,
                   intra-month lows). Composition effect at monthly marks;
                   fills are NOT modeled tick-by-tick.
         max_hold  drop a name after N months held, however it ranks.
+    POLICY (the strategy's own decisions — searched per trial, never
+    harness doctrine; all optional, absent = the plain equal-weight book):
+        top         book size (overrides the `top` argument)
+        weighting   equal | rank (linear in rank) | invvol (1 / 60-session
+                    daily-return stdev, measured before the decision)
+        max_weight  cap per name as a fraction of the invested sleeve; the
+                    excess is redistributed, or stays in cash if all capped
+        min_hold    a bought name is kept at least N months (unless stopped
+                    or the regime goes to cash)
+        sl_pct      intramonth stop-loss at entry price x (1 - sl_pct)
+        ts_pct      intramonth trailing stop at peak daily close since entry
+                    x (1 - ts_pct)
+        stop_cool   months a stopped name is barred from re-entry (default 0)
+      Stops are simulated on the daily path of the holding month (needs the
+      next_open fill and `ex["path"]`): a bar that opens through the level
+      fills at its open (gap risk), otherwise at the level; a bar that is
+      down-locked (one price below the prior close) or traded zero volume
+      cannot fill and the stop waits for the next tradeable bar. The stopped
+      slot sits in cash until the next rebalance.
 
     `ex` is the execution model (None = legacy: fill at the signal close, every
     name fillable, no liquidity floor). Keys: `price` (exec_panels price or
@@ -248,6 +334,17 @@ def backtest_scores(scores: np.ndarray, regime: np.ndarray, px: np.ndarray,
     risk = risk or {}
     trail_k = risk.get("trail_k")
     max_hold = risk.get("max_hold")
+    top = int(risk.get("top") or top)
+    weighting = str(risk.get("weighting") or "equal")
+    max_w = risk.get("max_weight")
+    min_hold = int(risk.get("min_hold") or 0)
+    sl_pct = float(risk.get("sl_pct") or 0.0)
+    ts_pct = float(risk.get("ts_pct") or 0.0)
+    stop_cool = int(risk.get("stop_cool") or 0)
+    stops_on = sl_pct > 0 or ts_pct > 0
+    # the general weighted path; without these keys the loop below is the
+    # plain equal-weight book, bit-for-bit
+    adv = stops_on or weighting != "equal" or bool(max_w)
     col_idx = {s: j for j, s in enumerate(cols)} if cols is not None else {}
     n_stocks = px.shape[1]
     if ex is not None and cols is None:
@@ -256,8 +353,18 @@ def backtest_scores(scores: np.ndarray, regime: np.ndarray, px: np.ndarray,
     # a next-day fill needs month t+2's first bar to mark month t+1: the last
     # decision row has no exit price, so the walk stops one row earlier
     t_end = len(months) - 1 if pxe is px else len(months) - 2
-    stats = {"would_enter": 0, "blocked_lock": 0, "blocked_tv": 0, "stuck": 0}
+    stats = {"would_enter": 0, "blocked_lock": 0, "blocked_tv": 0, "stuck": 0,
+             "stops": 0}
     picks_log: dict = {}
+    P = None
+    if stops_on or weighting == "invvol":
+        if ex is None or ex.get("path") is None or pxe is px:
+            raise ValueError("stops / invvol weights need the realistic next-open "
+                             "execution model (ex['path'])")
+        P = ex["path"]
+    entry_px: dict = {}
+    tpeak: dict = {}
+    cool_until: dict = {}
     eq, held, peaks, flags = [1.0], {}, {}, []
     weights: dict = {}
     E_prev = 0.0
@@ -302,11 +409,23 @@ def backtest_scores(scores: np.ndarray, regime: np.ndarray, px: np.ndarray,
             for sym in held:
                 eb[col_idx[sym]] = False
             s[eb] = np.nan
+        for sym, tu in cool_until.items():
+            if tu > t and sym not in held:
+                s[col_idx[sym]] = np.nan
+        forced = []
+        if min_hold and E > 0:
+            forced = [x for x, t0 in held.items() if t - t0 < min_hold
+                      and np.isfinite(pxe[t, col_idx[x]]) and np.isfinite(pxe[t + 1, col_idx[x]])]
+            for x in forced:
+                s[col_idx[x]] = np.nan
         idx = np.flatnonzero(np.isfinite(s))
         pick = set()
-        if E > 0 and len(idx) >= max(top // 2, 3):
-            order = idx[np.argsort(-s[idx], kind="stable")[:top]]
-            pick = {cols[i] for i in order} if cols is not None else set(order.tolist())
+        order_syms: list = []
+        if E > 0 and len(idx) + len(forced) >= max(top // 2, 3):
+            order = idx[np.argsort(-s[idx], kind="stable")[:max(top - len(forced), 0)]]
+            order_syms = [cols[i] for i in order] if cols is not None else order.tolist()
+            order_syms = order_syms + sorted(forced)
+            pick = set(order_syms)
         stuck = set()
         if ex is not None:
             for sym in set(held) - pick:
@@ -321,7 +440,74 @@ def backtest_scores(scores: np.ndarray, regime: np.ndarray, px: np.ndarray,
             cont = len(pick & set(held)) / len(pick)
             c += 0.5 * cost * abs(E - E_prev) * cont
         new_w: dict = {}
-        if stuck:
+        if adv:
+            w_stuck = {x: weights.get(x, 0.0) for x in stuck}
+            room = max(E - sum(w_stuck.values()), 0.0)
+            vols = None
+            if weighting == "invvol" and order_syms:
+                vols = []
+                for x in order_syms:
+                    j = col_idx[x]
+                    A = P["a"][j]
+                    k1 = int(P["first"][t + 1, j])
+                    if A is None or k1 < 21:
+                        vols.append(np.nan)
+                        continue
+                    c_ = A["close"][max(0, k1 - 61):k1]
+                    rr = np.diff(np.log(c_[np.isfinite(c_) & (c_ > 0)]))
+                    vols.append(float(np.std(rr)) if rr.size >= 20 else np.nan)
+            ws = _weights(len(order_syms), room, weighting, max_w, vols)
+            new_w = {**{x: float(w) for x, w in zip(order_syms, ws)}, **w_stuck}
+            wp = sum(new_w[x] for x in pick)
+            if pick and wp > 0:
+                # same definition as the plain book: round trip on the newly
+                # bought share of the PICKS (stuck names are not a purchase)
+                bought = sum(new_w[x] for x in pick if x not in held) / wp
+                c = cost * bought
+                if ex is not None and ex.get("charge_exposure"):
+                    c += 0.5 * cost * abs(E - E_prev) * (1 - bought)
+            stopped = set()
+            r = 0.0
+            for x, w in new_w.items():
+                j = col_idx[x]
+                if x not in held:
+                    entry_px[x] = float(pxe[t, j])
+                    tpeak[x] = float(pxe[t, j])
+                fill = None
+                if stops_on:
+                    A = P["a"][j]
+                    k0, k1 = int(P["first"][t + 1, j]), int(P["first"][t + 2, j])
+                    for k in range(k0, k1):
+                        lv = -np.inf
+                        if sl_pct:
+                            lv = entry_px[x] * (1 - sl_pct)
+                        if ts_pct:
+                            lv = max(lv, tpeak[x] * (1 - ts_pct))
+                        o_, h_, l_, c_ = A["open"][k], A["high"][k], A["low"][k], A["close"][k]
+                        dead = (A["volume"][k] == 0) or (h_ == l_ and c_ < A["pc"][k])
+                        if not dead:
+                            if o_ <= lv:
+                                fill = o_
+                                break
+                            if l_ <= lv:
+                                fill = lv
+                                break
+                        if np.isfinite(c_):
+                            tpeak[x] = max(tpeak[x], float(c_))
+                if fill is not None and np.isfinite(fill):
+                    stopped.add(x)
+                    r += w * (fill / pxe[t, j] - 1)
+                else:
+                    r += w * (pxe[t + 1, j] / pxe[t, j] - 1)
+            stats["stops"] += len(stopped)
+            eq.append(eq[-1] * (1 + r) * (1 - c))
+            flags.append(sum(new_w.values()))
+            for x in stopped:
+                cool_until[x] = t + 1 + stop_cool
+                new_w.pop(x, None)
+            pick -= stopped
+            stuck -= stopped
+        elif stuck:
             w_stuck = {x: weights.get(x, 0.0) for x in stuck}
             room = max(E - sum(w_stuck.values()), 0.0)
             new_w = {**{x: room / len(pick) for x in pick}, **w_stuck} if pick else w_stuck
@@ -349,6 +535,10 @@ def backtest_scores(scores: np.ndarray, regime: np.ndarray, px: np.ndarray,
         for sym in list(peaks):
             if sym not in new_held:
                 del peaks[sym]
+        for dct in (entry_px, tpeak):
+            for sym in list(dct):
+                if sym not in new_held:
+                    del dct[sym]
         held = new_held
         if record_picks:  # (book, exposure): a regime change is a footprint too
             picks_log[t] = (sorted(new_held), round(flags[-1], 6))
@@ -535,7 +725,7 @@ def score_candidate(mod, params: dict, ctx: dict, risk_cli: dict | None = None):
     risk = dict(risk_cli or {"trail_k": None, "max_hold": None})
     if len(out) > 2 and out[2]:
         risk.update(out[2])
-    for k in ("trail_k", "max_hold"):
+    for k in POLICY_KEYS:  # the strategy's own buy/hold/stop policy, searched per trial
         if k in params:
             risk[k] = params[k]
     lows = None
@@ -548,6 +738,10 @@ def score_candidate(mod, params: dict, ctx: dict, risk_cli: dict | None = None):
 
 def run_book(scored, ctx: dict, top: int, cost: float, folds: int, **kw) -> dict:
     scores, regime, risk, lows = scored
+    needs_path = (risk.get("sl_pct") or risk.get("ts_pct")
+                  or risk.get("weighting") == "invvol")
+    if needs_path and ctx["ex"] is not None and ctx["ex"].get("path") is None:
+        ctx["ex"]["path"] = build_path(ctx["daily"], ctx["months"], ctx["cols"])
     return backtest_scores(scores, regime, ctx["px"], ctx["months"], ctx["start_i"],
                            ctx["split_i"], cost, top, cols=ctx["cols"], lows=lows,
                            risk=risk, ex=ctx["ex"], folds=folds, **kw)
@@ -726,7 +920,11 @@ def main() -> int:
                 f"min_tv={prof['min_tv']:g} cost={prof['cost_bps']:g}rt "
                 f"expo={int(bool(prof['charge_exposure']))}")
     print(f"EXEC {exec_tag} | would-enter {xs['would_enter']} blocked-lock "
-          f"{xs['blocked_lock']} blocked-tv {xs['blocked_tv']} stuck-exits {xs['stuck']}")
+          f"{xs['blocked_lock']} blocked-tv {xs['blocked_tv']} stuck-exits {xs['stuck']} "
+          f"stops {xs['stops']}")
+    pol = {k: risk[k] for k in POLICY_KEYS if risk.get(k) not in (None, 0, 0.0, "equal")}
+    print("POLICY " + (json.dumps(pol, sort_keys=True) if pol else
+                       f"default (equal weight, top {args.top}, no stops)"))
 
     status, note = "baseline", "first entry"
     unit = "%" if ruler == "cagr" else ""
@@ -804,7 +1002,7 @@ def main() -> int:
         extra_note += f" noise_sd={m['noise_sd']:.3f}"
     with open(results_path, "a") as f:
         f.write(f"{ts}\t{status}\t{args.candidate}\t{json.dumps(params, sort_keys=True)}\t"
-                f"{args.top}\t{m['cagr']*100:.3f}\t{m['maxdd']*100:.3f}\t{m['ret_dd']:.3f}\t"
+                f"{int(risk.get('top') or args.top)}\t{m['cagr']*100:.3f}\t{m['maxdd']*100:.3f}\t{m['ret_dd']:.3f}\t"
                 f"{m['h1_cagr']*100:.3f}\t{m['h2_cagr']*100:.3f}\t{fwd_cols}\t"
                 f"{note} [risk:{risk_note.strip()} select:{prof['select']} {exec_tag} "
                 f"minyr={m['year_min']*100:.1f} ystd={m['year_std']*100:.1f}{extra_note}]\n")

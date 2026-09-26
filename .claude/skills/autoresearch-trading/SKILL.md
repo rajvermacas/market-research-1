@@ -134,7 +134,15 @@ AND forward), writes `research/promotions/<ts>_<cand>.json`, and
 `--crown <report>` records a passing report in
 `.cache/strategy_lab/champion_real.json`. Monthly and execution panels are
 cached in `.cache/strategy_lab/panels/` (keyed by a data fingerprint), so a
-light trial costs ~4 s. **The loop's resume file is `research/loop_state.md`**
+light trial costs ~4 s. **Policy is the strategy's, not the harness's.** Buying, sizing, holding and
+stop-loss are searchable params-json (or candidate risk-dict) keys: `top`,
+`weighting` (equal/rank/invvol), `max_weight`, `min_hold`, `max_hold`,
+`sl_pct` / `ts_pct` (stops simulated on the daily path: gap-through fills at the
+open, down-locked or zero-volume bars cannot fill), `stop_cool`. With none set,
+the book is the plain equal-weight top-N bit-for-bit. The harness keeps only the
+market's rules (fills, locks, liquidity, costs), the ruler and the gate — never
+tune those per trial. The gate nudges numeric policy keys like any other param.
+**The loop's resume file is `research/loop_state.md`**
 — read it first in every new session and rewrite its state/lead sections at
 every close-out.
 
