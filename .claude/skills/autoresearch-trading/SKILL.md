@@ -100,8 +100,25 @@ python scripts/strategy_lab.py --candidate strat_combo \
 ```
 
 Verdict logic mirrors Phase A (train selects, forward judges, halves must pass)
-and appends to `.cache/strategy_lab/results.tsv`. Keep `top` and costs fixed
+and appends to the profile's ledger. Keep `top` and costs fixed
 when comparing mechanisms.
+
+**Execution model (`--exec`, default `realistic`).** Since the Loop-21 champion
+review, `strategy_lab.py` fills each rebalance at the next session's open,
+refuses entries whose execution bar is circuit-locked up or traded zero volume,
+traps exits whose bar is locked down, requires a INR 50 lakh 20-session median
+traded value for new entries, and charges 50 bps round trip (+ half a round
+trip on exposure changes). Its ledger is `.cache/strategy_lab/results_real.tsv`
+/ `best_real.json`. `--exec legacy` reproduces the pre-L22 harness and ledger
+(`results.tsv` / `best.json`) bit-exactly — those numbers are an upper bound
+that assumed un-fillable limit-up small caps could be bought at the signal
+close (the L21 champion: legacy fwd +55.0%/−11.0%, realistic fwd −5.2%/−41.2%).
+Every new best is stamped with its harness (exec model, cost, universe, start,
+split, top) and the lab REFUSES to rank a trial against a best with a
+different stamp — window/cost variants need their own ledger. Every run prints
+an `EXEC` line (would-enter / blocked-lock / blocked-tv / stuck-exits); a
+mechanism whose gain disappears when those counts change is an execution
+artifact.
 
 ## Searchable risk (nothing hardcoded)
 
@@ -499,7 +516,9 @@ rule, ledger paths, stop time, report format. Hard-won rules:
   are scoped to it. Re-base surviving terms onto the champion chain before
   believing a negative.
 - State the run convention in every brief: candidate, `--top`, `--universe
-  nse_all`, `--cost-bps 25`, the full params JSON, and the isolated ledger paths.
+  nse_all`, `--exec realistic` (profile defaults: next-open fill, lock block,
+  min_tv 5e6, 50 bps round trip — never override them inside one ledger),
+  the full params JSON, and the isolated ledger paths.
   A wrong universe silently produces rows incomparable to the champion —
   Loop-13: a worker's first batch ran nifty500 by its own choice and had to be
   rerun before any number meant anything. Ledgers are also blind to `--start`:

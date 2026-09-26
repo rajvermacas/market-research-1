@@ -439,3 +439,15 @@ mistake recurs.
   stop has passed, and go straight to close-out — the durable ledgers and
   delivered files are the record, and fresh trials 14 h later risk mixing
   harness versions inside one ledger.
+- A backtest that fills at the bar its signal read, on a universe with price
+  bands, is measuring un-fillable trades. The legacy `strategy_lab` harness
+  bought every pick at the same month-end close the score used; on the full
+  NSE board ~30% of the L21 champion's entries closed at their high and ~16%
+  printed one price all day (upper-circuit locks, no sellers). Refusing only
+  the locked entries took its forward from +55.0%/−11.0% to ~+21%/−39% — far
+  outside a random-block control (fwd 42–62%) — and the full realistic
+  model (next-open fill, lock block, INR 50 lakh liquidity floor, 50 bps)
+  reads fwd −5.2%/−41.2%. Twenty-one loops of PIT, identity and arithmetic
+  audits never asked whether the trade could be executed. Model the fill
+  (next session, locks, liquidity) in the harness before ranking anything,
+  and stamp every ledger with the execution model it was measured under.
