@@ -41,7 +41,7 @@ through `scripts/promote_gate.py`. Nothing else crowns a champion.
    README results-ledger row, rewrite the two sections below, `git add -f` the
    ledgers, commit, push.
 
-## Current state (Loop-27 close, 2026-09-26 23:43 IST — champion unchanged since L25)
+## Current state (Loop-28 close, 2026-09-27 00:48 IST — champion unchanged since L25)
 
 - **Champion** (`.cache/strategy_lab/champion_real.json`, crowned L25): `strat_l23a_liqconfirm`,
   full board (`nse_all`), `--top 25`, params
@@ -60,10 +60,26 @@ through `scripts/promote_gate.py`. Nothing else crowns a champion.
 - **Harness**: realistic execution + robust fold ruler + noise margin + blind forward;
   policy keys searchable (`top`, `weighting`, `max_weight`, `min_hold`, `max_hold`, `sl_pct`,
   `ts_pct`, `stop_cool`). Pass `--top 25` on the CLI; set the book size with the `top` key.
-- **Reveals used**: 13 (L27 spent #12 on strat_l27b_spread, #13 on strat_l27a_froth). **Trials under the current scoring**: ~300 across realistic ledgers.
-- **Loop counter**: last loop = 27. Next loop = 28.
+- **Reveals used**: 15 (L28 spent #14 on strat_l28b_corrdiv, #15 on strat_l28o_upvolnz; L27 #12 spread, #13 froth). **Trials under the current scoring**: ~590 across realistic ledgers (the gate's N=592).
+- **Loop counter**: last loop = 28. Next loop = 29.
 
 ## Lead queue (highest first)
+
+000. **Loop-28 outcome (no promotion).** Two gates, both fail the forward trade-off:
+   - `strat_l28b_corrdiv` (correlation-diversified selection, cd_c .3 / 60d / mean / buf 15, + weighting rank):
+     train 33.16/−17.63 → fwd 18.09/−18.50 (−3.50pp CAGR). The fifth selection-side train gain that loses
+     forward CAGR (after ddquality, breakmag, CS spread, top-22). Selection/rank channels look closed for forward CAGR.
+   - `strat_l28o_upvolnz` (board up-value share over 42 sessions > .52 → re-arm a PARTIAL tier to full; never re-arms
+     full cash): train 38.46/−17.76 (plateau .48–.55, 14 train firings) → fwd 26.79/−26.49: +5.21pp CAGR but DD 6.01pp
+     deeper (allowed 2.60). Re-arming adds forward return AND forward drawdown. Its forward is now revealed — do not
+     re-shape it against that number (e.g. a DD guard tuned to 2022-26 is contaminated). A re-arm variant may only be
+     retested with a DD guard justified on train data alone, and gated as a new candidate with disclosure.
+   - Re-arm family status: corerearm (L27), thrust (L28a, 3 firings), upvol/upvolnz — all gain on train by re-arming
+     partial tiers after washouts; the one gated shows the forward cost is drawdown.
+   - Ungated train leads: `strat_l28a_thrust` lo .45 / hi .60 / w21 (32.46/−17.22, 3 firings — fails footprint);
+     `strat_l28d_runupdemote` 4d / .15 (32.45/−17.89, passes train trade-off, but 29.38/−18.52 at 100 bps — cost-sensitive).
+   - Harness fact (designer D): refused entries (up-lock, low traded value) are NaN'd before the pick, so the slot goes to
+     the next rank — there is no cash to convert by demoting fill-risk names.
 
 00. **Loop-27 outcome — a crown was REVOKED.** `strat_l27a_froth` (illiquid-tail minus liquid-core
    2-month return > .06 -> exposure x 0.6) passed all 9 gate checks (train 30.21/−14.09, fwd
@@ -108,6 +124,9 @@ through `scripts/promote_gate.py`. Nothing else crowns a champion.
 
 ## Loop log
 
+- L28 (2026-09-27 00:02–00:48 IST by `date`, routine manual test fire; close-out began at 45 elapsed min): 4 designers in 2 rounds
+  (exposure A/C, book construction B, entry quality D) + 1 orchestrator file, 11 mechanism files, 146 trial rows; 2 gated:
+  corrdiv (fwd −3.50pp CAGR) and upvolnz (fwd DD 6.01pp deeper); champion unchanged.
 - L27 (2026-09-26 22:43–23:43 IST, 60 min, routine test fire): 3 designers + 1 short round + 3 orchestrator files, 15 mechanism files,
   ~150 trials; 2 gated: CS spread (fails fwd CAGR −3.23pp) and froth (passes all checks — crown REVOKED
   for forward contamination, see lead 00); champion unchanged.

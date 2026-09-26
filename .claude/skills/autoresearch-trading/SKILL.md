@@ -948,6 +948,17 @@ to wait for them.
    diagnostics may only print pre-split months. Operational: the `autoresearch-designer` agent type
    was not registered in the routine session, so designers ran as `general-purpose` with the
    definition inlined and no model override (inheriting the orchestrator's model).
+   State at Loop-28 close (2026-09-27, routine manual test fire): champion UNCHANGED (L25
+   `strat_l23a_liqconfirm` top 25 invvol). Two gates (reveals #14, #15): correlation-diversified
+   selection + rank weights (`strat_l28b_corrdiv`) train 33.16/-17.63 -> fwd 18.09/-18.50, loses 3.5pp
+   forward CAGR like every earlier selection-side gain; up-value-share re-arm from a partial tier
+   (`strat_l28o_upvolnz` 42d/.52) train 38.46/-17.76 -> fwd 26.79/-26.49, +5.2pp CAGR but 6.0pp deeper
+   DD, so re-arm rules buy forward return with forward drawdown. Both also failed the best-of-N margin.
+   Harness fact: refused entries are NaN'd before the pick (slot goes to the next rank), so fill-risk
+   demotion cannot convert cash. Operational: designers share the session scratchpad; two designers'
+   batch files collided (same `batch2.sh` name) - briefs must require designer-prefixed scratch names.
+   The `autoresearch-designer` agent type was again not registered; designers ran as `general-purpose`
+   with the definition inlined and no model override.
 5. Ask the user for the designer and worker models (Step 0 of the playbook),
    then open the round. At close: commit with setup + verdict, `git add -f` the
    tracked ledgers if `.cache` is ignored, and push the workstream branch — the
