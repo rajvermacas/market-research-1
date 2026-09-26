@@ -120,6 +120,24 @@ an `EXEC` line (would-enter / blocked-lock / blocked-tv / stuck-exits); a
 mechanism whose gain disappears when those counts change is an execution
 artifact.
 
+**Scoring, blindness and promotion (Loop-23 harness).** The realistic profile
+ranks on `robust` = the median of 4 contiguous train-fold calmars (each fold's
+DD floored at 5%), requires train CAGR above the bench, and demands the gain
+exceed the trial's own NOISE sd (16 reruns with a random 10% of new entries
+refused). The forward window is BLIND: trials print `FWD [blind]`, ledgers
+store `blind`, best.json strips forward keys. Never pass `--reveal` inside a
+loop. A KEEP is only a candidate: `scripts/promote_gate.py` runs the fixed
+checks (folds, ±1-step neighbours, 2x cost, 32-seed noise, best-of-N deflated
+margin, footprint vs champion, Nifty 500 transfer, the single logged forward
+reveal, and dominance: higher CAGR AND no deeper DD than the champion on train
+AND forward), writes `research/promotions/<ts>_<cand>.json`, and
+`--crown <report>` records a passing report in
+`.cache/strategy_lab/champion_real.json`. Monthly and execution panels are
+cached in `.cache/strategy_lab/panels/` (keyed by a data fingerprint), so a
+light trial costs ~4 s. **The loop's resume file is `research/loop_state.md`**
+— read it first in every new session and rewrite its state/lead sections at
+every close-out.
+
 ## Searchable risk (nothing hardcoded)
 
 Risk settings are trial params, not house doctrine. Per trial, via
@@ -628,6 +646,8 @@ to wait for them.
 
 ## Fresh-session bootstrap
 
+0. Read `research/loop_state.md` — the current champion, protocol, loop
+   counter and lead queue. It supersedes the historical state paragraphs below.
 1. Read this skill end-to-end first — the loop assumes the playbook above.
 2. `git log --oneline -5`, `git status --short` — find the workstream branch
    and check for external/parallel changes.

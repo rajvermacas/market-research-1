@@ -1,0 +1,2 @@
+ts	candidate	params	ledger	why
+2026-09-26T08:37:08Z	strat_floorhighfresh	{"b_hi": 0.65, "b_lo": 0.45, "b_mid": 0.55, "floor_lb": 19, "lookback": 16, "max_dist": 0.055, "regime_ma": 18}	.cache/strategy_lab/results_real.tsv	promote_gate

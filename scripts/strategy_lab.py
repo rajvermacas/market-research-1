@@ -44,6 +44,15 @@ a trial against a best with a different stamp is refused, not ranked.
 Known residual: eligibility still requires a finite next-month price (a
 look-ahead the L20 audit measured as inert on the legacy champion).
 
+Scoring (Loop-23): the realistic profile ranks on `robust`, the median of 4
+contiguous train-fold calmars (DD floored at 5%), so one boom year cannot
+carry a candidate; a keep must beat the ledger best by more than its own
+noise (sd over 16 reruns that refuse a random 10% of new entries) and beat
+the bench on train CAGR. The forward window is blind unless --reveal is
+passed, and every reveal is logged; promote_gate.py is the one place a
+candidate's forward is revealed and a champion is crowned. Monthly and
+execution panels are cached under .cache/strategy_lab/panels/.
+
 Usage:
     python scripts/strategy_lab.py --candidate strat_momentum \
         --params-json '{"lookback":9,"regime_ma":6,"abs_mom":true}' \
@@ -55,11 +64,12 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import importlib
 import json
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 import numpy as np
@@ -201,7 +211,8 @@ def backtest_scores(scores: np.ndarray, regime: np.ndarray, px: np.ndarray,
                     months, start_i: int, split_i: int | None,
                     cost: float, top: int, cols=None,
                     lows: np.ndarray | None = None, risk: dict | None = None,
-                    ex: dict | None = None) -> dict:
+                    ex: dict | None = None, extra_block: np.ndarray | None = None,
+                    folds: int = 0, record_picks: bool = False) -> dict:
     """Monthly book with searchable risk. `regime` is exposure in [0,1] per
     month (bool arrays still work as 0/1 cash-or-full). `risk` selects the
     position machinery for THIS trial — the loop discovers it, nothing here
@@ -225,6 +236,14 @@ def backtest_scores(scores: np.ndarray, regime: np.ndarray, px: np.ndarray,
         another month, and new picks share only the exposure left over;
       - costs stay a ROUND TRIP per newly bought slot (`cost`), plus
         0.5 x cost x |E - E_prev| on the continuing slots when enabled.
+
+    `extra_block` (months x stocks bool) refuses NEW entries exactly like an
+    up-lock — the noise probe uses it to knock out a random share of entries.
+    `folds` splits the TRAIN curve into that many contiguous blocks and scores
+    each as CAGR / max(|DD|, 5%); `robust` is the median block score (the
+    ruler of the realistic profile), `robust_min` the worst. `record_picks`
+    adds the held book per decision row (for footprint diffs; never written
+    to a ledger).
     """
     risk = risk or {}
     trail_k = risk.get("trail_k")
@@ -238,6 +257,7 @@ def backtest_scores(scores: np.ndarray, regime: np.ndarray, px: np.ndarray,
     # decision row has no exit price, so the walk stops one row earlier
     t_end = len(months) - 1 if pxe is px else len(months) - 2
     stats = {"would_enter": 0, "blocked_lock": 0, "blocked_tv": 0, "stuck": 0}
+    picks_log: dict = {}
     eq, held, peaks, flags = [1.0], {}, {}, []
     weights: dict = {}
     E_prev = 0.0
@@ -277,6 +297,11 @@ def backtest_scores(scores: np.ndarray, regime: np.ndarray, px: np.ndarray,
                 stats["blocked_lock"] += int(sum(lock[i] for i in new_nat))
                 stats["blocked_tv"] += int(sum(thin[i] and not lock[i] for i in new_nat))
             s[lock | thin] = np.nan
+        if extra_block is not None:
+            eb = extra_block[t].copy()
+            for sym in held:
+                eb[col_idx[sym]] = False
+            s[eb] = np.nan
         idx = np.flatnonzero(np.isfinite(s))
         pick = set()
         if E > 0 and len(idx) >= max(top // 2, 3):
@@ -325,6 +350,8 @@ def backtest_scores(scores: np.ndarray, regime: np.ndarray, px: np.ndarray,
             if sym not in new_held:
                 del peaks[sym]
         held = new_held
+        if record_picks:
+            picks_log[t] = sorted(new_held)
 
     curve = np.array(eq)
     flags = np.array(flags)
@@ -362,6 +389,22 @@ def backtest_scores(scores: np.ndarray, regime: np.ndarray, px: np.ndarray,
                 "full_cagr": float(full_cagr), "full_dd": float(full_dd)}
 
     k = split_i - start_i
+    extra: dict = {}
+    if record_picks:
+        extra["picks"] = picks_log
+    if folds:
+        edges = np.linspace(0, k, folds + 1).round().astype(int)
+        fc, fd, fs, bsc = [], [], [], []
+        for a, b in zip(edges[:-1], edges[1:]):
+            c_, d_ = seg(curve[a:b + 1])
+            bc_, bd_ = seg(bench[a:b + 1])
+            fc.append(float(c_))
+            fd.append(float(d_))
+            fs.append(float(c_ / max(abs(d_), 0.05)))
+            bsc.append(float(bc_ / max(abs(bd_), 0.05)))
+        extra.update({"fold_cagr": fc, "fold_dd": fd, "fold_score": fs,
+                      "robust": float(np.median(fs)), "robust_min": float(min(fs)),
+                      "bench_robust": float(np.median(bsc))})
     train_cagr, train_dd = seg(curve[: k + 1])
     test_cagr, test_dd = seg(curve[k:] / curve[k])
     btrain_cagr, btrain_dd = seg(bench[: k + 1])
@@ -371,7 +414,7 @@ def backtest_scores(scores: np.ndarray, regime: np.ndarray, px: np.ndarray,
     h1, _ = seg(train[:mid])
     h2, _ = seg(train[mid - 1:])
     rdd = abs(train_cagr / train_dd) if train_dd else 0.0
-    return {**cons, "exec_stats": stats, "cagr": float(train_cagr), "maxdd": float(train_dd), "ret_dd": float(rdd),
+    return {**cons, **extra, "exec_stats": stats, "cagr": float(train_cagr), "maxdd": float(train_dd), "ret_dd": float(rdd),
             "h1_cagr": float(h1), "h2_cagr": float(h2),
             "bench_cagr": float(btrain_cagr), "bench_dd": float(btrain_dd),
             "invested": float(flags[:k].mean()) if k else 0.0, "months": len(train) - 1,
@@ -383,17 +426,160 @@ def backtest_scores(scores: np.ndarray, regime: np.ndarray, px: np.ndarray,
 
 EXEC_PROFILES = {
     # the pre-L22 harness: fill at the signal close, every name fillable, no
-    # liquidity floor. Kept so the old ledger stays reproducible — its numbers
-    # are an UPPER BOUND, not an achievable return.
+    # liquidity floor, train-CAGR ruler, forward printed on every trial. Kept
+    # so the old ledger stays reproducible — its numbers are an UPPER BOUND,
+    # not an achievable return.
     "legacy": {"fill": "close", "lock_block": False, "min_tv": 0.0, "cost_bps": 25.0,
-               "charge_exposure": False, "results": ".cache/strategy_lab/results.tsv",
+               "charge_exposure": False, "select": "cagr", "folds": 0,
+               "noise_seeds": 0, "noise_rate": 0.10, "noise_k": 0.0, "blind": False,
+               "results": ".cache/strategy_lab/results.tsv",
                "best_json": ".cache/strategy_lab/best.json"},
     # next-session open fill, circuit locks refuse entries (and trap exits),
-    # INR 50 lakh/day liquidity floor on new entries, 50 bps round trip
+    # INR 50 lakh/day liquidity floor on new entries, 50 bps round trip.
+    # Ruler = median of 4 train-fold calmars (DD floored at 5%); a keep must
+    # beat the best by its own perturbation noise; forward is BLIND unless
+    # --reveal is passed (and every reveal is logged).
     "realistic": {"fill": "next_open", "lock_block": True, "min_tv": 5e6, "cost_bps": 50.0,
-                  "charge_exposure": True, "results": ".cache/strategy_lab/results_real.tsv",
+                  "charge_exposure": True, "select": "robust", "folds": 4,
+                  "noise_seeds": 16, "noise_rate": 0.10, "noise_k": 1.0, "blind": True,
+                  "results": ".cache/strategy_lab/results_real.tsv",
                   "best_json": ".cache/strategy_lab/best_real.json"},
 }
+STAMP_KEYS = ("fill", "lock_block", "min_tv", "cost_bps", "charge_exposure", "select",
+              "folds", "noise_seeds", "noise_rate", "noise_k")
+RULER = {"cagr": "cagr", "calmar": "ret_dd", "robust": "robust"}
+PANEL_CACHE = REPO_ROOT / ".cache" / "strategy_lab" / "panels"
+REVEALS = REPO_ROOT / ".cache" / "strategy_lab" / "reveals.tsv"
+
+
+def is_legacy_exec(prof: dict) -> bool:
+    return (prof["fill"] == "close" and not prof["lock_block"]
+            and not prof["min_tv"] and not prof["charge_exposure"])
+
+
+def data_fingerprint() -> str:
+    """Cheap identity of the committed inputs: path + size of every daily
+    partition and the universe file. A data refresh changes it, so a stale
+    panel cache can never be read against new data."""
+    h = hashlib.sha1()
+    files = sorted((REPO_ROOT / "data" / "ohlcv" / "daily").glob("year=*/*.parquet"))
+    files.append(REPO_ROOT / "data" / "universe" / "nse_universe.parquet")
+    for f in files:
+        h.update(f"{f.relative_to(REPO_ROOT)}:{f.stat().st_size};".encode())
+    return h.hexdigest()[:12]
+
+
+def load_monthly_cached(universe: str, start: str):
+    """auto_research.load_monthly, memoised to .cache/strategy_lab/panels/
+    (the monthly pivot is ~12 s of every trial). Bit-identical arrays."""
+    PANEL_CACHE.mkdir(parents=True, exist_ok=True)
+    f = PANEL_CACHE / f"monthly_{universe}_{data_fingerprint()}.npz"
+    if f.exists():
+        z = np.load(f, allow_pickle=False)
+        px = z["px"]
+        months = [date.fromordinal(int(o)) for o in z["months"]]
+        cols = z["cols"].tolist()
+    else:
+        px, months, cols, _ = load_monthly(universe, "1900-01-01")
+        np.savez(f, px=px, months=np.array([m.toordinal() for m in months]),
+                 cols=np.array(cols))
+    start_i = next(i for i, mm in enumerate(months) if str(mm) >= start)
+    return px, months, cols, start_i
+
+
+def exec_panels_cached(daily, months, cols, fill: str, universe: str) -> dict:
+    PANEL_CACHE.mkdir(parents=True, exist_ok=True)
+    f = PANEL_CACHE / f"exec_{universe}_{data_fingerprint()}_{fill}.npz"
+    if f.exists():
+        z = np.load(f, allow_pickle=False)
+        return {"price": z["price"] if z["price"].size else None, "lock_up": z["lock_up"],
+                "lock_dn": z["lock_dn"], "tv20": z["tv20"]}
+    ex = exec_panels(daily, months, cols, fill)
+    np.savez(f, price=ex["price"] if ex["price"] is not None else np.empty(0),
+             lock_up=ex["lock_up"], lock_dn=ex["lock_dn"], tv20=ex["tv20"])
+    return ex
+
+
+def build_context(universe: str, start: str, split: str | None, prof: dict,
+                  need_daily: bool) -> dict:
+    """Everything a trial needs that does not depend on the candidate."""
+    px, months, cols, start_i = load_monthly_cached(universe, start)
+    split_i = None
+    if split:
+        split_i = next((i for i, mm in enumerate(months) if str(mm) >= split), None)
+        if split_i is None or not (start_i < split_i < len(months) - 1):
+            raise SystemExit(f"--split {split} outside range")
+    legacy_exec = is_legacy_exec(prof)
+    daily = None
+    if need_daily or not legacy_exec:
+        u = pl.read_parquet(REPO_ROOT / "data" / "universe" / "nse_universe.parquet")
+        syms = u["symbol"].to_list() if universe == "nse_all" else \
+            u.filter(pl.col(f"in_{universe}"))["symbol"].to_list()
+        daily = load_daily(syms)
+    ex = None
+    if not legacy_exec:
+        ex = dict(exec_panels_cached(daily, months, cols, prof["fill"], universe))
+        if not prof["lock_block"]:
+            ex["lock_up"] = np.zeros_like(ex["lock_up"])
+            ex["lock_dn"] = np.zeros_like(ex["lock_dn"])
+        ex["min_tv"] = float(prof["min_tv"] or 0.0)
+        ex["charge_exposure"] = bool(prof["charge_exposure"])
+    return {"px": px, "months": months, "cols": cols, "start_i": start_i,
+            "split_i": split_i, "daily": daily, "ex": ex, "universe": universe}
+
+
+def score_candidate(mod, params: dict, ctx: dict, risk_cli: dict | None = None):
+    panels = {"px": ctx["px"], "months": ctx["months"], "cols": ctx["cols"],
+              "daily": ctx["daily"], "start_i": ctx["start_i"]}
+    out = mod.score(panels, params)
+    risk = dict(risk_cli or {"trail_k": None, "max_hold": None})
+    if len(out) > 2 and out[2]:
+        risk.update(out[2])
+    for k in ("trail_k", "max_hold"):
+        if k in params:
+            risk[k] = params[k]
+    lows = None
+    if risk.get("trail_k"):
+        if ctx["daily"] is None:
+            raise SystemExit("trail_k needs the daily panel")
+        lows = monthly_lows(ctx["daily"], ctx["months"], ctx["cols"])
+    return np.asarray(out[0], dtype=float), np.asarray(out[1], dtype=float), risk, lows
+
+
+def run_book(scored, ctx: dict, top: int, cost: float, folds: int, **kw) -> dict:
+    scores, regime, risk, lows = scored
+    return backtest_scores(scores, regime, ctx["px"], ctx["months"], ctx["start_i"],
+                           ctx["split_i"], cost, top, cols=ctx["cols"], lows=lows,
+                           risk=risk, ex=ctx["ex"], folds=folds, **kw)
+
+
+def noise_probe(scored, ctx: dict, top: int, cost: float, folds: int, key: str,
+                seeds: int, rate: float) -> list[float]:
+    """Re-run the book `seeds` times with a random `rate` share of cells
+    refused as NEW entries (held names untouched) and return the ruler value
+    of each run. Its spread is the trial's own noise floor: a gain smaller
+    than it is indistinguishable from a different random pick set."""
+    vals = []
+    for sd in range(seeds):
+        mask = np.random.default_rng(sd).random(ctx["px"].shape) < rate
+        vals.append(float(run_book(scored, ctx, top, cost, folds, extra_block=mask)[key]))
+    return vals
+
+
+def log_reveal(candidate: str, params: dict, ledger: str, why: str) -> int:
+    """Append one forward reveal to the reveal log and return the running
+    count. The forward window is a holdout only while this stays small."""
+    REVEALS.parent.mkdir(parents=True, exist_ok=True)
+    if not REVEALS.exists():
+        REVEALS.write_text("ts\tcandidate\tparams\tledger\twhy\n")
+    ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    with open(REVEALS, "a") as f:
+        f.write(f"{ts}\t{candidate}\t{json.dumps(params, sort_keys=True)}\t{ledger}\t{why}\n")
+    return sum(1 for _ in open(REVEALS)) - 1
+
+
+def strip_forward(m: dict) -> dict:
+    return {k: v for k, v in m.items() if not k.startswith(("fwd_", "full_"))}
 
 
 def main() -> int:
@@ -406,11 +592,12 @@ def main() -> int:
     ap.add_argument("--top", type=int, default=10)
     ap.add_argument("--exec", dest="exec_profile", choices=sorted(EXEC_PROFILES),
                     default="realistic",
-                    help="execution model: 'realistic' (default) fills at the next "
-                         "session's open, refuses circuit-locked entries/exits and "
-                         "names under the liquidity floor; 'legacy' reproduces the "
-                         "pre-L22 harness (fill at the signal close, all fillable). "
-                         "Each profile has its own default ledger.")
+                    help="execution + scoring profile: 'realistic' (default) fills at "
+                         "the next session's open, refuses circuit-locked entries/exits "
+                         "and names under the liquidity floor, ranks on the median "
+                         "train-fold calmar with a noise-calibrated margin, and keeps "
+                         "the forward window blind; 'legacy' reproduces the pre-L22 "
+                         "harness. Each profile has its own default ledger.")
     ap.add_argument("--fill", choices=["close", "next_open", "next_close"], default=None,
                     help="override the profile's fill price")
     ap.add_argument("--min-tv", type=float, default=None,
@@ -422,14 +609,26 @@ def main() -> int:
                     help="ROUND-TRIP cost per newly bought slot, bps (profile default: "
                          "legacy 25, realistic 50 = ~22 statutory STT/stamp/exchange + "
                          "~28 spread/impact)")
+    ap.add_argument("--select", choices=sorted(RULER), default=None,
+                    help="keep ruler (profile default: legacy cagr, realistic robust = "
+                         "median train-fold calmar). Stamped into the ledger.")
+    ap.add_argument("--folds", type=int, default=None,
+                    help="contiguous train folds for the robust ruler (profile default)")
+    ap.add_argument("--noise-seeds", type=int, default=None,
+                    help="random-entry-block reruns that measure the trial's noise "
+                         "floor (0 disables; profile default)")
+    ap.add_argument("--reveal", action="store_true",
+                    help="print and store forward numbers for this trial. Logged to "
+                         f"{REVEALS.relative_to(REPO_ROOT)}; loops should leave it off "
+                         "and let promote_gate.py reveal once per promotion.")
+    ap.add_argument("--reveal-why", default="manual",
+                    help="reason recorded in the reveal log")
     ap.add_argument("--max-dd", type=float, default=70.0)
     ap.add_argument("--dd-slack", type=float, default=2.0)
     ap.add_argument("--min-delta", type=float, default=0.05,
-                    help="required improvement in --select units to accept")
-    ap.add_argument("--select", choices=["cagr", "calmar"], default="cagr",
-                    help="keep ruler: raw train CAGR or risk-adjusted ret/DD. "
-                         "Fixed per ledger so trials stay comparable; the loop "
-                         "discovers risk SETTINGS, not the ruler.")
+                    help="minimum improvement in ruler units (cagr: pp); the "
+                         "realistic profile also requires noise_k x the trial's "
+                         "noise sd, whichever is larger")
     ap.add_argument("--cagr-guard", type=float, default=0.5,
                     help="calmar mode only: reject if train CAGR trails best by "
                          "more than Xpp (stops cash-like winners)")
@@ -454,17 +653,24 @@ def main() -> int:
 
     prof = dict(EXEC_PROFILES[args.exec_profile])
     for k, v in (("fill", args.fill), ("min_tv", args.min_tv),
-                 ("lock_block", args.lock_block), ("cost_bps", args.cost_bps)):
+                 ("lock_block", args.lock_block), ("cost_bps", args.cost_bps),
+                 ("select", args.select), ("folds", args.folds),
+                 ("noise_seeds", args.noise_seeds)):
         if v is not None:
             prof[k] = v
-    harness = {"exec": args.exec_profile, **prof, "universe": args.universe,
-               "start": args.start, "split": args.split, "top": args.top}
-    args.results = args.results or prof.pop("results")
-    args.best_json = args.best_json or prof.pop("best_json")
-    harness.pop("results", None)
-    harness.pop("best_json", None)
-    legacy_exec = (prof["fill"] == "close" and not prof["lock_block"]
-                   and not prof["min_tv"] and not prof["charge_exposure"])
+    if prof["select"] == "robust" and not prof["folds"]:
+        raise SystemExit("--select robust needs --folds > 0")
+    harness = {"exec": args.exec_profile, **{k: prof[k] for k in STAMP_KEYS},
+               "universe": args.universe, "start": args.start, "split": args.split,
+               "top": args.top}
+    if args.exec_profile == "legacy":
+        # the legacy stamp predates the ruler/fold/noise keys; keep it as it was
+        for k in ("select", "folds", "noise_seeds", "noise_rate", "noise_k"):
+            harness.pop(k)
+    args.results = args.results or prof["results"]
+    args.best_json = args.best_json or prof["best_json"]
+    legacy_exec = is_legacy_exec(prof)
+    blind = prof["blind"] and not args.reveal
     params = json.loads(args.params_json)
     cost = prof["cost_bps"] / 10_000
     results_path = REPO_ROOT / args.results
@@ -472,57 +678,49 @@ def main() -> int:
     results_path.parent.mkdir(parents=True, exist_ok=True)
 
     mod = importlib.import_module(args.candidate)
-    print(f"loading monthly panel ({args.universe} from {args.start}) ...", flush=True)
-    px, months, cols, start_i = load_monthly(args.universe, args.start)
-    split_i = None
-    if args.split:
-        split_i = next((i for i, mm in enumerate(months) if str(mm) >= args.split), None)
-        if split_i is None or not (start_i < split_i < len(months) - 1):
-            raise SystemExit(f"--split {args.split} outside range")
-    daily = None
+    print(f"loading panels ({args.universe} from {args.start}) ...", flush=True)
     want_trail = args.trail_k is not None or "trail_k" in params
-    if getattr(mod, "NEEDS_DAILY", False) or want_trail or not legacy_exec:
-        print("loading daily long panel for candidate ...", flush=True)
-        u = pl.read_parquet(REPO_ROOT / "data" / "universe" / "nse_universe.parquet")
-        syms = u["symbol"].to_list() if args.universe == "nse_all" else \
-            u.filter(pl.col(f"in_{args.universe}"))["symbol"].to_list()
-        daily = load_daily(syms)
-    panels = {"px": px, "months": months, "cols": cols, "daily": daily, "start_i": start_i}
-
+    ctx = build_context(args.universe, args.start, args.split, prof,
+                        getattr(mod, "NEEDS_DAILY", False) or want_trail)
     print(f"scoring with {args.candidate} {params} ...", flush=True)
-    out = mod.score(panels, params)
-    scores, regime = out[0], out[1]
-    risk = {"trail_k": args.trail_k, "max_hold": args.max_hold}
-    if len(out) > 2 and out[2]:
-        risk.update(out[2])
-    if "trail_k" in params:
-        risk["trail_k"] = params["trail_k"]
-    if "max_hold" in params:
-        risk["max_hold"] = params["max_hold"]
-    lows = None
-    if risk.get("trail_k") and daily is not None:
-        print("building monthly lows for trailing stop ...", flush=True)
-        lows = monthly_lows(daily, months, cols)
-    ex = None
-    if not legacy_exec:
-        print(f"building execution panels (fill {prof['fill']}) ...", flush=True)
-        ex = exec_panels(daily, months, cols, prof["fill"])
-        if not prof["lock_block"]:
-            ex["lock_up"] = np.zeros_like(ex["lock_up"])
-            ex["lock_dn"] = np.zeros_like(ex["lock_dn"])
-        ex["min_tv"] = float(prof["min_tv"] or 0.0)
-        ex["charge_exposure"] = bool(prof["charge_exposure"])
-    m = backtest_scores(np.asarray(scores, dtype=float), np.asarray(regime, dtype=float),
-                        px, months, start_i, split_i, cost, args.top,
-                        cols=cols, lows=lows, risk=risk, ex=ex)
+    scored = score_candidate(mod, params, ctx,
+                             {"trail_k": args.trail_k, "max_hold": args.max_hold})
+    risk = scored[2]
+    folds = int(prof["folds"] or 0)
+    m = run_book(scored, ctx, args.top, cost, folds)
+    ruler = RULER[prof["select"]]
+    noise = []
+    if prof["noise_seeds"] and ctx["split_i"] is not None:
+        noise = noise_probe(scored, ctx, args.top, cost, folds, ruler,
+                            int(prof["noise_seeds"]), float(prof["noise_rate"]))
+        m["noise_sd"] = float(np.std(noise, ddof=1))
+        m["noise_p10"] = float(np.percentile(noise, 10))
+    n_trial = (sum(1 for _ in open(results_path)) if results_path.exists() else 1)
+    if not blind and prof["blind"]:
+        n_rev = log_reveal(args.candidate, params, str(args.results), args.reveal_why)
+        print(f"REVEAL logged (#{n_rev} in {REVEALS.relative_to(REPO_ROOT)})")
+
     risk_note = "".join(f" {k}={v}" for k, v in risk.items() if v is not None) or " none"
+    fwd_txt = ("FWD [blind]" if blind else
+               f"FWD {m['fwd_cagr']*100:+.2f}% DD {m['fwd_dd']*100:.2f}%")
+    bench_txt = (f"train bench {m['bench_cagr']*100:+.2f}%" if blind else
+                 f"train bench {m['bench_cagr']*100:+.2f}% | fwd bench "
+                 f"{m['fwd_bench_cagr']*100:+.2f}%")
     print(f"TRAIN {m['cagr']*100:+.2f}% DD {m['maxdd']*100:.2f}% ret/DD {m['ret_dd']:.2f} "
           f"H1 {m['h1_cagr']*100:+.1f}% H2 {m['h2_cagr']*100:+.1f}% inv {m['invested']*100:.0f}% "
-          f"| FWD {m['fwd_cagr']*100:+.2f}% DD {m['fwd_dd']*100:.2f}% "
-          f"(train bench {m['bench_cagr']*100:+.2f}% | fwd bench {m['fwd_bench_cagr']*100:+.2f}%)")
+          f"| {fwd_txt} ({bench_txt})")
     print("YEARS " + " ".join(f"{y}:{v*100:+.0f}%" for y, v in sorted(m["years"].items()))
           + f" | min {m['year_min']*100:+.1f}% std {m['year_std']*100:.1f}% "
           + f"pos {m['year_pos']}/{m['year_n']} best-share {m['best_share']*100:.0f}%")
+    if folds:
+        print("FOLDS " + " ".join(f"{c*100:+.1f}/{d*100:.1f}({sc:.2f})" for c, d, sc in
+                                  zip(m["fold_cagr"], m["fold_dd"], m["fold_score"]))
+              + f" | robust {m['robust']:.3f} min {m['robust_min']:.3f} "
+              + f"(bench {m['bench_robust']:.3f})")
+    if noise:
+        print(f"NOISE {len(noise)} seeds x {prof['noise_rate']:.0%} entry block | "
+              f"{prof['select']} sd {m['noise_sd']:.3f} p10 {m['noise_p10']:.3f} "
+              f"| trial #{n_trial} in this ledger")
     xs = m["exec_stats"]
     exec_tag = (f"exec:{args.exec_profile} fill={prof['fill']} lock={int(bool(prof['lock_block']))} "
                 f"min_tv={prof['min_tv']:g} cost={prof['cost_bps']:g}rt "
@@ -531,12 +729,12 @@ def main() -> int:
           f"{xs['blocked_lock']} blocked-tv {xs['blocked_tv']} stuck-exits {xs['stuck']}")
 
     status, note = "baseline", "first entry"
-    ruler = "ret_dd" if args.select == "calmar" else "cagr"
-    unit = "" if args.select == "calmar" else "%"
+    unit = "%" if ruler == "cagr" else ""
+    scale = 100 if ruler == "cagr" else 1
     if best_path.exists():
         best = json.loads(best_path.read_text())
         # one harness version per ledger: never rank a trial against a best
-        # measured under a different execution model, cost, window or top-N
+        # measured under a different execution model, cost, ruler, window or top-N
         if best.get("harness") is None and not (legacy_exec and prof["cost_bps"] == 25.0):
             raise SystemExit(f"{best_path} has no harness stamp (a pre-L22 legacy "
                              f"ledger); only the unmodified legacy harness may rank against it — "
@@ -547,10 +745,15 @@ def main() -> int:
                              f"use a matching ledger")
         b = best["metrics"]
         floor = min(-abs(args.max_dd) / 100, b["maxdd"])
-        lead_ok = m[ruler] > b[ruler] + args.min_delta / (100 if ruler == "cagr" else 1)
+        margin = args.min_delta / scale
+        if noise:
+            margin = max(margin, float(prof["noise_k"]) * m["noise_sd"])
+        lead_ok = m[ruler] > b[ruler] + margin
         guard_ok = True
-        if args.select == "calmar":
+        if prof["select"] == "calmar":
             guard_ok = m["cagr"] >= b["cagr"] - args.cagr_guard / 100
+        elif prof["select"] == "robust":
+            guard_ok = m["cagr"] > m["bench_cagr"]  # a cash-like book cannot win
         dd_ok = m["maxdd"] >= floor and m["maxdd"] >= b["maxdd"] - args.dd_slack / 100
         robust = m["h1_cagr"] > 0 and m["h2_cagr"] > 0
         year_ok, year_why = True, ""
@@ -561,42 +764,57 @@ def main() -> int:
             year_ok, year_why = False, (f"year std {m['year_std']*100:.1f}% > "
                                         f"{args.year_std_max:g}%")
         if lead_ok and guard_ok and dd_ok and robust and year_ok:
-            status, note = "keep", f"beats best on {args.select}"
+            status, note = "keep", (f"beats best on {prof['select']} by "
+                                    f"{(m[ruler]-b[ruler])*scale:.3f}{unit} > margin "
+                                    f"{margin*scale:.3f}{unit}")
         else:
             if not robust:
                 note = "fails train half"
             elif not lead_ok:
-                note = (f"TRAIN {m[ruler]*100:.2f}{unit} <= "
-                        f"best {b[ruler]*100:.2f}{unit} [{args.select}]")
+                note = (f"TRAIN {m[ruler]*scale:.3f}{unit} <= best "
+                        f"{b[ruler]*scale:.3f}{unit} + margin {margin*scale:.3f}{unit} "
+                        f"[{prof['select']}]")
             elif not guard_ok:
-                note = f"CAGR {m['cagr']*100:.2f}% trails best by >{args.cagr_guard:g}pp"
+                note = (f"CAGR {m['cagr']*100:.2f}% trails best by >{args.cagr_guard:g}pp"
+                        if prof["select"] == "calmar" else
+                        f"CAGR {m['cagr']*100:.2f}% <= bench {m['bench_cagr']*100:.2f}%")
             elif not year_ok:
                 note = year_why
             else:
                 note = f"DD {m['maxdd']*100:.1f}% breaches floor/slack"
             status = "discard"
+    stored = strip_forward(m) if blind else m
     if status in ("baseline", "keep"):
         best_path.write_text(json.dumps(
             {"candidate": args.candidate, "params": params, "top": args.top,
              "harness": harness,
-             "select": args.select, "risk": {k: v for k, v in risk.items()
-                                             if v is not None},
-             "metrics": m}, indent=2))
+             "select": prof["select"], "risk": {k: v for k, v in risk.items()
+                                                if v is not None},
+             "metrics": stored}, indent=2))
     if not results_path.exists():
         results_path.write_text("ts\tstatus\tcandidate\tparams\ttop\ttrain_cagr\ttrain_dd\t"
                                 "ret_dd\th1\th2\tfwd_cagr\tfwd_dd\tfwd_bench\tnote\n")
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    fwd_cols = ("blind\tblind\tblind" if blind else
+                f"{m['fwd_cagr']*100:.3f}\t{m['fwd_dd']*100:.3f}\t{m['fwd_bench_cagr']*100:.3f}")
+    extra_note = ""
+    if folds:
+        extra_note += f" robust={m['robust']:.3f} rmin={m['robust_min']:.3f}"
+    if noise:
+        extra_note += f" noise_sd={m['noise_sd']:.3f}"
     with open(results_path, "a") as f:
         f.write(f"{ts}\t{status}\t{args.candidate}\t{json.dumps(params, sort_keys=True)}\t"
                 f"{args.top}\t{m['cagr']*100:.3f}\t{m['maxdd']*100:.3f}\t{m['ret_dd']:.3f}\t"
-                f"{m['h1_cagr']*100:.3f}\t{m['h2_cagr']*100:.3f}\t{m['fwd_cagr']*100:.3f}\t"
-                f"{m['fwd_dd']*100:.3f}\t{m['fwd_bench_cagr']*100:.3f}\t"
-                f"{note} [risk:{risk_note.strip()} select:{args.select} {exec_tag} "
-                f"minyr={m['year_min']*100:.1f} ystd={m['year_std']*100:.1f}]\n")
-    print(f"{status.upper()}: {note} | forward {'PASSES' if m['fwd_cagr'] > 0 else 'FAILS'} "
-          f"(never drove selection)")
-    dd_flag = "" if m['fwd_dd'] >= m['fwd_bench_dd'] else " [WARN fwd DD worse than bench]"
-    print(f"forward DD {m['fwd_dd']*100:.2f}% vs bench {m['fwd_bench_dd']*100:.2f}%{dd_flag}")
+                f"{m['h1_cagr']*100:.3f}\t{m['h2_cagr']*100:.3f}\t{fwd_cols}\t"
+                f"{note} [risk:{risk_note.strip()} select:{prof['select']} {exec_tag} "
+                f"minyr={m['year_min']*100:.1f} ystd={m['year_std']*100:.1f}{extra_note}]\n")
+    if blind:
+        print(f"{status.upper()}: {note} | forward blind — promote_gate.py reveals it once")
+    else:
+        print(f"{status.upper()}: {note} | forward {'PASSES' if m['fwd_cagr'] > 0 else 'FAILS'} "
+              f"(never drove selection)")
+        dd_flag = "" if m['fwd_dd'] >= m['fwd_bench_dd'] else " [WARN fwd DD worse than bench]"
+        print(f"forward DD {m['fwd_dd']*100:.2f}% vs bench {m['fwd_bench_dd']*100:.2f}%{dd_flag}")
     return 0
 
 
