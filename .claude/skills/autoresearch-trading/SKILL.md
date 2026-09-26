@@ -9,6 +9,17 @@ Repeatable autonomous research loops for NSE strategies. Two phases: first
 climb params on a fixed strategy, then evolve the strategy mechanism itself.
 The agent changes code each loop; a fixed harness keeps score.
 
+## MANDATORY — models: Opus 5.5 at medium effort everywhere
+
+The orchestrator (main session) runs `claude-opus-5-5` at `effortLevel: medium`
+(pinned in `.claude/settings.json`). Every designer and trial worker is spawned
+with the Agent tool as `subagent_type: "autoresearch-designer"`
+(`.claude/agents/autoresearch-designer.md`: `model: claude-opus-5-5`,
+`effort: medium`) and WITHOUT a `model` override — an override would replace the
+pinned model. Do not ask the user which models to use; this is the standing
+choice (it replaces Step 0's model question and any older GLM/other-model
+guidance below).
+
 ## MANDATORY — commit and push: at loop end, and during the loop whenever state changes
 
 The container is ephemeral: anything not pushed is lost with the session, and
