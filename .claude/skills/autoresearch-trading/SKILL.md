@@ -826,6 +826,18 @@ to wait for them.
    survived and double-wrote a grid ledger). Worker ledgers:
    `.cache/strategy_lab/l21_w1_results.tsv` (18 rows), `l21_w2_results.tsv`
    (19 rows); grids `l21_orch*`; manifest `.cache/l21_manifest.tsv`.
+   State at Loop-22 close (2026-09-26): first loop under `--exec realistic`
+   (10-minute brief, 2 Opus designers, 5 mechanisms, trials run by the
+   designers). The realistic main ledger `.cache/strategy_lab/best_real.json`
+   is seeded with `strat_floorhighfresh` top 25 {"b_hi": 0.65, "b_lo": 0.45,
+   "b_mid": 0.55, "floor_lb": 19, "lookback": 16, "max_dist": 0.055,
+   "regime_ma": 18}: train +24.13%/-18.98% (calmar 1.27), fwd +20.63%/-21.65%,
+   bench +19.84% / +14.53%. The legacy L21 chain reads fwd -5.2%/-41.2% under
+   realistic execution and is NOT the base. Nothing promoted: advtilt, lockpen,
+   gappen, liqrs DEAD (fillability tilts cut blocked entries but lose return on
+   both windows); liqbreadth PARTIAL (26.0-28.3 train, fwd 22.3-22.5/-19.5, but
+   train DD -24.4..-25.1) — next: pair it with higher b_* thresholds. All
+   screens are 2-cell smokes; neighbourhoods unscreened.
 5. Ask the user for the designer and worker models (Step 0 of the playbook),
    then open the round. At close: commit with setup + verdict, `git add -f` the
    tracked ledgers if `.cache` is ignored, and push the workstream branch — the
