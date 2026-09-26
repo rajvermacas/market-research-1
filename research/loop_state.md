@@ -35,52 +35,41 @@ through `scripts/promote_gate.py`. Nothing else crowns a champion.
    README results-ledger row, rewrite the two sections below, `git add -f` the
    ledgers, commit, push.
 
-## Current state (Loop-24 close, 2026-09-26 15:00 IST)
+## Current state (Loop-25 close, 2026-09-26 16:00 IST)
 
-- **Champion** (`.cache/strategy_lab/champion_real.json`): `strat_floorhighfresh`, top 25,
-  equal weight, no stops,
-  `{"b_hi": 0.65, "b_lo": 0.45, "b_mid": 0.55, "floor_lb": 19, "lookback": 16, "max_dist": 0.055, "regime_ma": 18}`.
-  Train +24.13% / DD −18.98% (calmar 1.27, robust 1.059) vs bench +19.84%;
-  forward +20.63% / DD −21.65% (calmar 0.95) vs bench +14.53% / −27.88%.
-- **To dethrone it** (gate check 9 `tradeoff`, user rule 2026-09-26), on train AND
-  forward separately: either dominate (CAGR higher, DD no deeper), or gain ≥ +2pp CAGR
-  with DD at most min(0.5 × gain, 5pp) deeper. Train: > 24.13% (or ≥ 26.13% with DD down
-  to −18.98% − dent). Forward: > 20.63% / −21.65% (or ≥ 22.63% with a bounded dent).
-  Plus checks 1–8. Re-scoring all six earlier gate reports under this rule changes no
-  verdict — every one lost forward CAGR.
-- **Universe is open**: the champion may come from the full board or the Nifty 500
-  (`--universe nifty500`, own ledger; gate with `--universe nifty500`). The champion's
-  own Nifty 500 run reads train +29.7%/−14.1%, fwd +18.5%/−21.4% (below its full-board
-  forward) — the Nifty 500 has not yet been searched as a primary universe.
-- **Harness**: realistic execution + robust fold ruler + noise margin + blind forward.
-  **Policy is searchable** (params-json keys): `top`, `weighting` (equal/rank/invvol),
-  `max_weight`, `min_hold`, `max_hold`, `sl_pct`, `ts_pct`, `stop_cool`. Pass `--top 25`
-  on the CLI (the ledger stamp) and set the book size with the `top` key.
-- **Reveals used**: 7 (`.cache/strategy_lab/reveals.tsv`). Each gate run spends one —
-  gate only candidates whose train neighbourhood is already measured.
-- **Trials under the current scoring**: ~170 across all realistic ledgers.
-- **Loop counter**: last loop = 24. Next loop = 25.
+- **Champion** (`.cache/strategy_lab/champion_real.json`, crowned L25): `strat_l23a_liqconfirm`,
+  full board (`nse_all`), `--top 25`, params
+  `{"b_hi": 0.65, "b_lo": 0.45, "b_mid": 0.55, "floor_lb": 19, "lookback": 16, "max_dist": 0.055, "regime_ma": 18, "lq_min": 5e6, "lq_days": 40, "lq_shift": 0.05, "lq_shift_hi": 0.05, "lq_shift_lo": 0.075, "lq_mode": "strict", "top": 25, "weighting": "invvol"}`.
+  Train +30.09% / DD −17.22% (calmar 1.75, robust 2.121, noise sd ~0.16) vs bench +19.84%;
+  forward +21.58% / DD −20.47% (calmar 1.05) vs bench +14.53% / −27.88%. Nifty 500 transfer
+  +28.4% / −12.1% vs bench +21.1%. Gate report:
+  `research/promotions/2026-09-26T101152Z_strat_l23a_liqconfirm.json`.
+- **Previous champion**: `strat_floorhighfresh` top 25 equal (train 24.13/−18.98, fwd 20.63/−21.65).
+- **To dethrone it** (gate check 9 `tradeoff`, user rule), on train AND forward separately:
+  dominate (CAGR higher, DD no deeper), or gain ≥ +2pp CAGR with DD at most
+  min(0.5 × gain, 5pp) deeper. Train: > 30.09% / −17.22%. Forward: > 21.58% / −20.47%
+  (or ≥ 23.58% with a bounded dent). Plus checks 1–8 (forward DD must also beat the bench's).
+- **Universe is open**: full board or Nifty 500 (`--universe nifty500`, own ledger; gate with
+  `--universe nifty500`).
+- **Harness**: realistic execution + robust fold ruler + noise margin + blind forward;
+  policy keys searchable (`top`, `weighting`, `max_weight`, `min_hold`, `max_hold`, `sl_pct`,
+  `ts_pct`, `stop_cool`). Pass `--top 25` on the CLI; set the book size with the `top` key.
+- **Reveals used**: 9. **Trials under the current scoring**: ~260 across realistic ledgers.
+- **Loop counter**: last loop = 25. Next loop = 26.
 
 ## Lead queue (highest first)
 
-1. **Gate `strat_l23a_liqconfirm` + top 25 inverse-vol** (ungated; neighbourhood already
-   measured in `.cache/strategy_lab/l24_pol_results.tsv`: train 30.09/−17.22, every
-   neighbour 26.8–33.4 at DD −16.8…−18.4). It keeps the 25-name breadth that held
-   forward CAGR in every gate so far, and the liqconfirm regime that improved forward DD.
-   params: champion keys + `"lq_min": 5e6, "lq_days": 40, "lq_shift": 0.05,
-   "lq_shift_hi": 0.05, "lq_shift_lo": 0.075, "lq_mode": "strict", "top": 25,
-   "weighting": "invvol"`.
-1b. **Search the Nifty 500 as a primary universe** (never done under the realistic
-   harness): seed `results_real_nifty500.tsv` with the champion, then screen the
-   policy keys and the liqconfirm regime there.
-2. **Concentration is a train artifact on this base**: 12–15-name books lifted train by
-   6–10pp and lost ~4.5pp of forward CAGR in both gates. Keep new mechanisms at the
-   champion's breadth (25) unless the base changes.
-3. **Stops are dead** on the fresh-print book (every sl/ts level lowers CAGR without
-   improving DD). Do not re-run without a changed base.
-4. Rank channels that are NOT the V-recovery axis (ddquality/trmom lost forward).
-5. gapdrift (held high-volume gap-up) — PARTIAL, needs a stronger event definition.
-6. Data backlog: NSE bhavcopy (survivorship) — every result here is inflated by it.
+1. **Book size 20–23 on the new champion** (ungated, `.cache/strategy_lab/l25_orch_results.tsv`):
+   top 20 invvol 33.41/−16.55, top 22 33.35/−16.79 (L24), top 23 32.42/−16.81 — a train plateau
+   that dominates the champion. Caution: 12–15-name books lost ~4.5pp forward in both L24
+   gates; 20–23 is milder concentration. Measure top 21/24 first, then gate ONE cell.
+2. **Nifty 500 with a drawdown control**: the Nifty 500 regime_ma-24 cell has the forward
+   CAGR (22.8%) but a −25.7% forward DD (worse than its bench). A regime or exposure rule that
+   cuts that DD could make it pass the trade-off. Its ledger: `.cache/strategy_lab/l25_dA_results.tsv`.
+3. Rank channels that are NOT the V-recovery axis (ddquality/trmom lost forward; gapdrift on
+   the new champion lowers train CAGR).
+4. Stops are dead on the fresh-print book; concentration below 20 names is a train artifact.
+5. Data backlog: NSE bhavcopy (survivorship) — every result here is inflated by it.
 
 ## Loop log
 
@@ -92,3 +81,6 @@ through `scripts/promote_gate.py`. Nothing else crowns a champion.
 - L24 (2026-09-26, 30 min): risk policy moved into training (book size, weights,
   holds, daily-path stops); 33 trials; 2 gated (top-15 inverse-vol on the champion and on
   liqconfirm), both lost forward CAGR; stops dead; champion unchanged.
+- L25 (2026-09-26, 30 min): **NEW CHAMPION** liqconfirm + top 25 inverse-vol (fwd
+  21.58/−20.47 vs 20.63/−21.65; train 30.09/−17.22); Nifty 500 searched (84 trials; best cell
+  gated, fwd 22.82/−25.65 fails the trade-off); gap-drift dead on the new base; 3 gates, 1 pass.
