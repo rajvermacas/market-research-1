@@ -331,6 +331,12 @@ mistake recurs.
   patched data is worse than one built on data whose flaws are documented.
 - Keep large Parquet panels partitioned (by year). A single file over 100 MB is rejected by GitHub
   outright, and anything near it makes the repo painful to clone.
+- A blind forward window is blind to diagnostics too, not just to strategy returns. A Loop-27
+  designer chose an exposure rule's sign after printing its signal's spikes, including Jan-2022,
+  which is in the forward window. That rule then passed every gate check, with the forward drawdown
+  gain coming from that same firing, and the crown had to be revoked. Diagnostics that inform a
+  design may only print months before the split. Remembered post-split market events ("the 2022
+  small-cap unwind") are forward data as well.
 - Sleep between retry attempts, not after the last one — a trailing back-off multiplies wasted time
   across thousands of symbols that will never resolve.
 - Best strategy means best FORWARD performer, not best train. Train selects candidates,

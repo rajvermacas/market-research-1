@@ -940,6 +940,14 @@ to wait for them.
    both windows); liqbreadth PARTIAL (26.0-28.3 train, fwd 22.3-22.5/-19.5, but
    train DD -24.4..-25.1) — next: pair it with higher b_* thresholds. All
    screens are 2-cell smokes; neighbourhoods unscreened.
+   State at Loop-27 close (2026-09-26, routine test fire): champion UNCHANGED (L25
+   `strat_l23a_liqconfirm` top 25 invvol; see `research/loop_state.md`). Two gates: CS spread
+   (wide sign) train 35.19/-15.84 -> fwd 18.35/-17.24, fails fwd CAGR; froth exposure cut passed
+   all 9 checks (fwd 23.44/-14.44) and was crowned, then REVOKED because its sign was chosen after
+   a diagnostic that read a forward-window (Jan-2022) value. Designer briefs must now state that
+   diagnostics may only print pre-split months. Operational: the `autoresearch-designer` agent type
+   was not registered in the routine session, so designers ran as `general-purpose` with the
+   definition inlined and no model override (inheriting the orchestrator's model).
 5. Ask the user for the designer and worker models (Step 0 of the playbook),
    then open the round. At close: commit with setup + verdict, `git add -f` the
    tracked ledgers if `.cache` is ignored, and push the workstream branch — the

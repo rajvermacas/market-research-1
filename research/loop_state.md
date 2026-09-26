@@ -41,7 +41,7 @@ through `scripts/promote_gate.py`. Nothing else crowns a champion.
    README results-ledger row, rewrite the two sections below, `git add -f` the
    ledgers, commit, push.
 
-## Current state (Loop-25 close, 2026-09-26 16:00 IST)
+## Current state (Loop-27 close, 2026-09-26 23:43 IST — champion unchanged since L25)
 
 - **Champion** (`.cache/strategy_lab/champion_real.json`, crowned L25): `strat_l23a_liqconfirm`,
   full board (`nse_all`), `--top 25`, params
@@ -60,10 +60,26 @@ through `scripts/promote_gate.py`. Nothing else crowns a champion.
 - **Harness**: realistic execution + robust fold ruler + noise margin + blind forward;
   policy keys searchable (`top`, `weighting`, `max_weight`, `min_hold`, `max_hold`, `sl_pct`,
   `ts_pct`, `stop_cool`). Pass `--top 25` on the CLI; set the book size with the `top` key.
-- **Reveals used**: 11. **Trials under the current scoring**: ~300 across realistic ledgers.
-- **Loop counter**: last loop = 26. Next loop = 27.
+- **Reveals used**: 13 (L27 spent #12 on strat_l27b_spread, #13 on strat_l27a_froth). **Trials under the current scoring**: ~300 across realistic ledgers.
+- **Loop counter**: last loop = 27. Next loop = 28.
 
 ## Lead queue (highest first)
+
+00. **Loop-27 outcome — a crown was REVOKED.** `strat_l27a_froth` (illiquid-tail minus liquid-core
+   2-month return > .06 -> exposure x 0.6) passed all 9 gate checks (train 30.21/−14.09, fwd
+   23.44/−14.44) and was crowned, then the audit found the designer chose the sign after a
+   diagnostic that printed the Jan-2022 rel spike — a FORWARD-window value — and the 2022-01 /
+   2024-01 firings carry the forward DD gain. The L25 champion was restored by hand from git
+   (commit 21b710a); the gate report stays in `research/promotions/`. If the owner judges the
+   contamination tolerable, re-crown with
+   `python scripts/promote_gate.py --crown research/promotions/2026-09-26T173406Z_strat_l27a_froth.json`.
+   Otherwise froth can only be confirmed on forward data after 2026-09. Its train DD gain is the
+   2016-10/11 firings alone (demonetisation); the 2020-21 firings cost 2.6pp train CAGR.
+01. **Illiquidity rank premium is train-side.** CS spread (wide sign) gated: train 35.19/−15.84 but
+   fwd 18.35/−17.24 (−3.23pp CAGR) — the third rank tilt (after ddquality, breakmag) that buys train
+   CAGR and loses forward CAGR. Amihud (35.11/−16.22) is the same axis; do not gate it on this
+   evidence. Rank tilts on the 25-name book look exhausted for forward CAGR; exposure-side work
+   (with strictly pre-2022 diagnostics) is where the forward DD improvements have come from.
 
 0. **Loop-26 outcome** (no promotion): breakout magnitude (`strat_l26b_breakmag`, bm_w .2 /
    bm_lb 9) is the best forward-DD line found — fwd 18.25/−14.32, calmar 1.27 vs the champion's
@@ -82,6 +98,10 @@ through `scripts/promote_gate.py`. Nothing else crowns a champion.
 5. Data backlog: NSE bhavcopy (survivorship) — every result here is inflated by it.
 
 ## Loop log
+
+- L27 (2026-09-26 22:43–23:43 IST, 60 min, routine test fire): 3 designers + 1 short round, ~14 mechanisms,
+  ~130 trials; 2 gated: CS spread (fails fwd CAGR −3.23pp) and froth (passes all checks — crown REVOKED
+  for forward contamination, see lead 00); champion unchanged.
 
 - L22 (2026-09-26, 10 min): first realistic loop; 5 execution-aware tilts, none kept.
 - L23 (2026-09-26, 40 min): harness v2 (blind/robust/noise/gate); 8 mechanisms,
