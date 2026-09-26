@@ -1,0 +1,104 @@
+{
+  "candidate": "strat_l29d_randrearm",
+  "params": {
+    "b_hi": 0.65,
+    "b_lo": 0.45,
+    "b_mid": 0.55,
+    "floor_lb": 19,
+    "lookback": 16,
+    "max_dist": 0.055,
+    "regime_ma": 18,
+    "lq_min": 5000000.0,
+    "lq_days": 40,
+    "lq_shift": 0.05,
+    "lq_shift_hi": 0.05,
+    "lq_shift_lo": 0.075,
+    "lq_mode": "strict",
+    "top": 25,
+    "weighting": "invvol",
+    "rr_mode": "months",
+    "rr_n": 8,
+    "rr_seed": 2,
+    "rr_to": 1.0
+  },
+  "top": 25,
+  "harness": {
+    "exec": "realistic",
+    "fill": "next_open",
+    "lock_block": true,
+    "min_tv": 5000000.0,
+    "cost_bps": 50.0,
+    "charge_exposure": true,
+    "select": "robust",
+    "folds": 4,
+    "noise_seeds": 16,
+    "noise_rate": 0.1,
+    "noise_k": 1.0,
+    "universe": "nse_all",
+    "start": "2015-01-01",
+    "split": "2022-01-01",
+    "top": 25
+  },
+  "select": "robust",
+  "risk": {
+    "top": 25,
+    "weighting": "invvol"
+  },
+  "metrics": {
+    "year_min": -0.15441015853353435,
+    "year_max": 1.3596561342103874,
+    "year_std": 0.5431978306720816,
+    "year_pos": 4,
+    "year_n": 6,
+    "best_share": 0.4966378765030528,
+    "years": {
+      "2015": 0.5395791609385747,
+      "2016": 0.12686665085440496,
+      "2017": 0.9470205898480779,
+      "2018": -0.15441015853353435,
+      "2019": 0.0,
+      "2020": 0.2867497446799139,
+      "2021": 1.3596561342103874,
+      "2022": -0.03220072810523489
+    },
+    "fold_cagr": [
+      0.5259551966702884,
+      0.19376305095324708,
+      0.0,
+      0.8514064480289756
+    ],
+    "fold_dd": [
+      -0.11585976073144444,
+      -0.17191211505667237,
+      0.0,
+      -0.07813060422652329
+    ],
+    "fold_score": [
+      4.539584695754889,
+      1.127105270558572,
+      0.0,
+      10.89722083244744
+    ],
+    "robust": 2.8333449831567306,
+    "robust_min": 0.0,
+    "bench_robust": 0.887638656089025,
+    "exec_stats": {
+      "would_enter": 1376,
+      "blocked_lock": 185,
+      "blocked_tv": 402,
+      "stuck": 9,
+      "stops": 0
+    },
+    "cagr": 0.3551595244081833,
+    "maxdd": -0.17191211505667237,
+    "ret_dd": 2.0659365646865657,
+    "h1_cagr": 0.35958479194114745,
+    "h2_cagr": 0.35095349828006395,
+    "bench_cagr": 0.19837608390238493,
+    "bench_dd": -0.6268214578534694,
+    "invested": 0.6,
+    "months": 84,
+    "noise_sd": 0.22640223432229242,
+    "noise_p10": 2.6534975478355856
+  }
+}
