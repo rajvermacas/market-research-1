@@ -54,15 +54,15 @@ through `scripts/promote_gate.py`. Nothing else crowns a champion.
 - **Harness**: realistic execution + robust fold ruler + noise margin + blind forward;
   policy keys searchable (`top`, `weighting`, `max_weight`, `min_hold`, `max_hold`, `sl_pct`,
   `ts_pct`, `stop_cool`). Pass `--top 25` on the CLI; set the book size with the `top` key.
-- **Reveals used**: 9. **Trials under the current scoring**: ~260 across realistic ledgers.
+- **Reveals used**: 10. **Trials under the current scoring**: ~260 across realistic ledgers.
 - **Loop counter**: last loop = 25. Next loop = 26.
 
 ## Lead queue (highest first)
 
-1. **Book size 20–23 on the new champion** (ungated, `.cache/strategy_lab/l25_orch_results.tsv`):
-   top 20 invvol 33.41/−16.55, top 22 33.35/−16.79 (L24), top 23 32.42/−16.81 — a train plateau
-   that dominates the champion. Caution: 12–15-name books lost ~4.5pp forward in both L24
-   gates; 20–23 is milder concentration. Measure top 21/24 first, then gate ONE cell.
+1. **Nifty 500 with a drawdown control** (see 2) is now the top lead. Book size is CLOSED on
+   the new champion: 20–24 names is a train plateau (32–33%) but the gated top-22 cell read
+   fwd 20.65/−18.74 (−0.94pp CAGR vs the champion) and failed the deflated margin — the
+   fourth gate in which a more concentrated book lost forward CAGR. Keep 25 names.
 2. **Nifty 500 with a drawdown control**: the Nifty 500 regime_ma-24 cell has the forward
    CAGR (22.8%) but a −25.7% forward DD (worse than its bench). A regime or exposure rule that
    cuts that DD could make it pass the trade-off. Its ledger: `.cache/strategy_lab/l25_dA_results.tsv`.
@@ -83,4 +83,5 @@ through `scripts/promote_gate.py`. Nothing else crowns a champion.
   liqconfirm), both lost forward CAGR; stops dead; champion unchanged.
 - L25 (2026-09-26, 30 min): **NEW CHAMPION** liqconfirm + top 25 inverse-vol (fwd
   21.58/−20.47 vs 20.63/−21.65; train 30.09/−17.22); Nifty 500 searched (84 trials; best cell
-  gated, fwd 22.82/−25.65 fails the trade-off); gap-drift dead on the new base; 3 gates, 1 pass.
+  gated, fwd 22.82/−25.65 fails the trade-off); gap-drift dead on the new base; top-22 book
+  gated, fwd 20.65/−18.74 fails; 4 gates, 1 pass.
