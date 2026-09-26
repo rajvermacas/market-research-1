@@ -59,13 +59,12 @@ through `scripts/promote_gate.py`. Nothing else crowns a champion.
 
 ## Lead queue (highest first)
 
-1. **Nifty 500 with a drawdown control** (see 2) is now the top lead. Book size is CLOSED on
-   the new champion: 20–24 names is a train plateau (32–33%) but the gated top-22 cell read
-   fwd 20.65/−18.74 (−0.94pp CAGR vs the champion) and failed the deflated margin — the
-   fourth gate in which a more concentrated book lost forward CAGR. Keep 25 names.
-2. **Nifty 500 with a drawdown control**: the Nifty 500 regime_ma-24 cell has the forward
+1. **Nifty 500 with a drawdown control**: the Nifty 500 regime_ma-24 cell has the forward
    CAGR (22.8%) but a −25.7% forward DD (worse than its bench). A regime or exposure rule that
    cuts that DD could make it pass the trade-off. Its ledger: `.cache/strategy_lab/l25_dA_results.tsv`.
+2. **Book size is CLOSED at 25 names**: 20–24 is a train plateau (32–33%) but the gated
+   top-22 cell read fwd 20.65/−18.74 (−0.94pp CAGR vs the champion) — the fourth gate where
+   a more concentrated book lost forward CAGR.
 3. Rank channels that are NOT the V-recovery axis (ddquality/trmom lost forward; gapdrift on
    the new champion lowers train CAGR).
 4. Stops are dead on the fresh-print book; concentration below 20 names is a train artifact.
