@@ -861,8 +861,9 @@ def main() -> int:
         # the legacy stamp predates the ruler/fold/noise keys; keep it as it was
         for k in ("select", "folds", "noise_seeds", "noise_rate", "noise_k"):
             harness.pop(k)
-    args.results = args.results or prof["results"]
-    args.best_json = args.best_json or prof["best_json"]
+    sfx = "" if args.universe == "nse_all" or args.exec_profile == "legacy" else f"_{args.universe}"
+    args.results = args.results or prof["results"].replace(".tsv", f"{sfx}.tsv")
+    args.best_json = args.best_json or prof["best_json"].replace(".json", f"{sfx}.json")
     legacy_exec = is_legacy_exec(prof)
     blind = prof["blind"] and not args.reveal
     params = json.loads(args.params_json)

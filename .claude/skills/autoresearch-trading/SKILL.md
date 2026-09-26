@@ -142,6 +142,14 @@ open, down-locked or zero-volume bars cannot fill), `stop_cool`. With none set,
 the book is the plain equal-weight top-N bit-for-bit. The harness keeps only the
 market's rules (fills, locks, liquidity, costs), the ruler and the gate — never
 tune those per trial. The gate nudges numeric policy keys like any other param.
+**Promotion rule (user preference, 2026-09-26): CAGR may buy drawdown, and
+the universe is open.** Gate check 9 (`tradeoff`) passes a window (train and
+forward, separately) if the candidate dominates the champion, OR gains >= 2pp
+CAGR while its max DD is at most min(0.5 x the gain, 5pp) deeper. A champion
+may come from the full board (`nse_all`) or the Nifty 500: run the lab with
+`--universe nifty500` (its own ledger, `results_real_nifty500.tsv`) and gate
+with `promote_gate.py --universe nifty500`; transfer is then checked on the
+full board. Strategy CAGR/DD are compared directly across universes.
 **The loop's resume file is `research/loop_state.md`**
 — read it first in every new session and rewrite its state/lead sections at
 every close-out.

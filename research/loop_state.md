@@ -42,8 +42,16 @@ through `scripts/promote_gate.py`. Nothing else crowns a champion.
   `{"b_hi": 0.65, "b_lo": 0.45, "b_mid": 0.55, "floor_lb": 19, "lookback": 16, "max_dist": 0.055, "regime_ma": 18}`.
   Train +24.13% / DD −18.98% (calmar 1.27, robust 1.059) vs bench +19.84%;
   forward +20.63% / DD −21.65% (calmar 0.95) vs bench +14.53% / −27.88%.
-- **To dethrone it** (gate check 9): train CAGR > 24.13% AND train DD ≥ −18.98% AND
-  forward CAGR > 20.63% AND forward DD ≥ −21.65%, plus checks 1–8.
+- **To dethrone it** (gate check 9 `tradeoff`, user rule 2026-09-26), on train AND
+  forward separately: either dominate (CAGR higher, DD no deeper), or gain ≥ +2pp CAGR
+  with DD at most min(0.5 × gain, 5pp) deeper. Train: > 24.13% (or ≥ 26.13% with DD down
+  to −18.98% − dent). Forward: > 20.63% / −21.65% (or ≥ 22.63% with a bounded dent).
+  Plus checks 1–8. Re-scoring all six earlier gate reports under this rule changes no
+  verdict — every one lost forward CAGR.
+- **Universe is open**: the champion may come from the full board or the Nifty 500
+  (`--universe nifty500`, own ledger; gate with `--universe nifty500`). The champion's
+  own Nifty 500 run reads train +29.7%/−14.1%, fwd +18.5%/−21.4% (below its full-board
+  forward) — the Nifty 500 has not yet been searched as a primary universe.
 - **Harness**: realistic execution + robust fold ruler + noise margin + blind forward.
   **Policy is searchable** (params-json keys): `top`, `weighting` (equal/rank/invvol),
   `max_weight`, `min_hold`, `max_hold`, `sl_pct`, `ts_pct`, `stop_cool`. Pass `--top 25`
@@ -62,6 +70,9 @@ through `scripts/promote_gate.py`. Nothing else crowns a champion.
    params: champion keys + `"lq_min": 5e6, "lq_days": 40, "lq_shift": 0.05,
    "lq_shift_hi": 0.05, "lq_shift_lo": 0.075, "lq_mode": "strict", "top": 25,
    "weighting": "invvol"`.
+1b. **Search the Nifty 500 as a primary universe** (never done under the realistic
+   harness): seed `results_real_nifty500.tsv` with the champion, then screen the
+   policy keys and the liqconfirm regime there.
 2. **Concentration is a train artifact on this base**: 12–15-name books lifted train by
    6–10pp and lost ~4.5pp of forward CAGR in both gates. Keep new mechanisms at the
    champion's breadth (25) unless the base changes.
