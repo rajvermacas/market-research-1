@@ -232,6 +232,10 @@ and occasionally reused.
   monthly panel is continuous (139 intervals ≈ 2015-01 → 2026-09), but nothing in
   the harness asserts it — assert month continuity (or derive elapsed time from the
   first/last timestamps) before trusting a CAGR.
+- Beat a random null of the same mechanism, not just the champion. On the L25 book, 9 of 16 purely random rank
+  tilts beat the champion's train CAGR and random re-arms of partial tiers add ~4pp; four gated "wins" were inside
+  those bands. Run the matched random control (random tilt, random firing months at the same count) before spending
+  a forward reveal - and even a tilt that clears the null (L29 liqclimb, ~4 sd) can still lose forward.
 - Get the arithmetic audited by something that did not write it. Four errors survived repeated
   self-review here — three of them pointing the same way, toward a better-looking result —
   and an independent pass found all four in fifteen minutes.

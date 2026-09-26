@@ -959,6 +959,13 @@ to wait for them.
    batch files collided (same `batch2.sh` name) - briefs must require designer-prefixed scratch names.
    The `autoresearch-designer` agent type was again not registered; designers ran as `general-purpose`
    with the definition inlined and no model override.
+   State at Loop-29 close (2026-09-27, scheduled NIGHT routine): champion UNCHANGED (L25 `strat_l23a_liqconfirm` top 25
+   invvol). New protocol: score every train gain against a RANDOM NULL of the same mechanism class — random rank tilt
+   (`strat_l29c_randtilt`: 30.46 ± 1.29, 9/16 beat the champion), random partial-tier re-arm (`strat_l29d_randrearm`: +4pp on
+   average), random cut, random slot reservation, and Nifty 500 bands (`strat_l29i_n500null`). One gate (reveal #16):
+   `strat_l29j_liqclimb` −0.2/6 (train 36.32/−15.21, ~4 sd above the tilt null) → fwd 17.28/−19.54, −4.30pp: clearing a
+   null does not rescue a selection tilt. `coresat` (today's index membership) is look-ahead. The `autoresearch-designer`
+   agent type was again not registered; designers ran as `general-purpose` with the definition inlined, no model override.
 5. Ask the user for the designer and worker models (Step 0 of the playbook),
    then open the round. At close: commit with setup + verdict, `git add -f` the
    tracked ledgers if `.cache` is ignored, and push the workstream branch — the

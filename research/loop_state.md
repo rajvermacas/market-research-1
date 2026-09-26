@@ -41,7 +41,7 @@ through `scripts/promote_gate.py`. Nothing else crowns a champion.
    README results-ledger row, rewrite the two sections below, `git add -f` the
    ledgers, commit, push.
 
-## Current state (Loop-28 close, 2026-09-27 00:48 IST — champion unchanged since L25)
+## Current state (Loop-29 close, 2026-09-27 02:37 IST — champion unchanged since L25)
 
 - **Champion** (`.cache/strategy_lab/champion_real.json`, crowned L25): `strat_l23a_liqconfirm`,
   full board (`nse_all`), `--top 25`, params
@@ -60,10 +60,34 @@ through `scripts/promote_gate.py`. Nothing else crowns a champion.
 - **Harness**: realistic execution + robust fold ruler + noise margin + blind forward;
   policy keys searchable (`top`, `weighting`, `max_weight`, `min_hold`, `max_hold`, `sl_pct`,
   `ts_pct`, `stop_cool`). Pass `--top 25` on the CLI; set the book size with the `top` key.
-- **Reveals used**: 15 (L28 spent #14 on strat_l28b_corrdiv, #15 on strat_l28o_upvolnz; L27 #12 spread, #13 froth). **Trials under the current scoring**: ~590 across realistic ledgers (the gate's N=592).
-- **Loop counter**: last loop = 28. Next loop = 29.
+- **Reveals used**: 16 (L29 spent #16 on strat_l29j_liqclimb; L28 #14 corrdiv, #15 upvolnz; L27 #12 spread, #13 froth). **Trials under the current scoring**: ~840 across realistic ledgers (the gate's N=841).
+- **Loop counter**: last loop = 29. Next loop = 30.
 
 ## Lead queue (highest first)
+
+0000. **Loop-29 outcome (no promotion; NULL CONTROLS are now part of the protocol).** 21 files (15 mechanisms + 6 random
+   controls), 238 trial rows, 1 gate:
+   - **Random nulls on the L25 base** (use these bands before believing any train gain): random rank tilt
+     (`strat_l29c_randtilt`, w .07/.15): train CAGR 30.46 ± 1.29 (max 32.63), robust max 2.959 — 9/16 beat the champion,
+     4/16 dominate it on train; at w .2 (8 seeds, orch ledger) 26.7–31.8. Random re-arm of the 16 partial-tier train months
+     (`strat_l29d_randrearm`, 8 months): 34.18 ± 2.14 — ANY re-arm adds ~+4pp train. Random partial cut (`strat_l29f_randcut`):
+     26.8–29.2. Random fixed-500 slot reservation (`strat_l29h_randres`): 29.33 ± 2.65. Nifty 500 book
+     (`strat_l29i_n500null`): tilt 32.29 ± 1.41 (robust max 3.558), cut robust max 3.708.
+   - **Gated: `strat_l29j_liqclimb`** (lc_w −0.2 / lc_lb 6 / lc_days 60 — favour names FALLING in cross-sectional traded-value
+     rank): train 36.32/−15.21 robust 2.961, above all 24 random-tilt draws (~4 sd), neighbours 29/32 → fwd **17.28/−19.54**
+     vs champion 21.58/−20.47: FAILS (−4.30pp fwd CAGR; margin 0.840 < 0.898). The sixth selection-side train gain that
+     dies forward — clearing a random null does NOT rescue a rank tilt. Treat rank/selection tilts on this base as closed
+     for forward CAGR unless a new data source changes the base.
+   - Not gated (null-level): `agerearmup` (36.38/−17.22, 83–88th pct of the re-arm null; the guard is a 2018 veto),
+     `insideday` +0.07 (33.23/−16.62, robust inside the null). Contaminated: `coresat` (today's Nifty 500 membership as a
+     slot reservation, 36.02/−16.20) is look-ahead — above all 10 random-reservation draws while the point-in-time
+     liquidity-core version (`liqcore`) loses CAGR. Dead: breadth-spread, regime-age cut, signal-hit, capture, fall-cut
+     (below its own null), Nifty 500 bookdd / midbeta; bookvol is inside the Nifty 500 cut null.
+   - Data backlog promoted: point-in-time index membership would turn coresat into a testable idea.
+   - Harness note (audited): the train YEARS line's "2022" bucket is the Jan-2022 holding month decided on the Dec-2021 close
+     (labels are closing month-ends) — a split convention shared by every recorded number, not a forward leak.
+   - Loop errors: designer B ran one batch with output discarded (4 rows), designer A piped one batch (8 rows), designers E
+     and F each launched two trials in one tool block; all rows logged correctly.
 
 000. **Loop-28 outcome (no promotion).** Two gates, both fail the forward trade-off:
    - `strat_l28b_corrdiv` (correlation-diversified selection, cd_c .3 / 60d / mean / buf 15, + weighting rank):
@@ -127,6 +151,10 @@ through `scripts/promote_gate.py`. Nothing else crowns a champion.
 
 ## Loop log
 
+- L29 (2026-09-27 01:51:46–02:37:55 IST by `date`, scheduled NIGHT routine; close-out began 02:36:58, 45 elapsed min): 10 designer
+  rounds (A exposure, B Nifty 500 DD, C changed-base legacy tilts, D/F/H/I random nulls, E core-satellite, G PIT liquid core,
+  J liquidity-rank climb) + audit + orchestrator neighbour/null runs; 21 files, 238 trial rows; 1 gated (liqclimb, fwd −4.30pp);
+  champion unchanged.
 - L28 (2026-09-27 00:02–00:52 IST by `date`, routine manual test fire; close-out began at 00:47:33, 45 elapsed min): 4 designers in 2 rounds
   (exposure A/C, book construction B, entry quality D) + 1 orchestrator file, 11 mechanism files, 146 trial rows; 2 gated:
   corrdiv (fwd −3.50pp CAGR) and upvolnz (fwd DD 6.01pp deeper); champion unchanged.
